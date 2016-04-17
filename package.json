@@ -1,16 +1,21 @@
 {
   "name": "liquid",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Web development framework",
+  "main": "liquid.js",
   "dependencies": {
     "colors": "^1.1.2",
-    "express": "^4.13.4"
+    "console-group": "^0.2.0",
+    "ejs": "^2.4.1",
+    "express": "^4.13.4",
+    "fibers": "^1.0.10",
+    "seraph": "^0.14.2",
+    "socket.io": "^1.4.5"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Robert Renbris",
   "license": "ISC"
 }
