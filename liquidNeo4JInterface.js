@@ -126,7 +126,12 @@ neo4j.createRelationTo = function(fromId, toId, relationName) {
 
 if (useRestAPI) {
 	var Fiber = require('fibers');
-	var db = require("seraph")("http://localhost:7474");	
+	var db = require("seraph")({
+		server: "http://localhost:7474",
+		user: 'neo4j',
+		pass: 'liquid'
+	});
+	
 	neo4j.initialize = function() {}
 
 	/**

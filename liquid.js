@@ -39,6 +39,11 @@ var express = require('express');
 var liquidHttpServer = express();
 // set the view engine to ejs
 liquidHttpServer.set('view engine', 'ejs');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
+console.log(session);
+liquidHttpServer.use(cookieParser());
+liquidHttpServer.use(session({secret: '12345QWER67890TY'}));
 
 var controllers = require('./controllers.js');
 for (controllerName in controllers) {
