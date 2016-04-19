@@ -6,7 +6,7 @@
 
 	<!--link rel="stylesheet" href="/external/bower/bootstrap/dist/css/bootstrap.css"-->
 
-    <!-- TODO <script src="/js/dependencies/sails.io.js"></script>-->
+    <!-- TODO <script src="/js/liquid/dependencies/sails.io.js"></script>-->
 	<link rel="stylesheet" href="/external/font-awsome/css/font-awesome.min.css">
 
 	<!-- Liquid scripts -->
@@ -18,28 +18,28 @@
     <!--script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>-->
     <script src="/external/babel/browser.min.js"></script>
     <script src="/external/socket.io-client/socket.io.js"></script>
-    <script src="/js/liquidUtility.js"></script>
-    <script src="/js/liquidCommon.js"></script>
-    <script src="/js/liquidSelection.js"></script>
-    <script src="/js/liquidRepetition.js"></script>
-    <script src="/js/liquidClient.js"></script>
-	<script src="/js/liquidReact.js"></script>
+    <script src="/js/liquid/liquidUtility.js"></script>
+    <script src="/js/liquid/liquidCommon.js"></script>
+    <script src="/js/liquid/liquidSelection.js"></script>
+    <script src="/js/liquid/liquidRepetition.js"></script>
+    <script src="/js/liquid/liquidClient.js"></script>
+	<script src="/js/liquid/liquidReact.js"></script>
 
 	<!-- Application scripts -->
-    <script src="/js/liquid_models/referenceService.js"></script>
-	<script type="text/babel" src="/js/reactComponents.js"></script>
+    <script src="/js/liquid_application/referenceService.js"></script>
+	<script type="text/babel" src="/js/liquid_application/reactComponents.js"></script>
 	
 	<!-- Initialize & setup data and socket io -->
 	<script>liquid.initialize();</script>
 	<script>var data = <%- data %>; console.log(data); </script>
-    <script src="/js/setupData.js"></script>
-    <script src="/js/setupSocketIo.js"></script>
+    <script src="/js/liquid/setupData.js"></script>
+    <script src="/js/liquid/setupSocketIo.js"></script>
 
 	<!-- Render page -->
-	<script type="text/babel" src="/js/renderPage.js"></script> 
+	<script type="text/babel" src="/js/liquid/renderPage.js"></script> 
 
 	<!-- Custom script (mostly for debugging and trying out stuff) -->
-    <!-- script src="/js/script.js"></script-->
+    <!-- script src="/js/liquid/script.js"></script-->
   </head>
 
   <body>
