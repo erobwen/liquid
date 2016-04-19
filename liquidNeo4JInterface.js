@@ -209,13 +209,13 @@ if (useRestAPI) {
 	};
 
 	neo4j.getRelationIds = function(id, relationName) {
-		// console.log("Get relation ids");
+		console.log("getRelationIds");
 		var result = [];
 		var relationInfo = neo4j.query("MATCH (n)-[r:" + relationName + "]->(m) WHERE id(n) = " + id + " RETURN r, m, id(m) as id");
-		// console.log(relationInfo);
+		console.log(relationInfo);
 		relationInfo.forEach(function(relationInfo) {
 			var relatedNodeId = relationInfo.m.id;
-			// console.log(relationInfo.m);
+			console.log(relationInfo.m);
 			// console.log("Id:" + relatedNodeId)
 			result.push(relatedNodeId);
 			neo4j.loadCache[relatedNodeId] = relationInfo.m;

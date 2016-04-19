@@ -21,7 +21,7 @@ module.exports = {
 			politics.addSubCategory(georgism);
 			
 			var myPolitics = createEntity('Category', {name: 'MyPoliticalCommitments', description: '', user: user});
-			politics.addSubCategory(georgism);
+			politics.addSubCategory(myPolitics);
 			
 			var directDemocracy = createEntity('Category', {name: 'Direct Democracy', description: '', user: user});
 			politics.addSubCategory(directDemocracy);
@@ -54,7 +54,19 @@ module.exports = {
 			// console.log("====================");
 		});
 	},
-		
+	
+	test : function (req, res) {
+		console.log("test");
+		// console.log(sails);
+		liquidPageRequest(req, res, function(user, session, page) {
+			// console.log("Page id;");
+			// console.log(page.id);
+			
+			var politics = liquid.findEntity({className: 'Category', name: "Politics"});
+			console.log(politics.getSubCategories());
+			res.send("Test finished");
+		});
+	},	
 	view : function (req, res) {
 		console.log("view");
 		// console.log(sails);
