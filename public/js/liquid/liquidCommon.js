@@ -1038,7 +1038,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					}
 				}, {requiresAnyOf: 'all',
 					usesRoles: ['administrator'],
-					addRolesOnServer: ['administrator']});
+					onServerAddRoles: ['administrator']});
 			}
 		});	
 		

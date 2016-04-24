@@ -44,7 +44,6 @@ var UserView = React.createClass(liquidClassData({
 					<PropertyField label="Name" object = { this.props.user} propertyName = "Name"/>
 					<div style={{height: "1em"}}></div>
 					<CategoriesView
-						key = { this.props.user.id }
 						categories = { rootCategories }  // This should evaluate to a new list upon change. This would not work with a relation... Should we create a new object on every change? However, it still means that both components needs reevaluation
 					/>
 					<button onClick= { function() { performScript(); }} >Execute script</button>
@@ -259,6 +258,7 @@ window.CategoryView = React.createClass(liquidClassData({
 			var categoryViewElementName ="CategoryView"
 			this.props.category.getSubCategories().forEach(function(category) {
 				// How to do it with standard syntax:
+				console.log("A view key: " + this.props.category.id + "." + category.id);
 				subCategories.push(
 					<CategoryView 
 						key = { this.props.category.id + "." + category.id }
