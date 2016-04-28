@@ -5,7 +5,7 @@
 
 There are two options. 
 
-1 ) Using native Java API for Neo4J connectivity.
+## 1 ) Using native Java API for Neo4J connectivity.
 In order to use the much faster Java wrapper for the Neo4J database, it is necessary to install node package 'java'. In order to sucessfully install java however, it is necessary to first install node-gyp, which requires the following steps:
 
 * java 
@@ -21,12 +21,12 @@ If you do not wish to use the native java api to connect to Neo4J, then you can 
 
 
 
-2) Use Neo4J rest API. 
+## 2) Use Neo4J rest API. 
 The alternative is to connect to Neo4J using its rest api. You then need to install the 'seraph' package. 
 
 For this you have to first install 
 
-*seraph
+* seraph
 	* Install Neo4J Community Edition. 
 
 If you do not wish to use the native java api to connect to Neo4J, then you can comment out the seraph dependency in the package.json file. 
