@@ -11,6 +11,7 @@
     "express": "^4.13.4",
     "express-session": "^1.13.0",
     "fibers": "^1.0.10",
+    "node-gyp": "^3.3.1",
     "seraph": "^0.14.2",
     "socket.io": "^1.4.5"
   },
