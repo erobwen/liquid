@@ -55,6 +55,7 @@ public class LiquidNeo4JInterface {
 		try (Transaction tx = db.beginTx()){
 			//System.out.println(LiquidNeo4JInterface.cypherEngine.execute(query).dumpToString());
 			ExecutionResult queryResult = LiquidNeo4JInterface.cypherEngine.execute(query);
+			System.out.println(queryResult.dumpToString());
 			Iterator iterator = queryResult.javaIterator();
 			while(iterator.hasNext()) {
 				result.add(iterator.next());
