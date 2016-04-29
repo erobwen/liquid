@@ -54,10 +54,10 @@ liquid.findEntity = function(properties) {
 }
 
 liquid.findEntities = function(properties) {
-	// console.log("findEntities:");
-	// console.log(properties);
+	console.log("findEntities:");
+	console.log(properties);
 	var entityIds = neo4j.findEntitiesIds(properties);
-	// console.log(entityIds);
+	console.log(entityIds);
 	var result = [];
 	entityIds.forEach(function(id) {
 		result.push(liquid.getEntity(id));

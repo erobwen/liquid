@@ -8,7 +8,7 @@
 *     REST API - enables visual Neo4J browser open at the same time. 
 *----------------------------------------------------------------*/
 
-var useJavaInterface = false;
+var useJavaInterface = true;
 var useRestAPI = !useJavaInterface;
 var trace = false;
 
@@ -79,6 +79,7 @@ neo4j.findEntitiesIds = function(properties) {
 	var query = "MATCH (n) WHERE " + propertyFilter + " RETURN id(n)";
 	// console.log(query);
 	var queryResult = neo4j.query(query);
+	console.log(queryResult);
 	ids = [];
 	queryResult.forEach(function(row) {
 		ids.push(row['id(n)']);
@@ -89,6 +90,8 @@ neo4j.findEntitiesIds = function(properties) {
 
 neo4j.setPropertyValue = function(id, propertyName, value) {
 	neo4j.query("MATCH (n) WHERE id(n) = " + id + " SET n." + propertyName + " = '" + value + "'");
+	console.log(neo4j);
+	console.log(neo4j.loadCache);
 	if (typeof(neo4j.loadCache[id]) !== 'undefined') {
 		delete neo4j.loacCache[id];
 	}
@@ -244,7 +247,7 @@ if (useJavaInterface) {
 	var java = require("java");
 	var path = require('path');
 	java.classpath.push(path.resolve(__dirname, "liquidNeo4JInterface.jar"));
-	java.classpath.push("C:\\Program Files (x86)\\Neo4j Community\\bin\\neo4j-desktop-2.1.7.jar");
+	java.classpath.push("C:\\Program Files\\Neo4j CE 2.3.3\\bin\\neo4j-desktop-2.3.3.jar");
 	// var fs = require('fs');
 	// console.log(path.join(__dirname, "neo4jNeo4JInterface.jar"));
 	// console.log('jar exists: ' + fs.existsSync(path.resolve(__dirname, "neo4jNeo4JInterface.jar")));
@@ -265,14 +268,15 @@ if (useJavaInterface) {
 	* Database query
 	*/
 	neo4j.query = function(cypherQuery) {
+		console.log("query: " + cypherQuery);
 		var queryResult = [];
 		neo4j.measureQueryTime(function() {
 			queryResult = java.callStaticMethodSync('liquid.LiquidNeo4JInterface', 'executeQuery', cypherQuery);
 		});
-		// console.log(queryResult);
+		console.log(queryResult);
 		var result = [];
 		queryResult.toArraySync().forEach(function(row) {
-			// console.log(row);
+			console.log(row);
 			result.push(neo4j.javaMapToMap(row));
 		});
 		return result;

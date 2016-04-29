@@ -1,4 +1,5 @@
 package liquid;
+import java.io.File;
 import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,7 +10,10 @@ import org.neo4j.cypher.ExecutionEngine;
 import org.neo4j.cypher.ExecutionResult;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.*;
-import org.neo4j.kernel.impl.util.StringLogger;
+import org.neo4j.logging.FormattedLogProvider;
+import org.neo4j.logging.LogProvider;
+import org.neo4j.logging.NullLogProvider;
+import org.neo4j.logging.async.AsyncLogProvider;
 
 //import scala.collection.convert.*;
 
@@ -29,9 +33,10 @@ public class LiquidNeo4JInterface {
 		if (LiquidNeo4JInterface.db == null) {
 			System.out.println(" === Initializing database connection ===");
 			GraphDatabaseFactory dbFactory = new GraphDatabaseFactory();
-			LiquidNeo4JInterface.db= dbFactory.newEmbeddedDatabase("C:\\liquid\\neo4j_db\\default.graphdb");
-			StringLogger logger = StringLogger.wrap(new OutputStreamWriter(System.out));
-		   	LiquidNeo4JInterface.cypherEngine = new ExecutionEngine(LiquidNeo4JInterface.db, logger);
+			File storeDir = new File("C:\\liquid\\neo4j_db\\default.graphdb");
+			LiquidNeo4JInterface.db= dbFactory.newEmbeddedDatabase(storeDir);
+			LogProvider logProvider = FormattedLogProvider.toWriter(new OutputStreamWriter(System.out));
+		   	LiquidNeo4JInterface.cypherEngine = new ExecutionEngine(LiquidNeo4JInterface.db, logProvider);
 		}
 	}
 	
