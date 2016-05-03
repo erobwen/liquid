@@ -8,7 +8,7 @@
 *     REST API - enables visual Neo4J browser open at the same time. 
 *----------------------------------------------------------------*/
 
-var useJavaInterface = true;
+var useJavaInterface = false;
 var useRestAPI = !useJavaInterface;
 var trace = false;
 
@@ -34,7 +34,7 @@ neo4j.measureQueryTime = function(callback) {
 
 neo4j.clearDatabase = function() {
 	// Clear database
-	var cypher = "START n = node(*) OPTIONAL MATCH n-[r]-() WHERE (ID(n)>0 AND ID(n)<10000) DELETE n, r"			
+	var cypher = "START n = node(*) OPTIONAL MATCH (n)-[r]-() WHERE (ID(n)>0 AND ID(n)<10000) DELETE n, r"			
 	neo4j.query(cypher);
 	if (trace) {
 		console.log("Removed all data in database!");
@@ -89,12 +89,21 @@ neo4j.findEntitiesIds = function(properties) {
 
 
 neo4j.setPropertyValue = function(id, propertyName, value) {
+	console.log("neo4j.setPropertyValue:" + "(" + id + ")." + propertyName + " = " + value);
 	neo4j.query("MATCH (n) WHERE id(n) = " + id + " SET n." + propertyName + " = '" + value + "'");
-	console.log(neo4j);
-	console.log(neo4j.loadCache);
-	if (typeof(neo4j.loadCache[id]) !== 'undefined') {
-		delete neo4j.loacCache[id];
+	// console.log(neo4j);
+	// console.log(neo4j.loadCache);
+	// console.log(id in neo4j.loadCache);
+	// console.log(typeof(id));
+	// console.log(Object.keys(neo4j.loadCache));
+	// if (Object.keys(neo4j.loadCache.length > 0)) {
+		// console.log(typeof(Object.keys(neo4j.loadCache)[0]));
+	// }
+	var loadCache = neo4j.loadCache;
+	if (typeof(loadCache[id]) !== 'undefined') {	
+		delete loadCache[id];
 	}
+	// console.log("neo4j.setPropertyValue finised...");
 };
 
 
@@ -155,7 +164,6 @@ if (useRestAPI) {
 				
 			// Make query while still remembering current connection (if interrupted by another connection)
 			var fiber = Fiber.current;
-			var currentConnection = global.currentneo4jConnection;
 			if (trace) {
 				console.log("Before query:" + parametrizedCypher);
 			}
@@ -172,7 +180,6 @@ if (useRestAPI) {
 				}
 			});
 			returnValue = Fiber.yield();
-			global.currentneo4jConnection = currentConnection;
 		});
 		
 		// Return value if any
@@ -217,7 +224,7 @@ if (useRestAPI) {
 		var relationInfo = neo4j.query("MATCH (n)-[r:" + relationName + "]->(m) WHERE id(n) = " + id + " RETURN r, m, id(m) as id");
 		console.log(relationInfo);
 		relationInfo.forEach(function(relationInfo) {
-			var relatedNodeId = relationInfo.m.id;
+			var relatedNodeId = parseInt(relationInfo.m.id);
 			console.log(relationInfo.m);
 			// console.log("Id:" + relatedNodeId)
 			result.push(relatedNodeId);
@@ -230,7 +237,7 @@ if (useRestAPI) {
 		var result = [];
 		var relationInfo = neo4j.query("MATCH (n)<-[r:" + relationName + "]-(m) WHERE id(n) = " + id + " RETURN r, m, id(m) as id");
 		result.forEach(function(relationInfo) {
-			var relatedNodeId = relationInfo.m.id;
+			var relatedNodeId = parseInt(relationInfo.m.id);
 			result.push(relatedNodeId);
 			neo4j.loadCache[relatedNodeId] = relationInfo.m;
 		});
