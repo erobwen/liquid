@@ -10,7 +10,7 @@
     "ejs": "^2.4.1",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
-    "fibers": "^1.0.10",
+    "fibers": "^1.0.12",
     "java": "^0.6.1",
     "node-gyp": "^3.3.1",
     "seraph": "^0.14.2",
@@ -23,7 +23,7 @@
   "author": "Robert Renbris",
   "license": "ISC",
   "repository": {
-	  "type": "git",
-	  "url": "https://github.com/erobwen/Liquid.git"
-	}
+    "type": "git",
+    "url": "https://github.com/erobwen/Liquid.git"
+  }
 }
