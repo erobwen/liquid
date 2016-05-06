@@ -8,6 +8,8 @@ function capitalize(s) {
 
 
 var liquid = {};
+liquid.onServer = false;
+
 //open up socket.io somehow!
 
 // io.socket.on('connect', function() {

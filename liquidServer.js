@@ -11,6 +11,7 @@ require( 'console-group' ).install();
  * The liquid with common functionality
  */ 
 var liquid = {};
+liquid.onServer = true;
 liquidCommon.addCommonLiquidFunctionality(liquid);
 liquidSelection.addLiquidSelectionFunctionality(liquid);
 liquidRepetition.addLiquidRepetitionFunctionality(liquid);
@@ -329,6 +330,7 @@ liquid.pageRequest = function(req, res, operation) {
 	// Setup page object
 	var hardToGuessPageId = liquid.generateUniqueKey(liquid.pagesMap);
 	var page = liquid.createPageObject(hardToGuessPageId, session);
+	liquid.page = page;
 	liquid.pagesMap[hardToGuessPageId] = page;
 	
 	var user = session.user;
@@ -354,6 +356,7 @@ liquid.pageRequest = function(req, res, operation) {
 liquid.dataRequest = function(hardToGuessPageId, operation) {
 	var result;
 	var page = liquid.pagesMap[hardToGuessPageId];
+	liquid.page = page;
 	Fiber(function() {  // consider, remove fiber when not using rest api?
 		// Measure query time and pageRequest time
 		neo4j.resetStatistics();

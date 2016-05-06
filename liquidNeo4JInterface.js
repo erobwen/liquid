@@ -164,6 +164,7 @@ if (useRestAPI) {
 				
 			// Make query while still remembering current connection (if interrupted by another connection)
 			var fiber = Fiber.current;
+			var currentPage = liquid.page;
 			if (trace) {
 				console.log("Before query:" + parametrizedCypher);
 			}
@@ -180,6 +181,7 @@ if (useRestAPI) {
 				}
 			});
 			returnValue = Fiber.yield();
+			liquid.page = currentPage;
 		});
 		
 		// Return value if any

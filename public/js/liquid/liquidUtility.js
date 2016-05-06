@@ -6,6 +6,15 @@ var isArray = function(entity) {
 	return Array.isArray(entity);
 }
 
+// var inArray = function(item, array) {
+	// array.forEach(function(arrayItem) {
+		// if (item === arrayItem) {
+			// return true;
+		// }
+	// });
+	// return false;
+// }
+
 var argumentsToArray = function(arguments) {
 	return Array.prototype.slice.call(arguments);
 }
@@ -20,6 +29,16 @@ var clearArray = function(array) {
 
 var lastOfArray = function(array) {
 	return array[array.length - 1];
+}
+
+var arrayToMap = function(array) {
+	var result = {};
+	if (typeof(array) !== 'undefined') {
+		array.forEach(function(item) {
+			result[item] = true;
+		});
+	}
+	return result;
 }
 
 // var argumentsToArray = function(argumentsObject) {
@@ -250,9 +269,11 @@ var nameToVariable = function(string) {
 
 if (typeof(module) !== 'undefined') {
 	module.exports.isArray = isArray;
+	// module.exports.inArray = inArray;
 	module.exports.argumentsToArray = argumentsToArray;
 	module.exports.copyArray = copyArray;
 	module.exports.clearArray = clearArray;
+	module.exports.arrayToMap = arrayToMap;
 	module.exports.lastOfArray = lastOfArray;
 	module.exports.removeFromArray = removeFromArray;
 	module.exports.clone = clone;
