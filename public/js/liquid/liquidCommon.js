@@ -134,12 +134,21 @@ var addCommonLiquidFunctionality = function(liquid) {
 		});
 	};
 	
-	liquid.createPropertyStructure = function(propertyData) {
-		liquid.normalizeProperty(propertyData);
+	liquid.createPropertyStructure = function(propertyData, details) {
+		liquid.normalizeProperty(propertyData, details);
 		return propertyData;
 	};
 	
-	liquid.normalizeProperty = function(property) {
+	liquid.normalizeProperty = function(property, details) {
+		// Security
+		if (typeof(details) !== 'undefined' && (typeof(details.readOnly) !== 'undefined' || typeof(details.readAndWrite) !== 'undefined')) {
+			property.securityInfo = true;
+			property.readOnly = arrayToMap(details.readOnly);
+			property.readAndWrite = arrayToMap(details.readAndWrite);
+		} else {
+			property.securityInfo = false;
+		}
+		
 		// Interpret undefined as false
 		if(typeof(property.type) == 'undefined') property.type = 'string';
 		if(typeof(property.defaultValue) == 'undefined') property.defaultValue = '';
@@ -564,6 +573,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 	*                 		Object setup
 	*----------------------------------------------------------------*/
 
+	liquid.roleStack = [];
+	
 	/**
 	 * Setup object
 	 */	
