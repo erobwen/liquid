@@ -600,27 +600,31 @@ var addCommonLiquidFunctionality = function(liquid) {
 		delete object.addProperty;
 		delete object.addRelation;
 		delete object.addReverseRelation;
-
-		// Add methods and repeaters
-		object.addMethod = function(methodName, method) {
-			// Note: this is important, because in a repeatOnChange we can track what methods are overwritten on the server, so we know they can only be called on the server.
+		
+		
+		var addSelectionNames = function(methodName, method) {
 			if (methodName.indexOf("select") === 0) {
 				var selectionName = methodName.substring(9);
-				object[methodName] = function() {
-					if (object.noDataLoaded) {
-						// Notify not able to select
-						// liquid.triedToSelect(object, );
-					} else {
-						// Add selection name!
-						var selection = arguments[0];
-						if (typeof(selection.selectionNames) === 'undefined') {
-							selection.selectionNames = {};
-						}
-						selection[object.id].selectionNames[selectionName] = true;
+				return function() {
+					// Add method name to selection!
+					var selection = arguments[0];
+					if (typeof(selection[object.id]) !== 'object') {
+						selection[object.id] = {};
+					}  
+					if (typeof(selection[object.id].selectionNames) === 'undefined') {
+						selection[object.id].selectionNames = {};
 					}
+					selection[object.id].selectionNames[selectionName] = true;
 					method.apply(this, arguments);
-				}.bind(this);
-			}
+				};
+			} else {
+				return method;
+			}			
+		}
+
+		
+		// Add methods and repeaters
+		object.addMethod = function(methodName, method) {
 			object[methodName] = method;
 		};
 		
