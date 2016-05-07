@@ -744,7 +744,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object[definition.getterName] = function() {
 			var instance = this._propertyInstances[definition.name];
 			liquid.notifyGettingProperty(object, definition, instance);
-			return instance.data;
+			if (true || allowRead(this, definition)) {
+				return instance.data;
+			} else {
+				console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
+				return clone(definition.defaultValue);
+			}
 		};
 		
 		// Initialize setter
@@ -752,9 +757,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 			var instance = this._propertyInstances[definition.name];
 			var oldValue = instance.data;
 			if (value != oldValue) {
-				instance.data = value;
-				liquid.notifySettingProperty(this, definition, instance, value, oldValue);
-				liquid.notifyChangeInProperty(this, definition, instance);
+				if (allowWrite(this, definition)) {
+					instance.data = value;
+					liquid.notifySettingProperty(this, definition, instance, value, oldValue);
+					liquid.notifyChangeInProperty(this, definition, instance);
+				} else {
+					console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
+				}
 			}
 		};
 	};
