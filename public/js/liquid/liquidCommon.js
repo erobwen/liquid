@@ -762,7 +762,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object[definition.getterName] = function() {
 			var instance = this._propertyInstances[definition.name];
 			liquid.notifyGettingProperty(object, definition, instance);
-			if (true || allowRead(this, definition)) {
+			if (allowRead(this, definition)) {
 				return instance.data;
 			} else {
 				console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
