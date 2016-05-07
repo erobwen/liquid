@@ -395,7 +395,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 	// Creates a blank instance, without data or id! Just Interface. 
 	liquid.createClassInstance = function(className) {
 		var liquidClass = liquid.classRegistry[className];
+		console.log("============  asfasdf");
+		console.log(liquidClass);
+		console.log(liquidClass.liquidObjectPrototype);
 		var object = Object.create(liquidClass.liquidObjectPrototype);
+		console.log(object);
 		liquid.cloneCommonInstanceFields(object, liquidClass.liquidObjectPrototype);
 		object.__uniqueSessionId = nextUniqueSessionId++;
 		return object;
@@ -662,10 +666,75 @@ var addCommonLiquidFunctionality = function(liquid) {
 				name : name,
 				type : 'this is not used?',
 				defaultValue : defaultValue, 
-			})
+			}, details)
 		);
 	};
 
+		
+	var allowRead = function(object, definition) {
+		return true;
+		if (definition.securityInfo) {
+			var pageRoles = object.cachedCall('roles', liquid.page);
+			// Is access granted by page?
+			pageRoles.forEach(function(role) {
+				if (role === 'administrator') {
+					return true;
+				}
+				if (typeof(definition.readOnly[role]) !== 'undefined') {
+					return true;
+				}
+				if (typeof(definition.readAndWrite[role]) !== 'undefined') {
+					return true;
+				}
+			});
+			// Is access granted by method?
+			liquid.roleStack.forEach(function(role) {
+				if (role === 'administrator') {
+					return true;
+				}
+				if (typeof(definition.readOnly[role]) !== 'undefined') {
+					return true;
+				}
+				if (typeof(definition.readAndWrite[role]) !== 'undefined') {
+					return true;
+				}
+			});
+			return false;			
+		} else {
+			return true;
+		}
+	};
+
+	var allowWrite = function(object, definition) {
+		return true;
+		if (definition.securityInfo) {
+			var pageRoles = object.cachedCall('roles', liquid.page);
+			// Is access granted by page?
+			pageRoles.forEach(function(role) {
+				if (role === 'administrator') {
+					return true;
+				}
+				if (typeof(definition.readAndWrite[role]) !== 'undefined') {
+					return true;
+				}
+			});
+			// Is access granted by method?
+			liquid.roleStack.forEach(function(role) {
+				if (role === 'administrator') {
+					return true;
+				}
+				if (typeof(definition.readAndWrite[role]) !== 'undefined') {
+					return true;
+				}				
+			});
+			return false;			
+		} else {
+			return true;
+		}
+	};
+
+
+	
 	liquid.addPropertyInfo = function(object, definition) {
 		var instance = {observers : {}};
 		object._propertyDefinitions[definition.name] = definition;
@@ -1047,9 +1116,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					} else {
 						return false;
 					}
-				}, {requiresAnyOf: 'all',
-					usesRoles: ['administrator'],
-					onServerAddRoles: ['administrator']});
+				}, 'administrator');
 			}
 		});	
 		
