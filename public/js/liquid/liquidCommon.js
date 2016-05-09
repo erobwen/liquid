@@ -168,14 +168,22 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 	
 	
-	liquid.createRelation = function(relationData) {
-		liquid.normalizeRelation(relationData);
+	liquid.createRelation = function(relationData, details) {
+		liquid.normalizeRelation(relationData, details);
 		return relationData;
 	};
 	
-	liquid.normalizeRelation = function(definition) {
+	liquid.normalizeRelation = function(definition, details) {
+		// Security
+		if (typeof(details) !== 'undefined' && (typeof(details.readOnly) !== 'undefined' || typeof(details.readAndWrite) !== 'undefined')) {
+			property.securityInfo = true;
+			property.readOnly = arrayToMap(details.readOnly);
+			property.readAndWrite = arrayToMap(details.readAndWrite);
+		} else {
+			property.securityInfo = false;
+		}
+
 		// definition.isLoaded = false;
-		
 		// Interpret undefined as false
 		if(typeof(definition.isSet) == 'undefined') definition.isSet = false;
 		// if(typeof(definition.isBidirectional) == 'undefined') definition.isBidirectional = false;
@@ -805,7 +813,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		var relationInstance = {  // Not used if object is a prototype
 			observers: {}
 		}
-		liquid.normalizeRelation(relationDefinition);
+		liquid.normalizeRelation(relationDefinition, details);
 		liquid.registerRelation(object, relationDefinition, relationInstance);
 		
 		// Init explorative calls
@@ -843,7 +851,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		var relationInstance = { // Not used if object is a prototype
 			observers: {}
 		};
-		liquid.normalizeRelation(relationDefinition);
+		liquid.normalizeRelation(relationDefinition, details);
 		liquid.registerRelation(object, relationDefinition, relationInstance);
 		
 		// Init explorative calls
