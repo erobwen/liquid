@@ -893,32 +893,34 @@ var addCommonLiquidFunctionality = function(liquid) {
 			};
 		} else {
 			object[definition.getterName] = function() {
-				if (allowRead(this, definition)) {
-					var instance = this._relationInstances[definition.qualifiedName];
-					liquid.notifyGettingRelation(this, definition, instance);
-					if (typeof(instance.data) === 'undefined') {
-						// if (this.isSaved) {
-						instance.data = null;
-						liquid.ensureIncomingRelationLoaded(this, definition.incomingRelationName);
+				// if (allowRead(this, definition)) {
+				var instance = this._relationInstances[definition.qualifiedName];
+				liquid.notifyGettingRelation(this, definition, instance);
+				if (typeof(instance.data) === 'undefined') {
+					// if (this.isSaved) {
+					instance.data = null;
+					liquid.roleStack.push('administrator');
+					liquid.ensureIncomingRelationLoaded(this, definition.incomingRelationName);
+					liquid.roleStack.pop();
 
-						// Return the first one or null
-						var incomingRelationQualifiedName = definition.incomingRelationQualifiedName;
-						// console.log(incomingRelationQualifiedName);
-						if (typeof(this.incomingRelations[incomingRelationQualifiedName]) !== 'undefined') {
-							var incomingRelationMap = this.incomingRelations[incomingRelationQualifiedName];
-							// console.log(this.incomingRelations);
-							// console.log(incomingRelation);
-							incomingRelationIds = Object.keys(incomingRelationMap);
-							if (incomingRelationIds.length !== 0) {
-								instance.data = incomingRelationMap[incomingRelationIds[0]];
-							}
+					// Return the first one or null
+					var incomingRelationQualifiedName = definition.incomingRelationQualifiedName;
+					// console.log(incomingRelationQualifiedName);
+					if (typeof(this.incomingRelations[incomingRelationQualifiedName]) !== 'undefined') {
+						var incomingRelationMap = this.incomingRelations[incomingRelationQualifiedName];
+						// console.log(this.incomingRelations);
+						// console.log(incomingRelation);
+						incomingRelationIds = Object.keys(incomingRelationMap);
+						if (incomingRelationIds.length !== 0) {
+							instance.data = incomingRelationMap[incomingRelationIds[0]];
 						}
 					}
-					return instance.data;
-				} else {
-					console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
-					return clone(definition.defaultValue);
 				}
+				return instance.data;
+				// } else {
+					// console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
+					// return clone(definition.defaultValue);
+				// }
 			}
 		}
 				
@@ -1210,9 +1212,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 				
 				object.addMethod('login', function(loginName, liquidPassword) {
 					return this.getPage().login(loginName, liquidPassword);
-				}, {requiresAnyOf: 'all',
-					usesRoles: ['administrator'],
-					addRolesOnServer: ['administrator']});
+				}, 'administrator');
+				
 			}
 		});	
 
