@@ -895,6 +895,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 			object[definition.getterName] = function() {
 				var instance = this._relationInstances[definition.qualifiedName];
 				liquid.notifyGettingRelation(this, definition, instance);
+				
+				// Get cache
 				if (typeof(instance.data) === 'undefined') {
 					// if (this.isSaved) {
 					instance.data = null;
@@ -915,6 +917,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 						}
 					}
 				}
+				
+				// Filter out readable data
 				if (instance.data !== null) {
 					if (allowRead(instance.data, instance.data._relationDefinitions[definition.incomingRelationQualifiedName])) {
 						return instance.data;
