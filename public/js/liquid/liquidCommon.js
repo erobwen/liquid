@@ -161,26 +161,26 @@ var addCommonLiquidFunctionality = function(liquid) {
 		property.setterName = "set" + capitaliseFirstLetter(property.name);		
 	};
 
-	liquid.normalizeRelations = function(registerClass) {
-		registerClass._relationDefinitions.forEach(function(relation) {
-			liquid.normalizeRelation(relation);
-		});
-	};
+	// liquid.normalizeRelations = function(registerClass) {
+		// registerClass._relationDefinitions.forEach(function(relation) {
+			// liquid.normalizeRelation(relation);
+		// });
+	// };
 	
 	
-	liquid.createRelation = function(relationData, details) {
-		liquid.normalizeRelation(relationData, details);
-		return relationData;
-	};
+	// liquid.createRelation = function(relationData, details) {
+		// liquid.normalizeRelation(relationData, details);
+		// return relationData;
+	// };
 	
 	liquid.normalizeRelation = function(definition, details) {
 		// Security
 		if (typeof(details) !== 'undefined' && (typeof(details.readOnly) !== 'undefined' || typeof(details.readAndWrite) !== 'undefined')) {
-			property.securityInfo = true;
-			property.readOnly = arrayToMap(details.readOnly);
-			property.readAndWrite = arrayToMap(details.readAndWrite);
+			definition.securityInfo = true;
+			definition.readOnly = arrayToMap(details.readOnly);
+			definition.readAndWrite = arrayToMap(details.readAndWrite);
 		} else {
-			property.securityInfo = false;
+			definition.securityInfo = false;
 		}
 
 		// definition.isLoaded = false;
