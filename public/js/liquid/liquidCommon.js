@@ -893,7 +893,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 			};
 		} else {
 			object[definition.getterName] = function() {
-				// if (allowRead(this, definition)) {
 				var instance = this._relationInstances[definition.qualifiedName];
 				liquid.notifyGettingRelation(this, definition, instance);
 				if (typeof(instance.data) === 'undefined') {
@@ -916,11 +915,16 @@ var addCommonLiquidFunctionality = function(liquid) {
 						}
 					}
 				}
-				return instance.data;
-				// } else {
-					// console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
-					// return clone(definition.defaultValue);
-				// }
+				if (instance.data !== null) {
+					if (allowRead(instance.data, instance.data._relationDefinitions[definition.incomingRelationQualifiedName])) {
+						return instance.data;
+					} else {
+						console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
+						return null;
+					}
+				} else {
+					return null;
+				}
 			}
 		}
 				
