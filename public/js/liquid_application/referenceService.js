@@ -205,24 +205,6 @@ registerClass({
 			});
 			return result;
 		});
-	},
-	
-	addRoles : function() {
-		object.addRole('default', 
-			{
-				notAccessableOnClient: [],
-				notWriteableOnClient:  ['name', 'description', 'SubCategory', 'Reference', 'Owner', 'Parent'],
-				notExecutableOnClient: []
-			}
-		);
-		object.addRole('owner', 
-			{
-				notAccessableOnClient: [],
-				notWriteableOnClient:  ['Owner'],
-				notExecutableOnClient: []
-			}
-		);
-		// redefineRole() for sub classes!
 	}
 });
 
