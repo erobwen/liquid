@@ -53,31 +53,6 @@ registerClass({
 			// console.log(result);
 			return result;
 		})
-	},
-	
-	addRoles : function() {
-		object.addRole('default', 
-			{
-				notAccessableOnClient: ['encryptedPassword'],
-				notWriteableOnClient:  ['isAdmin', 'userName', 'fullName', 'email', 'AddedReference', 'OwnedCategory'],
-				notExecutableOnClient: []
-			}
-		);
-		object.addRole('userSelf', 
-			{
-				notAccessableOnClient: ['encryptedPassword'],
-				notWriteableOnClient:  ['isAdmin', 'userName', 'email', 'AddedReference', 'OwnedCategory'],
-				notExecutableOnClient: ['setAndVerifyUserName', 'setAndVerifyEmail']
-			}
-		);
-		// object.addRole('administrator',    // Implicit!
-			// {
-				// notAccessableOnClient: [],
-				// notWriteableOnClient:  [],
-				// notExecutableOnClient: []
-			// }
-		// );
-		// redefineRole() for sub classes!
 	}
 });	
 

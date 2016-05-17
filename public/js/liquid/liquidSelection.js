@@ -74,7 +74,8 @@ var addLiquidSelectionFunctionality = function(liquid) {
 	}
 
 	liquid.mergeToSelection = function(id, objectSelection, destination) {
-		destination[id] = liquid.mergeObjectSelections(objectSelection, destination[id]);
+		destination[id] = true;
+		// destination[id] = liquid.mergeObjectSelections(objectSelection, destination[id]);  // Advanced, but will be abandoned?
 		// console.log(destination);
 	}
 

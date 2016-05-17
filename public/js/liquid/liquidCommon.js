@@ -197,7 +197,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				definition.readOnly = arrayToMap(details.readOnly);
 				definition.readAndWrite = arrayToMap(details.readAndWrite);
 			} else {
-				console.log(definition);
+				// console.log(definition);
 				throw "Cannot have security settings for reverse relation!";
 				definition.securityInfo = false;
 			}
@@ -271,7 +271,10 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if (typeof(object.incomingRelations[definition.incomingRelationQualifiedName]) !== 'undefined') {
 			var incomingRelationMap = object.incomingRelations[definition.incomingRelationQualifiedName];
 			for (incomingId in incomingRelationMap) {
-				set.push(incomingRelationMap[incomingId]);
+				var object = incomingRelationMap[incomingId];
+				// if (allowRead(object, liquid.page)) {
+				set.push(object);
+				// }
 			}
 		}
 		instance.data = set;
@@ -409,11 +412,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 	// Creates a blank instance, without data or id! Just Interface. 
 	liquid.createClassInstance = function(className) {
 		var liquidClass = liquid.classRegistry[className];
-		console.log("============  asfasdf");
-		console.log(liquidClass);
-		console.log(liquidClass.liquidObjectPrototype);
+		// console.log("============  asfasdf");
+		// console.log(liquidClass);
+		// console.log(liquidClass.liquidObjectPrototype);
 		var object = Object.create(liquidClass.liquidObjectPrototype);
-		console.log(object);
+		// console.log(object);
 		liquid.cloneCommonInstanceFields(object, liquidClass.liquidObjectPrototype);
 		object.__uniqueSessionId = nextUniqueSessionId++;
 		return object;
@@ -705,64 +708,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 	var allowRead = function(object, definition) {
 		return true;
-		if (definition.securityInfo) {
-			var pageRoles = object.cachedCall('roles', liquid.page);
-			// Is access granted by page?
-			pageRoles.forEach(function(role) {
-				if (role === 'administrator') {
-					return true;
-				}
-				if (typeof(definition.readOnly[role]) !== 'undefined') {
-					return true;
-				}
-				if (typeof(definition.readAndWrite[role]) !== 'undefined') {
-					return true;
-				}
-			});
-			// Is access granted by method?
-			liquid.roleStack.forEach(function(role) {
-				if (role === 'administrator') {
-					return true;
-				}
-				if (typeof(definition.readOnly[role]) !== 'undefined') {
-					return true;
-				}
-				if (typeof(definition.readAndWrite[role]) !== 'undefined') {
-					return true;
-				}
-			});
-			return false;			
-		} else {
-			return true;
-		}
+		var user = page.getUser();
+		return object.cachedCall('allowRead', user) || object.cachedCall('allowReadAndWrite', user);
 	};
 
-	var allowWrite = function(object, definition) {
+	
+	var allowWrite = function(object, page) {
 		return true;
-		if (definition.securityInfo) {
-			var pageRoles = object.cachedCall('roles', liquid.page);
-			// Is access granted by page?
-			pageRoles.forEach(function(role) {
-				if (role === 'administrator') {
-					return true;
-				}
-				if (typeof(definition.readAndWrite[role]) !== 'undefined') {
-					return true;
-				}
-			});
-			// Is access granted by method?
-			liquid.roleStack.forEach(function(role) {
-				if (role === 'administrator') {
-					return true;
-				}
-				if (typeof(definition.readAndWrite[role]) !== 'undefined') {
-					return true;
-				}				
-			});
-			return false;			
-		} else {
-			return true;
-		}
+		return object.cachedCall('allowReadAndWrite', page.getUser());
 	};
 
 
@@ -774,7 +727,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Initialize getter
 		object[definition.getterName] = function() {
-			if (allowRead(this, definition)) {
+			if (allowRead(this, liquid.page)) {
 				var instance = this._propertyInstances[definition.name];
 				liquid.notifyGettingProperty(object, definition, instance);
 				return instance.data;
@@ -789,7 +742,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			var instance = this._propertyInstances[definition.name];
 			var oldValue = instance.data;
 			if (value != oldValue) {
-				if (allowWrite(this, definition)) {
+				if (allowWrite(this, liquid.page)) {
 					liquid.notifySettingProperty(this, definition, instance, value, oldValue);
 					instance.data = value;
 					liquid.notifyChangeInProperty(this, definition, instance);
@@ -874,7 +827,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// Init getter
 		if(!definition.isReverseRelation) {
 			object[definition.getterName] = function() {
-				if (allowRead(this, definition)) {
+				if (allowRead(this, liquid.page)) {
 					var instance = this._relationInstances[definition.qualifiedName];
 					liquid.notifyGettingRelation(this, definition, instance);
 					if (typeof(instance.data) === 'undefined') {
@@ -931,7 +884,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			object[definition.setterName] = function(newValue) {
 				var previousValue = this[definition.getterName]();
 				if (previousValue != newValue) {
-					if (allowWrite(this, definition)) {
+					if (allowWrite(this, liquid.page)) {
 						// Delete previous relation.
 						if (previousValue !== null) {
 							liquid.deleteIncomingRelationOnDelete(previousValue, definition.qualifiedName, this);
@@ -994,7 +947,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if(!definition.isReverseRelation) {
 			// Init iterator
 			object[definition.forAllName] = function(action) {
-				if (allowRead(this, definition)) {
+				if (allowRead(this, liquid.page)) {
 					var instance = this._relationInstances[definition.qualifiedName];
 					if (typeof(instance.data) === 'undefined') {
 						liquid.loadSetRelation(this, definition, instance);
@@ -1010,7 +963,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			// Init getter
 			object[definition.getterName] = function() {
-				if (allowRead(this, definition)) {
+				if (allowRead(this, liquid.page)) {
 					// console.log("setRelationGetter");
 					var instance = this._relationInstances[definition.qualifiedName];
 					// console.log(instance);
@@ -1044,7 +997,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			// Init adder
 			object[definition.adderName] = function(added) {
-				if (allowWrite(this, definition)) {
+				if (allowWrite(this, liquid.page)) {
 					// console.log("Set relation adder");
 					// console.log(relation);
 					var instance = this._relationInstances[definition.qualifiedName];
@@ -1066,7 +1019,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			// Init remover
 			object[definition.removerName] = function(removed) {
-				if (allowWrite(this, definition)) {
+				if (allowWrite(this, liquid.page)) {
 					// console.group(this._ + "." + definition.removerName + "(" + removed._ + ")");
 					var instance = this._relationInstances[definition.qualifiedName];
 					if (typeof(instance.data) === 'undefined') {
@@ -1108,6 +1061,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					liquid.loadReverseSetRelation(this, definition, instance);
 				}
 				liquid.notifyGettingRelation(this, definition, instance);
+				// TODO filter out non accessable objects, if not administrator.
 				return instance.data;
 			}
 
@@ -1170,14 +1124,18 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			addPropertiesAndRelations : function (object) {
 				// Properties
-				object.addProperty('hardToGuessSessionId', '', {readOnly: ['userSubject'],  readAndWrite:['administrator']});
+				object.addProperty('hardToGuessSessionId', '');
 				
 				// Relations
-				object.addRelation('Page', 'toMany', {readOnly: ['userSubject'], readAndWrite:['administrator'], order: function(a, b) { return -1; }});
-				object.addRelation('User', 'toOne', {readOnly: [], readAndWrite:['administrator'], order: function(a, b) { return -1; }});
+				object.addRelation('Page', 'toMany', {order: function(a, b) { return -1; }});
+				object.addRelation('User', 'toOne', {order: function(a, b) { return -1; }});
 			},
 			
 			addMethods : function (object) {
+				object.addMethod('canReadAndWrite', function(user) { return liquid.isAdministrator; });
+				object.addMethod('canRead', function(user) { return liquid.isAdministrator; });
+				
+				
 				object.addMethod('encryptPassword', function(liquidPassword) {
 					return liquidPassword + " [encrypted]";
 				});
@@ -1199,7 +1157,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			addPropertiesAndRelations : function(object) {
 				// Properties
-				object.addProperty('pageUniqueId', '', {readOnly: [],  readAndWrite:['administrator']});
+				object.addProperty('pageUniqueId', '');
 				
 				// Relations
 				object.addReverseRelationTo('Session_Page', 'Session', 'toOne', {order: function(a, b) { return -1; }}); //readOnly: [], readAndWrite:['administrator'], 

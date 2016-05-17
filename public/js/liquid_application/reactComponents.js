@@ -213,7 +213,8 @@ window.CategoryView = React.createClass(liquidClassData({
 	},
 	
 	onDrop: function(event) {
-		// console.log("onDrop:" + this.props.category.getName() + ", " + this.dragEnterCounter);
+		console.log("onDrop:" + this.props.category.getName() + ", " + this.dragEnterCounter);
+		console.log(this.props.category);
 		event.preventDefault();
 		this.dragEnterCounter = 0;
 		var category = this.props.category;

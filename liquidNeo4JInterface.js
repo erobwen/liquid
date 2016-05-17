@@ -221,13 +221,13 @@ if (useRestAPI) {
 	};
 
 	neo4j.getRelationIds = function(id, relationName) {
-		console.log("getRelationIds");
+		// console.log("getRelationIds");
 		var result = [];
 		var relationInfo = neo4j.query("MATCH (n)-[r:" + relationName + "]->(m) WHERE id(n) = " + id + " RETURN r, m, id(m) as id");
-		console.log(relationInfo);
+		// console.log(relationInfo);
 		relationInfo.forEach(function(relationInfo) {
 			var relatedNodeId = parseInt(relationInfo.m.id);
-			console.log(relationInfo.m);
+			// console.log(relationInfo.m);
 			// console.log("Id:" + relatedNodeId)
 			result.push(relatedNodeId);
 			neo4j.loadCache[relatedNodeId] = relationInfo.m;
@@ -236,10 +236,15 @@ if (useRestAPI) {
 	};
 
 	neo4j.getReverseRelationIds = function(id, relationName) {
+		var queryResult = [];
+		var query = "MATCH (n)<-[r:" + relationName + "]-(m) WHERE id(n) = " + id + " RETURN r, m, id(m) as id";
+		var queryResult = neo4j.query(query);
+		console.log(query);
+		console.log(queryResult);
 		var result = [];
-		var relationInfo = neo4j.query("MATCH (n)<-[r:" + relationName + "]-(m) WHERE id(n) = " + id + " RETURN r, m, id(m) as id");
-		result.forEach(function(relationInfo) {
-			var relatedNodeId = parseInt(relationInfo.m.id);
+		queryResult.forEach(function(relationInfo) {
+			console.log(relationInfo);
+			var relatedNodeId = parseInt(relationInfo.id);
 			result.push(relatedNodeId);
 			neo4j.loadCache[relatedNodeId] = relationInfo.m;
 		});

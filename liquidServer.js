@@ -78,9 +78,9 @@ liquid.createEntity = function(className, initData) {
 	// console.log(object);
 	
 	// Setup default values and save to database. 
-	console.log("----------- setting default values -------------")
+	// console.log("----------- setting default values -------------")
 	for (propertyName in object._propertyDefinitions) {
-		console.log("propertyName: " + propertyName)
+		// console.log("propertyName: " + propertyName)
 		var instance = object._propertyInstances[propertyName];
 		var definition = object._propertyDefinitions[propertyName];
 		var defaultValue = definition.defaultValue;
@@ -89,7 +89,7 @@ liquid.createEntity = function(className, initData) {
 		// liquid.notifyChangeInProperty(object, property); // Do not!
 	}
 	
-	console.log("init: (" + object.className + "." + object.id + ")");
+	// console.log("init: (" + object.className + "." + object.id + ")");
 	object.init(initData);
 	
 	// Set object signum for easy debug
@@ -128,7 +128,7 @@ liquid.getEntity = function(id) {
  * Node creation
  */	
 liquid.loadNodeFromId = function(objectId) {
-	console.log("Load object from id:" + objectId);
+	// console.log("Load object from id:" + objectId);
 	var nodeData = neo4j.getNodeInfo(objectId);			
 	// console.log("loadNodeFromId, nodeData");
 	// console.log(nodeData);
@@ -189,8 +189,8 @@ liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualified
 	if (typeof(object.incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
 		// console.log("run liquid version of ensureIncomingRelationLoaded");
 		var incomingRelationIds = neo4j.getReverseRelationIds(object.id, incomingRelationQualifiedName); // This now contains potentially too many ids. 
-		// console.log("Load incoming relations id");
-		// console.log(incomingRelationIds);
+		console.log("Load incoming relations id");
+		console.log(incomingRelationIds);
 		if (incomingRelationIds.length > 0) {
 			incomingRelationIds.forEach(function(incomingId) {
 				var relatedObject = liquid.getEntity(incomingId);
@@ -245,6 +245,7 @@ liquid.notifySettingRelation = function(object, definition, instance, value, pre
 liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
 	for (id in object._observingPages) { // TODO: Notify observing pages for related object as well!!!
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id].socket !==  null) {
+			// TODO: only notify those who has read write to both objects.
 			object._observingPages[id].socket.emit("addingRelation", object.id, definition.qualifiedName, relatedObject.id);				
 		}
 	}
@@ -254,6 +255,7 @@ liquid.notifyAddingRelation = function(object, definition, instance, relatedObje
 liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
 	for (id in object._observingPages) {// TODO: Notify observing pages for related object as well!!!
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id].socket !==  null) {
+			// TODO: only notify those who has read write to both objects.
 			object._observingPages[id].socket.emit("deletingRelation", object.id, definition.qualifiedName, relatedObject.id);				
 		}
 	}
