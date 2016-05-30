@@ -3,7 +3,7 @@
 module.exports = {
 	init : function (req, res) {
 		liquidPageRequest(req, res, function(user, session, page) {
-			console.log("init");
+			console.log("Request page 'init'");
 			liquid.clearDatabase();
 		
 			// User
@@ -56,7 +56,7 @@ module.exports = {
 	},
 	
 	test : function (req, res) {
-		console.log("test");
+		console.log("Request page 'test'");
 		// console.log(sails);
 		liquidPageRequest(req, res, function(user, session, page) {
 			// console.log("Page id;");
@@ -68,7 +68,7 @@ module.exports = {
 		});
 	},	
 	view : function (req, res) {
-		console.log("view");
+		console.log("Request page 'view'");
 		// console.log(sails);
 		liquidPageRequest(req, res, function(user, session, page) {
 			// console.log("Page id;");
