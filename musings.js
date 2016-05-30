@@ -1,21 +1,28 @@
 
-var addSubscription = function(page, object, selector) {
+var addSubscription = function(page, object) { //selector
 	respondToPossibleChange(
 		function() {
-			var result;
-			liquid.page = page;
-			result = x[selector](); 
+			liquid.page = page; // Selection influenced by page.getUser();
+			var selection = {};
+			page.getSelectors().forEach(function(selector) {
+				object['select' + selector.getName()](selection); 
+			});
 			liquid.page = null;
-			return result;
+			return selection;
 		},
 		function(lastReturnValue, newReturnValue) {
 			var selectionDifference = selectionDifference(newReturnValue, lastReturnValue);
-			var serializedDifference = liquid.seriailzeSelection();
+			var serializedDifference = liquid.seriailzeSelection(selectionDifference);
+			// Filter out non vieweable objects
 			var data = {newObjects: serializedDifference, initiatingChange: liquid.getPendingChanges(page)};
 			page.socket.emitt('sendSubscriptionData', serializedDifference);
 		}
 	}
-} 
+}
+
+liquid.allowRead(object, page);
+
+object.cachedCall('allowRead', user)
 
 x.addMethod('selectForEdit', function(selection) {
 	this.y.selectForEdit(selection);	

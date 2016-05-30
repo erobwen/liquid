@@ -1,4 +1,4 @@
-console.log("Reference service!");
+// console.log("Reference service!");
 
 // Reference service
 var defined = function(something) {

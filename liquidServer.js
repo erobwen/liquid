@@ -55,10 +55,10 @@ liquid.findEntity = function(properties) {
 }
 
 liquid.findEntities = function(properties) {
-	console.log("findEntities:");
-	console.log(properties);
+	// console.log("findEntities:");
+	// console.log(properties);
 	var entityIds = neo4j.findEntitiesIds(properties);
-	console.log(entityIds);
+	// console.log(entityIds);
 	var result = [];
 	entityIds.forEach(function(id) {
 		result.push(liquid.getEntity(id));
@@ -189,8 +189,8 @@ liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualified
 	if (typeof(object.incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
 		// console.log("run liquid version of ensureIncomingRelationLoaded");
 		var incomingRelationIds = neo4j.getReverseRelationIds(object.id, incomingRelationQualifiedName); // This now contains potentially too many ids. 
-		console.log("Load incoming relations id");
-		console.log(incomingRelationIds);
+		// console.log("Load incoming relations id");
+		// console.log(incomingRelationIds);
 		if (incomingRelationIds.length > 0) {
 			incomingRelationIds.forEach(function(incomingId) {
 				var relatedObject = liquid.getEntity(incomingId);
@@ -246,7 +246,10 @@ liquid.notifyAddingRelation = function(object, definition, instance, relatedObje
 	for (id in object._observingPages) { // TODO: Notify observing pages for related object as well!!!
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id].socket !==  null) {
 			// TODO: only notify those who has read write to both objects.
-			object._observingPages[id].socket.emit("addingRelation", object.id, definition.qualifiedName, relatedObject.id);				
+			// 
+			object._observingPages[id].socket.emit("addingRelation", object.id, definition.qualifiedName, relatedObject.id);	
+
+			// TODO: check if the related object has a reverse relation, in that case
 		}
 	}
 	neo4j.createRelationTo(object.id, relatedObject.id, definition.qualifiedName);

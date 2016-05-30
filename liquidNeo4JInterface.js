@@ -239,11 +239,11 @@ if (useRestAPI) {
 		var queryResult = [];
 		var query = "MATCH (n)<-[r:" + relationName + "]-(m) WHERE id(n) = " + id + " RETURN r, m, id(m) as id";
 		var queryResult = neo4j.query(query);
-		console.log(query);
-		console.log(queryResult);
+		// console.log(query);
+		// console.log(queryResult);
 		var result = [];
 		queryResult.forEach(function(relationInfo) {
-			console.log(relationInfo);
+			// console.log(relationInfo);
 			var relatedNodeId = parseInt(relationInfo.id);
 			result.push(relatedNodeId);
 			neo4j.loadCache[relatedNodeId] = relationInfo.m;

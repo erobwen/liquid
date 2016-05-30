@@ -52,8 +52,8 @@ for (controllerName in controllers) {
 
 liquidHttpServer.use(express.static('public')); // TODO: use grunt to compile to different directory
 
-liquidHttpServer.listen(3000, function () {
-  console.log('Liquid is now listening on port 3000!');
+liquidHttpServer.listen(4000, function () {
+  console.log('Liquid is now listening on port 4000!');
 });
 
 
