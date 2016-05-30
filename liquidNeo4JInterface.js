@@ -79,7 +79,7 @@ neo4j.findEntitiesIds = function(properties) {
 	var query = "MATCH (n) WHERE " + propertyFilter + " RETURN id(n)";
 	// console.log(query);
 	var queryResult = neo4j.query(query);
-	console.log(queryResult);
+	// console.log(queryResult);
 	ids = [];
 	queryResult.forEach(function(row) {
 		ids.push(row['id(n)']);

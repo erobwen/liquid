@@ -213,8 +213,8 @@ window.CategoryView = React.createClass(liquidClassData({
 	},
 	
 	onDrop: function(event) {
-		console.log("onDrop:" + this.props.category.getName() + ", " + this.dragEnterCounter);
-		console.log(this.props.category);
+		// console.log("onDrop:" + this.props.category.getName() + ", " + this.dragEnterCounter);
+		// console.log(this.props.category);
 		event.preventDefault();
 		this.dragEnterCounter = 0;
 		var category = this.props.category;
@@ -260,6 +260,7 @@ window.CategoryView = React.createClass(liquidClassData({
 			var categoryViewElementName ="CategoryView"
 			this.props.category.getSubCategories().forEach(function(category) {
 				// How to do it with standard syntax:
+
 				subCategories.push(
 					<CategoryView 
 						key = { this.props.category.id + "." + category.id }
