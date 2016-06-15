@@ -86,7 +86,6 @@ liquid.createEntity = function(className, initData) {
 		var defaultValue = definition.defaultValue;
 		instance.data = defaultValue;
 		liquid.notifySettingProperty(object, definition, instance, defaultValue, null);
-		// liquid.notifyChangeInProperty(object, property); // Do not!
 	}
 	
 	// console.log("init: (" + object.className + "." + object.id + ")");
@@ -237,11 +236,6 @@ liquid.loadSetRelation = function(object, definition, instance) {
 /***
  * Relations
  */
-liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
-	liquid.notifyDeletingRelation(object, definition, instance, previousValue);
-	liquid.notifyAddingRelation(object, definition, instance, value);
-};
-
 liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
 	for (id in object._observingPages) { // TODO: Notify observing pages for related object as well!!!
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id].socket !==  null) {
@@ -253,6 +247,7 @@ liquid.notifyAddingRelation = function(object, definition, instance, relatedObje
 		}
 	}
 	neo4j.createRelationTo(object.id, relatedObject.id, definition.qualifiedName);
+	liquid.observersDirty(instance.observers);
 };
 
 liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
@@ -263,6 +258,7 @@ liquid.notifyDeletingRelation = function(object, definition, instance, relatedOb
 		}
 	}
 	neo4j.deleteRelationTo(definition.qualifiedName, object.id);
+	liquid.observersDirty(instance.observers);
 };
 
 
@@ -277,6 +273,7 @@ liquid.notifySettingProperty = function(object, propertyDefinition, propertyInst
 		}
 	}
 	neo4j.setPropertyValue(object.id, propertyDefinition.name, newValue);
+	liquid.observersDirty(instance.observers);
 }
 
 

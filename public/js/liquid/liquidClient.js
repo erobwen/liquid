@@ -473,18 +473,12 @@ liquid.loadSetRelation = function(object, definition, instance) {
 /***
  * Relations
  */
-liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
-	console.log("notifySettingRelation: (" + object._  + ")." + definition.name + " ... " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
-	if (liquid.activeSaver !== null) {
-		liquid.activeSaver.addEvent({type: 'settingRelation', object: object, relation: definition, relatedObject: value, previouslyRelatedObject: previousValue});
-	}
-};
-
 liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
 	console.log("notifyAddingRelation: (" + object._  + ")." + definition.name + " ... " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
 	if (liquid.activeSaver !== null) {
 		liquid.activeSaver.addEvent({type: 'addingRelation', object: object, relation: definition, relatedObject: relatedObject});
 	}
+	liquid.observersDirty(instance.observers);
 };
 
 liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
@@ -492,6 +486,7 @@ liquid.notifyDeletingRelation = function(object, definition, instance, relatedOb
 	if (liquid.activeSaver !== null) {
 		liquid.activeSaver.addEvent({type: 'deletingRelation', object: object, relation: definition, relatedObject: relatedObject});
 	}
+	liquid.observersDirty(instance.observers);
 };
 
 
@@ -503,6 +498,7 @@ liquid.notifySettingProperty = function(object, propertyDefinition, propertyInst
 	if (liquid.activeSaver !== null) {
 		liquid.activeSaver.addEvent({type: 'settingProperty', object: object, property: propertyDefinition, newValue: newValue, oldValue: oldValue});
 	}
+	liquid.observersDirty(instance.observers);
 }
 
 

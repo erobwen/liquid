@@ -20,7 +20,19 @@ var addSubscription = function(page, object) { //selector
 	}
 }
 
+var dataStructure = {
+	object: <page>,
+	selector: 'forEdit'	
+	parent: <selector>
+}
+
+
 liquid.allowRead(object, page);
+
+
+In User:
+object.addMethod('canRead', object, selector)
+object.addMethod('canWrite', object, selector)
 
 object.cachedCall('allowRead', user)
 
@@ -55,3 +67,10 @@ x.getSelectionForEdit() {
 	this.addSelectionForEdit(selection);
 	return selection;
 }
+
+
+
+object.addSelector("forEdit", {Parent : 'forView', Owner: 'forView', SubCategory: 'forEdit', Reference: 'forView'});
+object.addSelector("forView", {parentSelector: 'forEdit'}, {Parent : 'forView', Owner: 'forView', SubCategory: 'forEdit', Reference: 'forView'});
+
+

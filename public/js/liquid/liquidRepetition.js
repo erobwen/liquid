@@ -115,6 +115,17 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		holdingChangePropagation--;
 		liquid.refreshAllDirtyRepeaters();
 	};
+	
+	
+	// Observers is a map from id => observer
+	liquid.observersDirty = function(observers) {
+		liquid.holdChangePropagation(function() {
+			for (id in observers) {
+				liquid.repeaterDirty(observers[id]);
+			}			
+		});
+	};
+
 		
 	liquid.repeaterDirty = function(repeater) { // TODO: Add update block on this stage?
 		if (!repeater.dirty) {

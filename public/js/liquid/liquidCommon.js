@@ -306,7 +306,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			var repeater = liquid.repeatOnChange(function() {
 				instance.data.sort(definition.compareFunction);
 				if (previousSorting == null || !objectArraysSame(previous, instance.data)) {
-					liquid.notifyChangeInRelation(object, instance, instance.data);
+					liquid.notifyRelationReordered(object, instance, instance.data);
 				}
 				previousSorting = copyArray(instance.data);
 			});
@@ -326,48 +326,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 		}
 	};
 	
-
-	/**--------------------------------------------------------------
-	*                    Primary Observation
-	*
-	* Primary observation makes no distinction between relations 
-	* and reverse relations, both relations get notifications upon 
-	* modification. This is to be used for change propagation.
-	*
-	* Primary observation also gets a notification upon load events, 
-	* that makes previous unavailable data available. 
-	*----------------------------------------------------------------*/
-	
-	// var tracePrimaryObservation = true;
-	
-	liquid.notifyGettingRelation = function(object, definition, instance) {
-		// console.log("notifyGettingRelation: " + object._ + "." + definition.name);
-		liquid.setupObservation(object, instance);
-	};
-	 
-	liquid.notifyChangeInRelation = function(object, definition, instance, value) {
-		// console.log("notifyChangeInRelation: " + object._ + "." + definition.name);
-		liquid.holdChangePropagation(function() {
-			for (id in instance.observers) {
-				liquid.repeaterDirty(instance.observers[id]);
-			}			
-		});
-	};
-
-
-	liquid.notifyGettingProperty = function(object, propertyDefinition, propertyInstance) {
-		// console.log("notifyGettingProperty: " + object._ + "." + propertyDefinition.name);
-		liquid.setupObservation(object, propertyInstance);
-	};
-	 
-	liquid.notifyChangeInProperty = function(object, propertyDefinition, propertyInstance, value) {
-		// console.log("notifyChangeInProperty: " + object._ + "." + propertyDefinition.name);
-		liquid.holdChangePropagation(function() {
-			for (id in propertyInstance.observers) {
-				liquid.repeaterDirty(propertyInstance.observers[id]);
-			}			
-		});
-	};
 		
 
 	/**--------------------------------------------------------------
@@ -381,26 +339,52 @@ var addCommonLiquidFunctionality = function(liquid) {
 	/***
 	 * Relations
 	 */
+	liquid.notifyGettingRelation = function(object, definition, instance) {
+		// console.log("notifyGettingRelation: " + object._ + "." + definition.name);
+		liquid.setupObservation(object, instance);
+	};
+
 	liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
-		throw new Exception("Not implemented!");
+		// console.log("notifySettingRelation: " + object._ + "." + definition.name);
+		liquid.holdChangePropagation(function() {
+			liquid.notifyDeletingRelation(object, definition, instance, previousValue);
+			liquid.notifyAddingRelation(object, definition, instance, value);
+		});
 	};
 
 	liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
-		throw new Exception("Not implemented!");
+		liquid.observersDirty(instance.observers);
+	};
+
+	liquid.notifyAddIncomingRelationOnAdd = function(object, definition, instance) {
+		liquid.observersDirty(instance.observers);
 	};
 
 	liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
-		throw new Exception("Not implemented!");
+		liquid.observersDirty(instance.observers);
 	};
 
+	liquid.notifyDeleteIncomingRelationOnDelete = function(object, definition, instance) {
+		liquid.observersDirty(instance.observers);
+	};
 
+	liquid.notifyRelationReordered = function(object, definition, instance, relationData) {
+		liquid.observersDirty(instance.observers);
+	};
+
+	
+	
 	/***
 	 * Properties
 	 */
-	liquid.notifySettingProperty = function(object, propertyDefinition, propertyInstance, newValue, oldValue) {
-		throw new Exception("Not implemented!");
+	liquid.notifyGettingProperty = function(object, definition, instance) {
+		// console.log("notifyGettingProperty: " + object._ + "." + propertyDefinition.name);
+		liquid.setupObservation(object, instance);
 	};
 
+	liquid.notifySettingProperty = function(object, definition, instance, newValue, oldValue) {
+		liquid.observersDirty(instance.observers);
+	};
 
 	
 	/**--------------------------------------------------------------
@@ -530,7 +514,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					reverseInstance.data = referingObject;
 				}
 				// delete object._reverseRelations[incomingRelationQualifiedName].data; // TODO: not just delete the data, update it!
-				liquid.notifyChangeInRelation(object, reverseDefinition, reverseInstance);				
+				liquid.notifyAddIncomingRelationOnAdd(object, reverseDefinition, reverseInstance);				
 			}
 		}
 	};
@@ -550,7 +534,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			} else {
 				reverseInstance.data = null
 			}
-			liquid.notifyChangeInRelation(object, reverseDefinition, reverseInstance);
+			liquid.notifyDeleteIncomingRelationOnDelete(object, reverseDefinition, reverseInstance);
 		}
 	};
 	
@@ -743,9 +727,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 			var oldValue = instance.data;
 			if (value != oldValue) {
 				if (allowWrite(this, liquid.page)) {
-					liquid.notifySettingProperty(this, definition, instance, value, oldValue);
 					instance.data = value;
-					liquid.notifyChangeInProperty(this, definition, instance);
+					liquid.notifySettingProperty(this, definition, instance, value, oldValue);
 				} else {
 					console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
 				}
@@ -896,9 +879,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						if (newValue !== null) {
 							liquid.addIncomingRelationOnAdd(newValue, definition.qualifiedName, this);
 						}
-						// Notify observers
 						liquid.notifySettingRelation(this, definition, instance, newValue, previousValue);
-						liquid.notifyChangeInRelation(this, definition, instance);
 					} else {
 						console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
 					}
@@ -919,7 +900,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					} else {
 						// Relay to remover of incoming relation
 						var incomingRemoverName = incomingRelation.removerName;
-						newValue[incomingRemoverName](this);  // Note: no need to call liquid.notifyChangeInRelation(object, definition, instance); since this will be called by deleteIncomingRelationOnDelete
+						newValue[incomingRemoverName](this);  // Note: no need to call liquid.notifyDeleteIncomingRelationOnDelete(object, definition, instance); since this will be called by deleteIncomingRelationOnDelete
 					}
 				}
 				
@@ -1011,7 +992,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 					liquid.sortRelationOnElementChange(definition, instance);
 
 					liquid.notifyAddingRelation(this, definition, instance, added);
-					liquid.notifyChangeInRelation(this, definition, instance);
 				} else {
 					console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
 				}
@@ -1033,7 +1013,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 					// console.log(instance.data.length);
 
 					liquid.notifyDeletingRelation(this, definition, instance, removed);
-					liquid.notifyChangeInRelation(this, definition, instance);
 					// console.groupEnd();
 				} else {
 					console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
