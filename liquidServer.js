@@ -265,14 +265,14 @@ liquid.notifyDeletingRelation = function(object, definition, instance, relatedOb
 /***
  * Properties
  */
-liquid.notifySettingProperty = function(object, propertyDefinition, propertyInstance, newValue, oldValue) {
-	console.log("notifySettingProperty: " + propertyDefinition.name + " = " + newValue);
+liquid.notifySettingProperty = function(object, definition, instance, newValue, oldValue) {
+	console.log("in: " + definition.name + " = " + newValue);
 	for (id in object._observingPages) {
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id].socket !==  null) {
-			object._observingPages[id].socket.emit("settingProperty", object.id, propertyDefinition.name, newValue);				
+			object._observingPages[id].socket.emit("settingProperty", object.id, definition.name, newValue);				
 		}
 	}
-	neo4j.setPropertyValue(object.id, propertyDefinition.name, newValue);
+	neo4j.setPropertyValue(object.id, definition.name, newValue);
 	liquid.observersDirty(instance.observers);
 }
 

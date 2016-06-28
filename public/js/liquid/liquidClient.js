@@ -493,10 +493,10 @@ liquid.notifyDeletingRelation = function(object, definition, instance, relatedOb
 /***
  * Properties
  */
-liquid.notifySettingProperty = function(object, propertyDefinition, propertyInstance, newValue, oldValue) {
-	console.log("notifySettingProperty: (" + object._  + ")." + propertyDefinition.name + " = " + newValue + ", " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
+liquid.notifySettingProperty = function(object, definition, instance, newValue, oldValue) {
+	console.log("notifySettingProperty: (" + object._  + ")." + definition.name + " = " + newValue + ", " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
 	if (liquid.activeSaver !== null) {
-		liquid.activeSaver.addEvent({type: 'settingProperty', object: object, property: propertyDefinition, newValue: newValue, oldValue: oldValue});
+		liquid.activeSaver.addEvent({type: 'settingProperty', object: object, property: definition, newValue: newValue, oldValue: oldValue});
 	}
 	liquid.observersDirty(instance.observers);
 }
