@@ -329,7 +329,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			if (isArray(argument)) {
 				hash += "[" + makeArgumentHash(argument) + "]";
 			} else if (typeof(argument) === 'object') {
-				hash += "{id=" + argument.__uniqueSessionId + "}";   // Note! Do not use id here as it can change when source is shifted.  
+				hash += "{id=" + argument.localId + "}";   // Note! Do not use id here as it can change when source is shifted.  
 			} else {
 				hash += argument;
 			}
@@ -342,7 +342,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			// Split arguments 
 			var argumentsArray = argumentsToArray(arguments);
 			var methodName = argumentsArray.shift();
-			var methodArguments = argumentsArray;
+			var methodArguments = argumentsArray.shift();
+			var changeNotifyCallback = null;
+			if (argumentsArray.length > 0) {
+				changeNotifyCallback = argumentsArray.shift();
+			}
 
 			console.log(this._ + '.[cachedCall]' +  methodName);
 			
@@ -379,6 +383,9 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						// console.log(methodCaches[argumentHash]);
 						for (id in observers) {
 							liquid.repeaterDirty(observers[id]);
+						}
+						if (changeNotifyCallback !== null) {
+							changeNotifyCallback();
 						}
 						// }.bind(this));
 					}.bind(this));
@@ -422,7 +429,6 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 					repeater : null,
 					previousReturnValue : null,
 				};
-				liquid.setupObservation(this, repeaterRecord.repeater);
 				repeaterRecord.repeater = repeatOnChange("(" + this.className + "." + this.id+ ")" + repeaterName, function() {
 					var returnValue = method.apply(this, repeaterArguments);
 					// console.log("Evaluating repeater");
@@ -430,6 +436,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 					return returnValue;
 				}.bind(this));
+				liquid.setupObservation(this, repeaterRecord.repeater); 
 				repeaterInstances[argumentHash] = repeaterRecord;
 				// console.log("Repeater returning");
 				// console.log(repeaterRecord.returnValue);

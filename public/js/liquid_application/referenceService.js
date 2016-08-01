@@ -19,40 +19,33 @@ var alphabeticSorter = function(getterName) {
 registerClass({
 	name: 'User', _extends: 'LiquidUser',
 	
-	addPropertiesAndRelations : function (object) {
-		// Properties
-		object.addProperty('name', '');
-		object.addProperty('email', '');
-				
-		// Relations
-		object.addRelation('AddedReference', 'toMany'); // Dependent
-		object.addRelation('OwnedCategory', 'toMany'); // Dependent
+	properties : {
+		name: {defaultValue: ''},
+		email: {defaultValue: ''}
 	},
 	
-	addMethods : function (object) {
-		object.addMethod('selectAllCategories', function(selection) {
-			liquid.mergeToSelection(this.id, true, selection);
-			// console.log(this.getOwnedCategories());
-			this.getOwnedCategories().forEach(function(category) {
-				// console.log("Selecting");
-				// liquid.mergeToSelection(category.id, true, selection);
-				liquid.mergeToSelection(category.id, true, selection);
-				// console.log(selection);
-			});
-		});
-		
-		object.addMethod('getRootCategories', function() {
-			// console.log("In repeater code!");
+	relations: {
+		AddedReference: {airity: 'toMany', shape: 'nonRecursive'}, // tree, acyclic, graph
+		OwnedCategory: {airity: 'toMany', shape: 'nonRecursive'}
+	},
+	
+	methods: {
+		getRootCategories : function() {
 			var result = [];
 			this.getOwnedCategories().forEach(function(category) {
 				if (category.getParents().length === 0) {
 					result.push(category);
 				}
-			})
-			// console.log("Result in repeater code");
-			// console.log(result);
+			});
 			return result;
-		})
+		} 
+	},
+	
+	data_structures: {
+		thisAndAllCategories : {
+			'this' : 'object',
+			'OwnedCategory' : 'object'
+		}
 	}
 });	
 
@@ -60,126 +53,30 @@ registerClass({
 registerClass({
 	name: 'Category', _extends: 'Entity',
 	
-	addPropertiesAndRelations : function (object) {
-		// Properties
-		object.addProperty('name', '');
-		object.addProperty('description', '');
-			
-		// Relations
-		object.addRelation('SubCategory', 'toMany');
-		object.addRelation('Reference', 'toMany');
-		object.addReverseRelationTo('User_OwnedCategory', 'Owner', 'toOne');
-		object.addReverseRelationTo('Category_SubCategory', 'Parent', 'toMany');
+	properties: {
+		name: {  defaultValue: '' },
+		description: { defaultValue: '' }
 	},
 	
-	addMethods : function (object) {
-		object.overrideMethod('init', function(parent, initialData) {
+	relations: {
+		SubCategory : {airity: 'toMany', shape: 'acyclic'},
+		Reference: {airity: 'toMany', shape: 'nonRecursive'}
+		Owner: {reverseRelationTo: 'User_OwnedCategory', airity: 'toOne'},
+		Parent: {reverseRelationTo: 'Category_SubCategory', airity: 'toMany'}
+	},
+
+	addMethods(prototype) : {
+		init : ['override', function(parent, initialData) {
 			parent(initialData);
 			if (typeof(initialData.user) !== 'undefined') {
 				this.setOwner(initialData.user);
 			}
-		});
+		}],
 		
-		object.overrideMethod('getObjectSignum', function(parent) {
+		getObjectSignum : function(parent) {
 			var unloadedOrName = this.noDataLoaded ? "[no data]" : this.getName();
 			return "(" + this.className + "." + this.id + ":" + unloadedOrName + ")";
-		});
-		
-		object.addMethod("isParentOf", function(category) {
-			var result = false;
-			category.getParents().forEach(function(parentCategory) {
-				if (parentCategory === this) {
-					result = true;
-				}
-			}); 
-			return result;
-		});
-		
-		object.addMethod("canAddAsSubCategory", function(category) {
-			// console.log("canAddAsSubCategory: " + this._);
-			var allTransitiveParents = this.getAllTransitiveParents();
-			allTransitiveParents[this.id] = this; // Add this self
-			
-			var allTransitiveSubCategories = category.getAllTransitiveSubCategories();
-			allTransitiveSubCategories[category.id] = category; // Add category
-			
-			// console.log(allTransitiveParents);
-			// console.log(allTransitiveSubCategories);
-			for (parentId in allTransitiveParents) {
-				if (typeof(allTransitiveSubCategories[parentId]) !== 'undefined') {
-					return false;
-				}
-			}
-			// console.log("No cycle will be created");
-			var isAlreadySubCategory = false;
-			// console.log(this.getSubCategories());
-			this.getSubCategories().forEach(function(subCategory) {
-				// console.log("Comparing");
-				// console.log(subCategory.id);
-				// console.log(category.id);
-				
-				if (subCategory === category) {
-					// console.log("Aha!");
-					isAlreadySubCategory = true;
-				}
-			});
-			// console.log("Already a direct sub category: " + isAlreadySubCategory);
-			return !isAlreadySubCategory;
-		});
-		
-		object.addMethod("getAllTransitiveSubCategories", function() {
-			var categories = {};
-			this.addAllTransitiveSubCategories(categories);
-			return categories;
-		});
-		
-		object.addMethod("addAllTransitiveSubCategories", function(categories) {
-			if (typeof(categories[this.id]) === 'undefined') {
-				this.getSubCategories().forEach(function(subCategory) {
-					subCategory.addAllTransitiveSubCategories(categories);
-					categories[subCategory.id] = subCategory;
-				});
-			}
-		});
-		
-		object.addMethod("getAllTransitiveParents", function() {
-			// console.log("getAllTransitiveParents: " + this._);
-			var categories = {};
-			this.addAllTransitiveParents(categories);
-			return categories;
-		});
-		
-		object.addMethod("addAllTransitiveParents", function(categories) {
-			// console.log("addAllTransitiveParents:" + this._);
-			if (typeof(categories[this.id]) === 'undefined') {
-				this.getParents().forEach(function(parentCategory) {
-					parentCategory.addAllTransitiveParents(categories);
-					categories[parentCategory.id] = parentCategory;
-				});
-			} else {
-				// console.log("Added already");
-			}
-		});
-		
-		object.addMethod("isParentOrGrandParentOf", function(category) {
-			var result = false;
-			category.getParents().forEach(function(directParent) {
-				if (directParent === this || this.isParentOrGrandParentOf(directParent)) {
-					result = true;
-				}
-			});
-			return result;
-		});
-		
-		object.addMethod("isChildOrGrandChildOf", function(category) {
-			var result = false;
-			category.getSubCategories().forEach(function(directChild) {
-				if (directChild === this || this.isChildOrGrandChildOf(directChild)) {
-					result = true;
-				}
-			});
-			return result;
-		});
+		},
 	}
 });
 
@@ -269,3 +166,102 @@ registerClass({
 	
 	addMethods : function (object) {}
 });	
+
+
+/**
+
+		isParentOf : function(category) {
+			var result = false;
+			category.getParents().forEach(function(parentCategory) {
+				if (parentCategory === this) {
+					result = true;
+				}
+			}); 
+			return result;
+		},
+		
+		canAddAsSubCategory : function(category) {
+			// console.log("canAddAsSubCategory: " + this._);
+			var allTransitiveParents = this.getAllTransitiveParents();
+			allTransitiveParents[this.id] = this; // Add this self
+			
+			var allTransitiveSubCategories = category.getAllTransitiveSubCategories();
+			allTransitiveSubCategories[category.id] = category; // Add category
+			
+			// console.log(allTransitiveParents);
+			// console.log(allTransitiveSubCategories);
+			for (parentId in allTransitiveParents) {
+				if (typeof(allTransitiveSubCategories[parentId]) !== 'undefined') {
+					return false;
+				}
+			}
+			// console.log("No cycle will be created");
+			var isAlreadySubCategory = false;
+			// console.log(this.getSubCategories());
+			this.getSubCategories().forEach(function(subCategory) {
+				// console.log("Comparing");
+				// console.log(subCategory.id);
+				// console.log(category.id);
+				
+				if (subCategory === category) {
+					// console.log("Aha!");
+					isAlreadySubCategory = true;
+				}
+			});
+			// console.log("Already a direct sub category: " + isAlreadySubCategory);
+			return !isAlreadySubCategory;
+		});
+		
+		object.addMethod("getAllTransitiveSubCategories", function() {
+			var categories = {};
+			this.addAllTransitiveSubCategories(categories);
+			return categories;
+		});
+		
+		object.addMethod("addAllTransitiveSubCategories", function(categories) {
+			if (typeof(categories[this.id]) === 'undefined') {
+				this.getSubCategories().forEach(function(subCategory) {
+					subCategory.addAllTransitiveSubCategories(categories);
+					categories[subCategory.id] = subCategory;
+				});
+			}
+		});
+		
+		object.addMethod("getAllTransitiveParents", function() {
+			// console.log("getAllTransitiveParents: " + this._);
+			var categories = {};
+			this.addAllTransitiveParents(categories);
+			return categories;
+		});
+		
+		object.addMethod("addAllTransitiveParents", function(categories) {
+			// console.log("addAllTransitiveParents:" + this._);
+			if (typeof(categories[this.id]) === 'undefined') {
+				this.getParents().forEach(function(parentCategory) {
+					parentCategory.addAllTransitiveParents(categories);
+					categories[parentCategory.id] = parentCategory;
+				});
+			} else {
+				// console.log("Added already");
+			}
+		});
+		
+		object.addMethod("isParentOrGrandParentOf", function(category) {
+			var result = false;
+			category.getParents().forEach(function(directParent) {
+				if (directParent === this || this.isParentOrGrandParentOf(directParent)) {
+					result = true;
+				}
+			});
+			return result;
+		});
+		
+		object.addMethod("isChildOrGrandChildOf", function(category) {
+			var result = false;
+			category.getSubCategories().forEach(function(directChild) {
+				if (directChild === this || this.isChildOrGrandChildOf(directChild)) {
+					result = true;
+				}
+			});
+			return result;
+		});
