@@ -1,3 +1,9 @@
+# Important notice
+
+By accident, the current main branch became unstable (updates do not propagate correctly). Until I can fix this, use the following label to get a stable working verison:
+
+Latest_stable_version
+
 # Folder structure
 
 * Liquid
