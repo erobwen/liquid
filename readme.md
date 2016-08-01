@@ -33,8 +33,8 @@ https://www.youtube.com/watch?v=liCdUjzHfqQ
 4. Run npm install in this directory. (some warnings and errors, but it should be ok). 
 5. Start Neo4J and open the interface. Change the password of user neo4j to "liquid"
 6. run "node liquid.js" in the liquid directory.
-7. Navigate to: http://localhost:3000/init  (this will populate the database with some data)
-8. Navigate to: http://localhost:3000/view
+7. Navigate to: http://localhost:4000/init  (this will populate the database with some data)
+8. Navigate to: http://localhost:4000/view
 
 # Rationale
 
