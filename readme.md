@@ -1,3 +1,17 @@
+# Folder structure
+
+* Liquid
+	* LiquidNeo4JInterface   native Java wrapper for Neo4J (to be removed)
+	* public 
+		* js
+			* liquid  -- The liquid libraries. Used on both client and server.
+			* **liquid_application**  -- This is where your application files go. Used on both client and server. 
+	* views -- ejs files for your express server. 
+	* **liquid.js** -- main starting point for liquid.
+	* controllers.js -- Controller definitions. 
+	* liquidServer.js -- the part of the framework that only needs to reside on the server.  
+
+
 # Basic demo
 
 This video demonstrates the server/client synchronization in action:
