@@ -273,7 +273,7 @@ liquid.notifySettingProperty = function(object, propertyDefinition, propertyInst
 		}
 	}
 	neo4j.setPropertyValue(object.id, propertyDefinition.name, newValue);
-	liquid.observersDirty(instance.observers);
+	liquid.observersDirty(propertyInstance.observers);
 }
 
 
