@@ -498,7 +498,7 @@ liquid.notifySettingProperty = function(object, propertyDefinition, propertyInst
 	if (liquid.activeSaver !== null) {
 		liquid.activeSaver.addEvent({type: 'settingProperty', object: object, property: propertyDefinition, newValue: newValue, oldValue: oldValue});
 	}
-	liquid.observersDirty(instance.observers);
+	liquid.observersDirty(propertyInstance.observers);
 }
 
 
