@@ -356,7 +356,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		liquid.observersDirty(instance.observers);
 	};
 
-	liquid.notifyAddIncomingRelationOnAdd = function(object, definition, instance) {
+	liquid.notifyAddIncomingRelation = function(object, definition, instance, relatedObject) {
 		liquid.observersDirty(instance.observers);
 	};
 
@@ -364,10 +364,10 @@ var addCommonLiquidFunctionality = function(liquid) {
 		liquid.observersDirty(instance.observers);
 	};
 
-	liquid.notifyDeleteIncomingRelationOnDelete = function(object, definition, instance) {
+	liquid.notifyDeletingIncomingRelation = function(object, definition, instance, relatedObject) {
 		liquid.observersDirty(instance.observers);
 	};
-
+	
 	liquid.notifyRelationReordered = function(object, definition, instance, relationData) {
 		liquid.observersDirty(instance.observers);
 	};
@@ -477,25 +477,10 @@ var addCommonLiquidFunctionality = function(liquid) {
 	/**--------------------------------------------------------------
 	*              Modification of incoming relations
 	*----------------------------------------------------------------*/
-	
-	liquid.addIncomingRelationOnLoad = function(object, incomingRelationQualifiedName, referingObject) {
+		
+	liquid.addIncomingRelation = function(object, incomingRelationQualifiedName, referingObject) {
 		// return;
-		// console.log("addIncomingRelationOnLoad: (" + object.className + "." + object.id + ") <-- [" + incomingRelationQualifiedName + "]--(" + referingObject.className + "." + referingObject.id + ")");
-		// Add in incoming relations, create a new map if necessary
-		if (typeof(object.incomingRelations[incomingRelationQualifiedName]) === 'undefined') {
-			object.incomingRelations[incomingRelationQualifiedName] = {};
-		}
-		object.incomingRelations[incomingRelationQualifiedName][referingObject.id] = referingObject;
-		
-		// Consider: do notify change here, if there are listeners to load events!!..
-		
-		// Consider: update any reverse relation that is not fully loaded. 
-	};
-	
-		
-	liquid.addIncomingRelationOnAdd = function(object, incomingRelationQualifiedName, referingObject) {
-		// return;
-		// console.log("addIncomingRelationOnAdd: (" + object.className + "." + object.id + ") <-- [" + incomingRelationQualifiedName + "]--(" + referingObject.className + "." + referingObject.id + ")");
+		// console.log("addIncomingRelation: (" + object.className + "." + object.id + ") <-- [" + incomingRelationQualifiedName + "]--(" + referingObject.className + "." + referingObject.id + ")");
 		// Add in incoming relations, create a new map if necessary
 		if (typeof(object.incomingRelations[incomingRelationQualifiedName]) === 'undefined') {
 			object.incomingRelations[incomingRelationQualifiedName] = {};
@@ -506,23 +491,24 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if (typeof(object._reverseRelations[incomingRelationQualifiedName]) !== 'undefined') {
 			var reverseDefinition = object._reverseRelations[incomingRelationQualifiedName];
 			var reverseInstance = object._relationInstances[reverseDefinition.qualifiedName];
-			if (typeof(reverseInstance.data) !== 'undefined') {
-				if (reverseDefinition.isSet) {
-					reverseInstance.data.push(referingObject);
-					liquid.sortRelationOnElementChange(reverseDefinition, reverseInstance);									
-				} else {
-					reverseInstance.data = referingObject;
+			if (reverseDefinition.isSet) {
+				if (typeof(reverseInstance.data) === 'undefined') {
+					reverseInstance.data = [];
 				}
-				// delete object._reverseRelations[incomingRelationQualifiedName].data; // TODO: not just delete the data, update it!
-				liquid.notifyAddIncomingRelationOnAdd(object, reverseDefinition, reverseInstance);				
+				reverseInstance.data.push(referingObject);
+				liquid.sortRelationOnElementChange(reverseDefinition, reverseInstance);									
+			} else {
+				reverseInstance.data = referingObject;
 			}
+			// delete object._reverseRelations[incomingRelationQualifiedName].data; // TODO: not just delete the data, update it!
+			liquid.notifyAddIncomingRelation(object, reverseDefinition, reverseInstance);				
 		}
 	};
 
 
-	liquid.deleteIncomingRelationOnDelete = function(object, incomingRelationQualifiedName, referingObject) {
+	liquid.deleteIncomingRelation = function(object, incomingRelationQualifiedName, referingObject) {
 		// return;
-		//console.log("deleteIncomingRelationOnDelete: (" + object.className + "." + object.id + ") <-X- [" + incomingRelationQualifiedName + "]--(" + referingObject.className + "." + referingObject.id + ")");
+		//console.log("deleteIncomingRelation: (" + object.className + "." + object.id + ") <-X- [" + incomingRelationQualifiedName + "]--(" + referingObject.className + "." + referingObject.id + ")");
 		delete object.incomingRelations[incomingRelationQualifiedName][referingObject.id]; // Note, this HAS to exist here. Every link should have a back link!	
 
 		// Delete data of any reverse relation
@@ -538,49 +524,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 		}
 	};
 	
-	liquid.deleteIncomingRelationOnUnload = function(object, incomingRelationQualifiedName, referingObject) {
-		// return;
-		//console.log("deleteIncomingRelationOnUnload: (" + object.className + "." + object.id + ") <-X- [" + incomingRelationQualifiedName + "]--(" + referingObject.className + "." + referingObject.id + ")");
-		delete object.incomingRelations[incomingRelationQualifiedName][referingObject.id]; // Note, this HAS to exist here. Every link should have a back link!	
-
-		// Delete data of any reverse relation, important to really free up memory!
-		if (typeof(object._reverseRelations[incomingRelationQualifiedName]) !== 'undefined') {
-			delete object._reverseRelations[incomingRelationQualifiedName].data;
-		}
-	};
 	
-	liquid.addOutgoingRelationOnLoad = function(object, qualifiedName, relatedObject) {
-		// console.log("addOutgoingRelationOnLoad: (" + object.className + "." + object.id + ") --[" + qualifiedName + "]--> (" + relatedObject.className + "." + relatedObject.id + ")");
-		var outgoingDefinition = object._relationDefinitions[qualifiedName];
-		var outgoingInstance = object._relationInstances[qualifiedName];
-		if (!outgoingInstance.isLoaded) {
-			object[outgoingDefinition.getterName](); // Set the data of the outgoing relation.  
-			if (isArray(outgoingInstance.data)) {
-				// A ordinary set array.						
-				outgoingInstance.data.push(relatedObject);
-				liquid.sortRelationOnElementChange(outgoingDefinition, outgoingInstance);
-			} else if (typeof(outgoingInstance.data) === 'object') {
-				if (typeof(outgoingInstance.data.id) !== 'undefined') {
-					// A sparse array.						
-					outgoingInstance.data = relatedObject;
-				} else {
-					// A sparse array.						
-					if (typeof(outgoingInstance.extraCache) !== 'undefined') {
-						outgoingInstance.extraCache = {};
-					}
-					outgoingInstance.extraCache[relatedObject.id] = relatedObject;
-				}
-			}
-		}
-	};
 	
 	/**--------------------------------------------------------------
-	*                 		Object setup
+	*                 Object Augmentation
 	*----------------------------------------------------------------*/
 
-	liquid.roleStack = [];
-	
-	/**
+	/*
 	 * Setup object
 	 */	
 	liquid.setupObject = function(object) {
@@ -602,37 +552,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 		delete object.addRelation;
 		delete object.addReverseRelation;
 		
-		
-		var addSelectionNames = function(methodName, method) {
-			if (methodName.indexOf("select") === 0) {
-				var selectionName = methodName.substring(9);
-				return function() {
-					// Add method name to selection!
-					var selection = arguments[0];
-					if (typeof(selection[object.id]) !== 'object') {
-						selection[object.id] = {};
-					}  
-					if (typeof(selection[object.id].selectionNames) === 'undefined') {
-						selection[object.id].selectionNames = {};
-					}
-					selection[object.id].selectionNames[selectionName] = true;
-					method.apply(this, arguments);
-				};
-			} else {
-				return method;
-			}			
-		}
-
-		
 		// Add methods and repeaters
 		object.addMethod = function(methodName, method) {
 			var methodWithPossibleSecurity = method;
 			if (arguments.length > 2 && liquid.onServer) {
 				var methodRoleOnServer = arguments[2];
 				methodWithPossibleSecurity = function() {
-					liquid.roleStack.push(methodRoleOnServer);
 					method.apply(this, argumentsToArray(argumentList));
-					liquid.roleStack.pop();
 				};
 			}
 			
@@ -835,9 +761,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				if (typeof(instance.data) === 'undefined') {
 					// if (this.isSaved) {
 					instance.data = null;
-					liquid.roleStack.push('administrator');
 					liquid.ensureIncomingRelationLoaded(this, definition.incomingRelationName);
-					liquid.roleStack.pop();
 
 					// Return the first one or null
 					var incomingRelationQualifiedName = definition.incomingRelationQualifiedName;
@@ -870,14 +794,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 					if (allowWrite(this, liquid.page)) {
 						// Delete previous relation.
 						if (previousValue !== null) {
-							liquid.deleteIncomingRelationOnDelete(previousValue, definition.qualifiedName, this);
+							liquid.deleteIncomingRelation(previousValue, definition.qualifiedName, this);
 						}
 
 						// Set new relation.
 						var instance = this._relationInstances[definition.qualifiedName];
 						instance.data = newValue;
 						if (newValue !== null) {
-							liquid.addIncomingRelationOnAdd(newValue, definition.qualifiedName, this);
+							liquid.addIncomingRelation(newValue, definition.qualifiedName, this);
 						}
 						liquid.notifySettingRelation(this, definition, instance, newValue, previousValue);
 					} else {
@@ -900,7 +824,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					} else {
 						// Relay to remover of incoming relation
 						var incomingRemoverName = incomingRelation.removerName;
-						newValue[incomingRemoverName](this);  // Note: no need to call liquid.notifyDeleteIncomingRelationOnDelete(object, definition, instance); since this will be called by deleteIncomingRelationOnDelete
+						newValue[incomingRemoverName](this);  // Note: no need to call liquid.notifyDeleteIncomingRelationOnDelete(object, definition, instance); since this will be called by deleteIncomingRelation
 					}
 				}
 				
@@ -986,7 +910,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						liquid.loadSetRelation(this, definition, instance);
 					}
 					// TODO: Assert not already in array!
-					liquid.addIncomingRelationOnAdd(added, definition.qualifiedName, this);
+					liquid.addIncomingRelation(added, definition.qualifiedName, this);
 
 					instance.data.push(added); //TODO: Create copy of array here?
 					liquid.sortRelationOnElementChange(definition, instance);
@@ -1005,7 +929,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					if (typeof(instance.data) === 'undefined') {
 						liquid.loadSetRelation(this, definition, instance);
 					}
-					liquid.deleteIncomingRelationOnDelete(removed, definition.qualifiedName, this);
+					liquid.deleteIncomingRelation(removed, definition.qualifiedName, this);
 					// console.log(instance.data.length);
 					// console.log(removed);
 					// console.log(instance.data);
@@ -1084,17 +1008,49 @@ var addCommonLiquidFunctionality = function(liquid) {
 				}
 			}
 		}
-	}
-	
+	};
+
+	liquid.subscribeToSelection = function(selection) {
+		for (id in selection) {
+			var object = selection[id];
+			object._observingPages[liquid.requestingPage.id] = liquid.requestingPage;
+		}
+	};
+
 	liquid.serializeSelection = function(selection) {
-		var visitedSet = {}
 		var serialized = [];
-		while (Object.keys(selection).length > 0) {
-			var firstSelectedId = Object.keys(selection)[0];
-			var firstEntity = liquid.getEntity(firstSelectedId);
-			serialized.push(firstEntity.serializeReachableSelection(selection, visitedSet));
+		for (id in selection) {
+			var object = selection[id];
+			serialized.push(liquid.serializeObject(object));
 		}
 		return serialized;
+	};
+
+	
+	
+	liquid.serializeObject = function(object) {
+		function serializedReference(object) {
+			return object.className + ":" + object.id; 
+		}
+		
+		serialized = {};
+		object._relationDefinitions.forEach(function(definition) {
+			if (!definition.isReverseRelation) {
+				if (definition.isSet) {
+					serialized[definition.name] = this[definition.getterName]().map(serializedReference);
+				} else {
+					serialized[definition.name] = serializedReference(this[definition.getterName]());
+				}
+			}
+		});
+		object._propertyDefinitions.forEach(function(definition) {
+			serialized[definition.name] = this[definition.getterName]();
+		});
+		return serialized;
+
+		// id:this.id,
+		// className: this.className,
+		// noDataLoaded : true
 	};
 
 	liquid.addCommonLiquidClasses = function() {
@@ -1227,101 +1183,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 								}							
 							}
 						});
-					}
-				};
-							
-				object.serializeReachableSelection = function(selection, visitedSet) {
-					if (typeof(visitedSet) === 'undefined') {
-						visitedSet = {};
-					}
-					if(typeof(visitedSet[this.id]) !== 'undefined') {
-						return this.id;
-					} else {
-						visitedSet[this.id] = true;
-						if(typeof(selection[this.id]) !== 'undefined') {
-							// console.log("Serialize selected object: " + this.className + "." + this.id);
-							var objectSelectionDetails = selection[this.id];
-							delete selection[this.id];
-							
-							this._observingPages[liquid.requestingPage.id] = liquid.requestingPage;
-							
-							var serialized = { 
-								id:this.id, 
-								className: this.className, 
-								noDataLoaded : false,
-								_relations: {},
-								_properties: {}
-							};
-							
-							for (propertyName in this._propertyDefinitions) {
-								// console.log("Adding property: " + propertyName);
-								var propertyInstance = this._propertyInstances[propertyName];
-								serialized._properties[propertyName] = propertyInstance.data;
-							};
-							
-							for (var relationName in this._relationDefinitions) {
-								if (objectSelectionDetails === true 
-									|| (typeof(objectSelectionDetails) === 'object' && typeof(objectSelectionDetails['allOther']) === 'boolean' &&  objectSelectionDetails['allOther'] === true)
-									|| (typeof(objectSelectionDetails) === 'object' && objectSelectionDetails[relationName] !== 'undefined')){
-									// console.log("Serialize relation for " + this.className + "." + this.id +  "." + relationName);
-
-									var definition = this._relationDefinitions[relationName];
-									var relationSelectionDetails = (typeof(objectSelectionDetails) === 'object') ? objectSelectionDetails[relationName] : true;
-									if(definition.isSet) {
-										if (typeof(relationSelectionDetails) === 'object' && typeof(relationSelectionDetails.spans) !== 'undefined') {
-											// Create a sparse array
-											var relatedSet = {};
-											var spans = relationSelectionDetails.spans
-											var relatedObjects = this[definition.getterName]();
-											var maxIndex = relatedObjects.length - 1;
-											for (var start in spans) {
-												var end = spans[start];
-												start = Math.min(start, maxIndex);
-												end = Math.min(end, maxIndex);
-												if (start >= 0) {
-													// console.log("Serializing span: " + start + ", " + end);
-													var index = start;
-													while(index <= end) {
-														relatedSet[index] = relatedObjects[index].serializeReachableSelection(selection, visitedSet);
-														index++;
-													}
-												}
-											}
-											serialized._relations[relationName] = relatedSet;
-										} else {
-											// Create an ordinary array
-											var relatedSet = [];
-											// console.log("Serialize relation for " + this.className + "." + this.id +  "." + relationName);
-											this[definition.forAllName](function(related) {
-												// console.log("looping through one!");
-												var seralizedRelated = related.serializeReachableSelection(selection, visitedSet);
-												// console.log("Looping for " + this.className + "."  + this.id +  "." + relationName);
-												relatedSet.push(seralizedRelated);
-											});
-											// console.log("Finised with relation  " + this.className + "."  + this.id +  "." + relationName);
-											serialized._relations[relationName] = relatedSet;
-										}
-									} else {
-										var related = this[definition.getterName]();
-										if (related !== null) {
-											related = related.serializeReachableSelection(selection, visitedSet);
-										}
-										serialized._relations[relationName] = related;
-									}
-									
-									// Add history information if required by relationSelectionDetails 
-								}
-							}
-							
-							// TODO: 						
-							return serialized;
-						} else {
-							return { 
-								id:this.id, 
-								className: this.className, 
-								noDataLoaded : true
-							};
-						}
 					}
 				};
 			},

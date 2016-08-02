@@ -213,7 +213,7 @@ liquid.loadSetRelation = function(object, definition, instance) {
 	});
 	// console.log(set);
 	set.forEach(function(relatedObject) {
-		liquid.addIncomingRelationOnLoad(relatedObject, definition.qualifiedName, object);
+		liquid.addIncomingRelation(relatedObject, definition.qualifiedName, object);
 	});
 	instance.data = set;
 	instance.isLoaded = true;
