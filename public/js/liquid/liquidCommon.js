@@ -1020,7 +1020,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.serializeSelection = function(selection) {
 		var serialized = [];
 		for (id in selection) {
-			var object = selection[id];
+			// console.log(liquid.idObjectMap);
+			var object = liquid.idObjectMap[id];
 			serialized.push(liquid.serializeObject(object));
 		}
 		return serialized;
@@ -1034,18 +1035,20 @@ var addCommonLiquidFunctionality = function(liquid) {
 		}
 		
 		serialized = {};
-		object._relationDefinitions.forEach(function(definition) {
+		for (relationName in object._relationDefinitions) {
+			var definition = object._relationDefinitions[relationName];
 			if (!definition.isReverseRelation) {
 				if (definition.isSet) {
-					serialized[definition.name] = this[definition.getterName]().map(serializedReference);
+					serialized[definition.name] = object[definition.getterName]().map(serializedReference);
 				} else {
 					serialized[definition.name] = serializedReference(this[definition.getterName]());
 				}
 			}
-		});
-		object._propertyDefinitions.forEach(function(definition) {
-			serialized[definition.name] = this[definition.getterName]();
-		});
+		}
+		for (propertyName in object._propertyDefinitions) {
+			definition = object._propertyDefinitions[propertyName];
+			serialized[definition.name] = object[definition.getterName]();
+		}
 		return serialized;
 
 		// id:this.id,
