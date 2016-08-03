@@ -1035,6 +1035,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 		}
 		
 		serialized = {};
+		serialized._ = object._;
+		serialized.className = object.className;
+		serialized.id = object.id;
 		for (relationName in object._relationDefinitions) {
 			var definition = object._relationDefinitions[relationName];
 			if (!definition.isReverseRelation) {
