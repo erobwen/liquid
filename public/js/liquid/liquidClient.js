@@ -96,13 +96,13 @@ liquid.withoutPushingToServer = function(action) {
 
 function pushChange(change) {	
 	var changelist = [change];
-	saver.serializeChangelist(changelist);
+	serializeChangelist(changelist);
 	liquid.socket.emit("batchSave", liquid.hardToGuessPageId, 42, changelist); //42 is unused saver id
 }
 
 function serializeChangelist(changelist) {
 	// Translate change from objects to entityIds. Do this as late as possible so that objects that change from a temporary id to a real one gets the right id in the save.
-	changeList.forEach(function(change) {
+	changelist.forEach(function(change) {
 		change.objectId = change.object.id;
 		delete change.object;
 
@@ -174,34 +174,49 @@ function unserializeReference(reference) {
 }
 
 function ensureEmptyObjectExists(id, className) {
-	if (typeof(idObjectMap[id]) === 'undefined') {
+	if (typeof(liquid.idObjectMap[id]) === 'undefined') {
 		var newObject = liquid.createClassInstance(className);
 		newObject.id = id;
 		newObject.noDataLoaded = true;
-		idObjectMap[id] = newObject;
+		liquid.idObjectMap[id] = newObject;
 	}
-	return idObjectMap[id];
+	return liquid.idObjectMap[id];
 }
 
 function unserializeObject(serializedObject) {
+	// console.log("unserializeObject");
+	// console.log(serializedObject);
 	var id = serializedObject.id;
 	var idObjectMap = liquid.idObjectMap;
 	if (typeof(idObjectMap[id]) === 'undefined') {
 		ensureEmptyObjectExists(id, serializedObject.className);
 	}
 	var targetObject = idObjectMap[id];
+	// console.log(targetObject);
 	if (targetObject.noDataLoaded) {
-		targetObject._relationDefinitions.forEach(function(definition){
-			var data = serializedObject[definition.name];
-			if (definition.isSet) {
-				data = data.map(unserializeReference);
-			} else {
-				data = unserializeReference(data);
+		for (relationName in targetObject._relationDefinitions) {
+			var definition = targetObject._relationDefinitions[relationName];
+			if (!definition.isReverseRelation) {
+				// console.log(definition);
+				var data = serializedObject[definition.name];
+				// console.log(data);
+				if (definition.isSet) {
+					data = data.map(unserializeReference);
+				} else {
+					data = unserializeReference(data);
+				}
+				liquid.withoutPushingToServer(function() {
+					targetObject[definition.setterName](data);
+				});
 			}
+		}
+		for (propertyName in targetObject._propertyDefinitions) {
+			definition = targetObject._propertyDefinitions[propertyName];
+			var data = serializedObject[definition.name];
 			liquid.withoutPushingToServer(function() {
 				targetObject[definition.setterName](data);
 			});
-		});
+		}
 	} else {
 		console.log("Loaded data that was already loaded!!!");
 	}

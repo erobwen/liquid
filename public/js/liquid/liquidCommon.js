@@ -247,18 +247,20 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 		
 	liquid.loadSingleRelation = function(object, definition, instance) {
+		instance.data = null;
 		//console.log("loadSingleRelation: (" + object.className + "." + object.id + ") -- [" + definition.name + "] --> ?");
-		throw new Exception("Not implemented!");
+		// throw new Exception("Not implemented!");
 	};
 
 	liquid.ensureIncomingRelationLoaded = function(object, incomingRelationName) {
 		// console.log("ensureIncomingRelationLoaded: (" + object.className + "." + object.id + ") <-- [" + incomingRelationName + "] -- ?");
-		throw new Exception("Not implemented!");
+		// throw new Exception("Not implemented!");
 	};
 		
 	liquid.loadSetRelation = function(object, definition, instance) {
+		instance.data = [];
 		// console.log("loadSetRelation: (" + object.className + "." + object.id + ") -- ["+ definition.qualifiedName + "] --> ?");
-		throw new Exception("Not implemented!");
+		// throw new Exception("Not implemented!");
 	};
 
 	liquid.loadReverseSetRelation = function(object, definition, instance) {
