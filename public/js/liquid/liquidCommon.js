@@ -522,7 +522,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			} else {
 				reverseInstance.data = null
 			}
-			liquid.notifyDeleteIncomingRelationOnDelete(object, reverseDefinition, reverseInstance);
+			liquid.notifyDeletingIncomingRelation(object, reverseDefinition, reverseInstance);
 		}
 	};
 	
