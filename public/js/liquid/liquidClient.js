@@ -1,35 +1,30 @@
 /**
-* Util
-*/
-function capitalize(s) {
-    return s[0].toUpperCase() + s.slice(1);
-}
+ * General setup
+ */
 
-
-
-var liquid = {};
-liquid.onServer = false;
-
-//open up socket.io somehow!
-
-// io.socket.on('connect', function() {
-	// io.socket.on('dataChanged', function(transaction) {
-		// liquid....
-	// });
-// });
+var liquid = {
+	onServer : false
+};
 
 addCommonLiquidFunctionality(liquid);
 addLiquidSelectionFunctionality(liquid);
 addLiquidRepetitionFunctionality(liquid);
 
 
+
+
+/**--------------------------------------------------------------
+ *                   Object/Entity retreival
+ *----------------------------------------------------------------*/
+
 /**
-* Setup temp id
-*/
-liquid.nextTemporaryId = 0;	
+ * Setup temp id
+ */
+liquid.nextTemporaryId = 0;
 liquid.getTemporaryId = function(className) {
 	return className + ".temporaryId=" + liquid.nextTemporaryId;
 };
+
 
 
 /**
@@ -73,12 +68,8 @@ liquid.findEntities = function(properties) {
 
 
 /**--------------------------------------------------------------
-*                   Detailed Observation
-*
-* Detailed observation ignores mirror relations. Therefore all 
-* Events in detailed obervation are unique, and can be used to 
-* Save data, transmitt changes to peers etc. 
-*----------------------------------------------------------------*/
+ *                   Data pushing
+ *----------------------------------------------------------------*/
 
 function changesOriginateFromServer() {
 	return changesOriginateFromServerNesting > 0;
@@ -94,7 +85,7 @@ liquid.withoutPushingToServer = function(action) {
 };
 
 
-function pushChange(change) {	
+function pushChange(change) {
 	var changelist = [change];
 	serializeChangelist(changelist);
 	liquid.socket.emit("batchSave", liquid.hardToGuessPageId, 42, changelist); //42 is unused saver id
@@ -128,6 +119,15 @@ function serializeChangelist(changelist) {
 	});
 }
 
+
+
+/**--------------------------------------------------------------
+*                   Detailed Observation
+*
+* Detailed observation ignores mirror relations. Therefore all 
+* Events in detailed obervation are unique, and can be used to 
+* Save data, transmitt changes to peers etc. 
+*----------------------------------------------------------------*/
 
 /***
  * Relations
