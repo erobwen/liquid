@@ -122,7 +122,12 @@ var arrayDifference = function(updatedArray, oldArray) {
 /*------------------------------
 *        String Utility
 *-------------------------------*/
- 
+
+
+function capitalize(s) {
+    return s[0].toUpperCase() + s.slice(1);
+}
+
 
 var pluralize = function(string, revert){
 
@@ -279,6 +284,7 @@ if (typeof(module) !== 'undefined') {
 	module.exports.clone = clone;
 	module.exports.arrayDifference = arrayDifference;
 	
+    module.exports.capitalize = capitalize;
 	module.exports.pluralize = pluralize;
 	module.exports.camelCaseToPlural = camelCaseToPlural;
 	module.exports.reconstructCamelCase = reconstructCamelCase;

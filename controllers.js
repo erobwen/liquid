@@ -92,6 +92,13 @@ module.exports = {
 			somePerson.selectAllCategories(selection)
 			// console.log("Selection:");
 			// console.log(selection);
+
+			// Subscribe to these objects. 
+			for (id in selection) {
+				var object = liquid.getEntity(id);
+				object._observingPages[liquid.requestingPage.id] = liquid.requestingPage;
+			}
+
 			var data = {
 				hardToGuessPageId : page.id,
 				serialized : liquid.serializeSelection(selection),
