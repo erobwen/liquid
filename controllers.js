@@ -1,4 +1,4 @@
-
+var liquidController = require('./liquidController.js');
 
 module.exports = {
 	init : function (req, res) {
@@ -116,3 +116,18 @@ module.exports = {
 		});
 	}	
 };
+
+console.log("HERE!!!");
+console.log(liquidController);
+for (definitionName in liquidController) {
+	console.log(definitionName);
+	var liquidControllerFunction = liquidController[definitionName];
+	module.exports[definitionName] = function (req, res) {
+		var result = liquidPageRequest(req, res, liquidControllerFunction);
+		if (isString(result)) {
+			res.send(result);
+		} else if (result !== null) {
+			res.render('layout', result);
+		}
+	}
+}
