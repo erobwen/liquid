@@ -117,10 +117,10 @@ module.exports = {
 	}	
 };
 
-console.log("HERE!!!");
-console.log(liquidController);
+// console.log("HERE!!!");
+// console.log(liquidController);
 for (definitionName in liquidController) {
-	console.log(definitionName);
+	// console.log(definitionName);
 	var liquidControllerFunction = liquidController[definitionName];
 	module.exports[definitionName] = function (req, res) {
 		var result = liquidPageRequest(req, res, liquidControllerFunction);

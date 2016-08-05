@@ -745,7 +745,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						// if (this.isSaved) {
 						var relatedObject = liquid.loadSingleRelation(this, definition, instance);
 						if (relatedObject !== null) {
-							liquid.addIncomingRelationOnLoad(relatedObject, definition.qualifiedName, this);
+							liquid.addIncomingRelation(relatedObject, definition.qualifiedName, this);
 						}
 						instance.data = relatedObject;
 					}
@@ -815,6 +815,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			// Just relays to the setter and getter of incoming relation, no security check here!
 			var incomingRelationQualifiedName = definition.incomingRelationQualifiedName;
 			object[definition.setterName] = function(newValue) {
+				console.log(definition.setterName + "(...)");
 				var previousValue = this[definition.getterName]();
 
 				if (previousValue != null) {
@@ -831,6 +832,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 				}
 				
 				if (newValue != null) {
+					console.log("adding new value");
+					console.log(newValue._relationDefinitions);
+					console.log(incomingRelationQualifiedName);
 					if (typeof(newValue._relationDefinitions[incomingRelationQualifiedName]) !== 'undefined') {
 						var incomingRelation = newValue._relationDefinitions[incomingRelationQualifiedName];
 						if (!incomingRelation.isSet) {
@@ -843,6 +847,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 							newValue[incomingAdderName](this);
 						}
 					} else {
+						console.log("New value did not have the right outgoing relation!");
 						// Trying to set a reverse relation to a object that does not have the relation that the reverse relation is reverse to!
 					}
 				}
@@ -961,6 +966,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			// Init getter
 			object[definition.getterName] = function() {
+				// console.log(definition.getterName + "(...)");
 				var instance = this._relationInstances[definition.qualifiedName];
 				if (typeof(instance.data) === 'undefined') {
 					liquid.loadReverseSetRelation(this, definition, instance);
@@ -972,7 +978,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 			// Init setter (uses adder and remover  no notification and no actual manipulation)
 			object[definition.setterName] = function(newSet) {
-				// console.log("Setter of mirror set relation");
+				// console.log(definition.setterName + "(...)");
 				var instance = this._relationInstances[definition.qualifiedName];				
 				if (typeof(instance.data) === 'undefined') {
 					// console.log("Needs loading of relation");
@@ -992,7 +998,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			// Init adder (just relays to incoming relation, no notification and no actual manipulation)
 			object[definition.adderName] = function(added) {
+				// console.log(definition.adderName + "(...)");
 				var incomingRelation = added._relationDefinitions[incomingRelationQualifiedName];
+				console.log(incomingRelation);
 				if (incomingRelation.isSet) {
 					added[incomingRelation.adderName](this);
 				} else {
@@ -1002,6 +1010,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			// Init remover (just relays to incoming relation, no notification and no actual manipulation)
 			object[definition.removerName] = function(removed) {
+				console.log(definition.removerName + "(...)");
 				var incomingRelation = removed._relationDefinitions[incomingRelationQualifiedName];
 				if (incomingRelation.isSet) {
 					removed[incomingRelation.removerName](this);
@@ -1100,10 +1109,10 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			addPropertiesAndRelations : function(object) {
 				// Properties
-				object.addProperty('pageUniqueId', '');
+				object.addProperty('hardToGuessPageId', '');
 				
 				// Relations
-				object.addReverseRelationTo('Session_Page', 'Session', 'toOne', {order: function(a, b) { return -1; }}); //readOnly: [], readAndWrite:['administrator'], 
+				object.addReverseRelationTo('LiquidSession_Page', 'Session', 'toOne', {order: function(a, b) { return -1; }}); //readOnly: [], readAndWrite:['administrator'],
 			},
 			
 			addMethods : function(object) {
@@ -1157,7 +1166,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						console.log("property: " + property);
 						setterName = 'set' + capitaliseFirstLetter(property);
 						if (typeof(this[setterName]) !== 'undefined') {
-							console.log("setting using standard constructor");
+							console.log("setting using standard constructor:" + setterName);
 							this[setterName](initData[property]);
 						} else {
 							console.log("Setter not found: (" + this.id + ")" + setterName);

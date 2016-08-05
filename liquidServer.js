@@ -172,6 +172,7 @@ liquid.loadSingleRelation = function(object, definition, instance) {
 	// console.log("loadSingleRelation: (" + object.className + "." + object.id + ") -- [" + definition.name + "] --> ?");
 	instance.data = null;
 	var relationIds = neo4j.getRelationIds(object.id, definition.qualifiedName);
+	// console.log(relationIds);
 	if (relationIds.length == 1) {
 		var relatedObject = liquid.getEntity(relationIds[0]);
 		instance.data = relatedObject;
@@ -180,7 +181,8 @@ liquid.loadSingleRelation = function(object, definition, instance) {
 		instance.isLoaded = false;
 		throw new Exception("Getting a single relation, that has more than one relation defined in the database.");
 	}
-	liquid.logData(instance.data);
+	//liquid.logData(instance.data);
+	return instance.data;
 };
 
 liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualifiedName) {
@@ -238,10 +240,10 @@ liquid.loadSetRelation = function(object, definition, instance) {
  */
 liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
 	for (id in object._observingPages) { // TODO: Notify observing pages for related object as well!!!
-		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id].socket !==  null) {
+		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
 			// TODO: only notify those who has read write to both objects.
 			// 
-			object._observingPages[id].socket.emit("addingRelation", object.id, definition.qualifiedName, relatedObject.id);	
+			object._observingPages[id]._socket.emit("addingRelation", object.id, definition.qualifiedName, relatedObject.id);
 
 			// TODO: check if the related object has a reverse relation, in that case
 		}
@@ -252,9 +254,9 @@ liquid.notifyAddingRelation = function(object, definition, instance, relatedObje
 
 liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
 	for (id in object._observingPages) {// TODO: Notify observing pages for related object as well!!!
-		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id].socket !==  null) {
+		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
 			// TODO: only notify those who has read write to both objects.
-			object._observingPages[id].socket.emit("deletingRelation", object.id, definition.qualifiedName, relatedObject.id);				
+			object._observingPages[id]._socket.emit("deletingRelation", object.id, definition.qualifiedName, relatedObject.id);
 		}
 	}
 	neo4j.deleteRelationTo(definition.qualifiedName, object.id);
@@ -268,8 +270,8 @@ liquid.notifyDeletingRelation = function(object, definition, instance, relatedOb
 liquid.notifySettingProperty = function(object, propertyDefinition, propertyInstance, newValue, oldValue) {
 	console.log("notifySettingProperty: " + propertyDefinition.name + " = " + newValue);
 	for (id in object._observingPages) {
-		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id].socket !==  null) {
-			object._observingPages[id].socket.emit("settingProperty", object.id, propertyDefinition.name, newValue);				
+		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
+			object._observingPages[id]._socket.emit("settingProperty", object.id, propertyDefinition.name, newValue);
 		}
 	}
 	neo4j.setPropertyValue(object.id, propertyDefinition.name, newValue);
@@ -287,21 +289,15 @@ liquid.notifySettingProperty = function(object, propertyDefinition, propertyInst
 liquid.pagesMap = {};  
 liquid.sessionsMap = {};
 
-liquid.createPageObject = function(id, session) {
-	return {
-		id: id,
-		session : session,
-		socket : null
-	};
+liquid.createPageObject = function(hardToGuessPageId, session) {
+	var page = createEntity('LiquidPage', { hardToGuessPageId: hardToGuessPageId, Session : session });
+	page._socket = null;
+	return page;
 };
 
-liquid.createSessionObject = function(id) {
-	return {
-		id : id,
-		pages : [],
-		user : null
-	};
-}
+liquid.createSessionObject = function(hardToGuessSessionId) {
+	return createEntity('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
+};
 
 liquid.generateUniqueKey = function(keysMap) {
 	var newKey = null;
@@ -315,30 +311,33 @@ liquid.generateUniqueKey = function(keysMap) {
 } 
 
 liquid.pageRequest = function(req, res, operation) {
-	// console.log(req.session);
-	// var connection = res.socket
-	// global.currentLiquidConnection = connection;
-	// global.currentSession = liquid.createSession(connection);
-	// console.log(currentLiquidConnection);
-	// console.log(currentLiquidConnection.sessionid);
-	// liquidSocket.emit('welcome', {message: "Hi i'm Laurent and i write shitty articles on my blog"});
-
-	// Setup session object (that we know is the same object identity on each page request)
-	if (typeof(liquid.sessionsMap[req.session.id]) === 'undefined') {
-		liquid.sessionsMap[req.session.id] = liquid.createSessionObject(req.session.id);		
-	}
-	var session = liquid.sessionsMap[req.session.id];
-
-	// Setup page object
-	var hardToGuessPageId = liquid.generateUniqueKey(liquid.pagesMap);
-	var page = liquid.createPageObject(hardToGuessPageId, session);
-	liquid.page = page;
-	liquid.pagesMap[hardToGuessPageId] = page;
-	
-	var user = session.user;
-
 	var result;
 	Fiber(function() {  // consider, remove fiber when not using rest api?
+		// console.log(req.session);
+		// var connection = res.socket
+		// global.currentLiquidConnection = connection;
+		// global.currentSession = liquid.createSession(connection);
+		// console.log(currentLiquidConnection);
+		// console.log(currentLiquidConnection.sessionid);
+		// liquidSocket.emit('welcome', {message: "Hi i'm Laurent and i write shitty articles on my blog"});
+
+		// Setup session object (that we know is the same object identity on each page request)
+		var hardToGuessSessionId = req.session.id;
+		if (typeof(liquid.sessionsMap[hardToGuessSessionId]) === 'undefined') {
+			liquid.sessionsMap[hardToGuessSessionId] = liquid.createSessionObject(hardToGuessSessionId);
+		}
+		var session = liquid.sessionsMap[hardToGuessSessionId];
+		// MATCH (n {className:'LiquidSession'}) DELETE n
+
+		// Setup page object
+		var hardToGuessPageId = liquid.generateUniqueKey(liquid.pagesMap);
+		var page = liquid.createPageObject(hardToGuessPageId, session);
+		// MATCH (n {className:'LiquidPage'}) DELETE n
+		liquid.page = page;
+		liquid.pagesMap[hardToGuessPageId] = page;
+
+		var user = session.getUser(); // Can be null!
+
 		// Measure query time and pageRequest time
 		neo4j.resetStatistics();
 		liquid.requestingPage = page;
@@ -363,7 +362,7 @@ liquid.dataRequest = function(hardToGuessPageId, operation) {
 		// Measure query time and pageRequest time
 		neo4j.resetStatistics();
 		liquid.requestingPage = page;
-		result = operation(page.session.user, page.session, page);
+		result = operation(page.getActiveUser(), page.getSession(), page);
 		liquid.requestingPage = null;
 		
 		// Display measures. 

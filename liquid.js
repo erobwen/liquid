@@ -82,7 +82,7 @@ liquidSocket.on('connection', function (socket) {
 		// console.log(hardToGuessPageId);
 		// console.log(liquid.pagesMap);
 		if (typeof(hardToGuessPageId) !== 'undefined' && hardToGuessPageId !== null && typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
-			liquid.pagesMap[hardToGuessPageId].socket = socket;
+			liquid.pagesMap[hardToGuessPageId]._socket = socket;
 			// console.log("Made an association between socket and hardToGuessPageId");
 		}
 	});
