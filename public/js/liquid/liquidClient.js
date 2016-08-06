@@ -168,6 +168,9 @@ liquid.notifySettingProperty = function(object, propertyDefinition, propertyInst
 *----------------------------------------------------------------*/
 
 function unserializeReference(reference) {
+	if (reference === null) {
+		return null;
+	}
 	var fragments = reference.split(":");
 	var className = fragments[0];
 	var id = parseInt(fragments[1]);

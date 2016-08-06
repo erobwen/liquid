@@ -22,11 +22,18 @@ var commonInitialize = liquid.initialize;
 liquid.initialize = function() {
 	neo4j.initialize();
 	commonInitialize();
-} 
+	liquid.clearPagesAndSessions();
+};
 
 liquid.clearDatabase = function() {
 	neo4j.clearDatabase();
-}
+};
+
+liquid.clearPagesAndSessions = function() {
+	neo4j.query("MATCH (n {className:'LiquidSession'}) DETACH DELETE n");
+	neo4j.query("MATCH (n {className:'LiquidPage'}) DETACH DELETE n");
+};
+
 /**--------------------------------------------------------------
 *                 Sessions
 *----------------------------------------------------------------*/

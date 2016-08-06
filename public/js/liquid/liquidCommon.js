@@ -249,6 +249,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		instance.data = null;
 		//console.log("loadSingleRelation: (" + object.className + "." + object.id + ") -- [" + definition.name + "] --> ?");
 		// throw new Exception("Not implemented!");
+		return instance.data;
 	};
 
 	liquid.ensureIncomingRelationLoaded = function(object, incomingRelationName) {
@@ -1042,7 +1043,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 	
 	liquid.serializeObject = function(object) {
 		function serializedReference(object) {
-			return object.className + ":" + object.id; 
+			if (object !== null) {
+				return object.className + ":" + object.id; 
+			} else {
+				return null;
+			}
 		}
 		
 		serialized = {};
@@ -1055,7 +1060,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				if (definition.isSet) {
 					serialized[definition.name] = object[definition.getterName]().map(serializedReference);
 				} else {
-					serialized[definition.name] = serializedReference(this[definition.getterName]());
+					serialized[definition.name] = serializedReference(object[definition.getterName]());
 				}
 			}
 		}

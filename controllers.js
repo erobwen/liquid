@@ -71,6 +71,7 @@ module.exports = {
 		console.log("Request page 'view'");
 		// console.log(sails);
 		liquidPageRequest(req, res, function(user, session, page) {
+
 			// console.log("Page id;");
 			// console.log(page.id);
 			
@@ -98,14 +99,19 @@ module.exports = {
 				var object = liquid.getEntity(id);
 				object._observingPages[liquid.requestingPage.id] = liquid.requestingPage;
 			}
+			
+			selection[page.id] = true;
+			selection[session.id] = true;
 
 			var data = {
 				hardToGuessPageId : page.getHardToGuessPageId(),
 				serialized : liquid.serializeSelection(selection),
 				user: somePerson.id,
+				session: session.id,
+				page: page.id,
 				// favourite : liquid.findEntity({className:'Category', name: 'Favourite'}).id,
 				// politics : liquid.findEntity({className:'Category', name: 'Politics'}).id
-			}
+			};
 			// console.log("Serialized data:");
 			// console.log(data);
 			res.render('layout',{

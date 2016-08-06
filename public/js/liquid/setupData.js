@@ -24,5 +24,7 @@ for (id in liquid.idObjectMap) {
 		window[nameToVariable(object.getName())] = object;
 	}
 }
+window.session = data.session;
+window.page = data.page;
 // window.georgism = find({name: 'Georgism'});
 // window.politics = find({name: 'Politics'});
