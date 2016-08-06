@@ -88,10 +88,10 @@ liquidSocket.on('connection', function (socket) {
 	});
 	
 	socket.on('batchSave', function(hardToGuessPageId, saverId, changeList){
-		// console.log('batchSave');
-		//console.log(hardToGuessPageId);
-		//console.log(saverId);
-		//console.log(changeList);
+		console.log('batchSave');
+		console.log(hardToGuessPageId);
+		console.log(saverId);
+		console.log(changeList);
 		liquid.dataRequest(hardToGuessPageId, function(user, session, page) {
 			changeList.forEach(function(change) {
 				var object = liquid.getEntity(change.objectId);
@@ -119,8 +119,14 @@ liquidSocket.on('connection', function (socket) {
 		// socket.emit("var saverId = arguments.saverId;")
 	});
 
-    socket.on('disconnect', function() {
+    socket.on('disconnect', function(a) {
+		// hardToGuessPageId
+		// var page = liquid.pagesMap[hardToGuessPageId];
+		// delete liquid.pagesMap[hardToGuessPageId];
+		// page.setSession(null);
+		// // TODO: unpersist page
         console.log('Disconnected'); 
+        console.log(a);
     });
 });
 

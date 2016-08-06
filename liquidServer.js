@@ -169,7 +169,7 @@ liquid.loadNodeFromId = function(objectId) {
 *----------------------------------------------------------------*/
 
 liquid.loadSingleRelation = function(object, definition, instance) {
-	// console.log("loadSingleRelation: (" + object.className + "." + object.id + ") -- [" + definition.name + "] --> ?");
+	console.log("loadSingleRelation: (" + object.className + "." + object.id + ") -- [" + definition.name + "] --> ?");
 	instance.data = null;
 	var relationIds = neo4j.getRelationIds(object.id, definition.qualifiedName);
 	// console.log(relationIds);
@@ -186,7 +186,7 @@ liquid.loadSingleRelation = function(object, definition, instance) {
 };
 
 liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualifiedName) {
-	// console.log("ensureIncomingRelationLoaded: (" + object.className + "." + object.id + ") <-- [" + incomingRelationQualifiedName + "] -- ?");
+	console.log("ensureIncomingRelationLoaded: (" + object.className + "." + object.id + ") <-- [" + incomingRelationQualifiedName + "] -- ?");
 	if (typeof(object.incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
 		// console.log("run liquid version of ensureIncomingRelationLoaded");
 		var incomingRelationIds = neo4j.getReverseRelationIds(object.id, incomingRelationQualifiedName); // This now contains potentially too many ids. 
@@ -206,7 +206,7 @@ liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualified
 	
 liquid.loadSetRelation = function(object, definition, instance) {
 	// Load relation
-	// console.log("loadSetRelation: (" + object.className + "." + object.id + ") --[" + definition.name + "]--> ?");
+	console.log("loadSetRelation: (" + object.className + "." + object.id + ") --[" + definition.name + "]--> ?");
 	var set = [];
 	var relationIds = neo4j.getRelationIds(object.id, definition.qualifiedName);
 	// console.log(relationIds);
@@ -355,9 +355,13 @@ liquid.pageRequest = function(req, res, operation) {
 }
 
 liquid.dataRequest = function(hardToGuessPageId, operation) {
+	console.log("dataRequest");
+	console.log(hardToGuessPageId);
+	console.log(liquid.pagesMap);
 	var result;
 	var page = liquid.pagesMap[hardToGuessPageId];
 	liquid.page = page;
+	console.log(page);
 	Fiber(function() {  // consider, remove fiber when not using rest api?
 		// Measure query time and pageRequest time
 		neo4j.resetStatistics();

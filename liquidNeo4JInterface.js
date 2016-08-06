@@ -10,7 +10,7 @@
 
 var useJavaInterface = false;
 var useRestAPI = !useJavaInterface;
-var trace = false;
+var trace = true;
 
 /**--------------------------------
 *               Basics 

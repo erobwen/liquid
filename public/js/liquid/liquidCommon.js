@@ -222,7 +222,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 			definition.adderName = 'add' + definition.name;
 			definition.removerName = 'remove' + definition.name;
 			definition.forAllName = 'forAll' + definition.plural;
-			
 		}
 	};
 	
@@ -265,7 +264,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.loadReverseSetRelation = function(object, definition, instance) {
 		// Load relation
-		//console.log("loadReverseSetRelation: (" + object.className + "." + object.id + ") <-- ["+ definition.incomingRelationQualifiedName + "] --?");
+		console.log("loadReverseSetRelation: (" + object.className + "." + object.id + ") <-- ["+ definition.incomingRelationQualifiedName + "] --?");
 		liquid.ensureIncomingRelationLoaded(object, definition.incomingRelationQualifiedName);
 		
 		var set = [];
@@ -909,6 +908,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			// Init adder
 			object[definition.adderName] = function(added) {
+				console.log(definition.adderName + "(...)");
 				if (allowWrite(this, liquid.page)) {
 					// console.log("Set relation adder");
 					// console.log(relation);
@@ -998,7 +998,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			
 			// Init adder (just relays to incoming relation, no notification and no actual manipulation)
 			object[definition.adderName] = function(added) {
-				// console.log(definition.adderName + "(...)");
+				console.log(definition.adderName + "(...)");
 				var incomingRelation = added._relationDefinitions[incomingRelationQualifiedName];
 				console.log(incomingRelation);
 				if (incomingRelation.isSet) {
@@ -1120,6 +1120,15 @@ var addCommonLiquidFunctionality = function(liquid) {
 					return liquidPassword + " [encrypted]";
 				});
 				
+				object.addMethod('getActiveUser', function(liquidPassword) {
+					if (this.getSession() != null) {
+						console.log(this.getSession());
+						console.log(this.getSession().getUser);
+						return this.getSession().getUser();
+					}
+					return null;
+				});
+
 				object.addMethod('login', function(loginName, liquidPassword) {
 					return this.getPage().login(loginName, liquidPassword);
 				}, 'administrator');

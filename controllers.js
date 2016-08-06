@@ -100,7 +100,7 @@ module.exports = {
 			}
 
 			var data = {
-				hardToGuessPageId : page.id,
+				hardToGuessPageId : page.getHardToGuessPageId(),
 				serialized : liquid.serializeSelection(selection),
 				user: somePerson.id,
 				// favourite : liquid.findEntity({className:'Category', name: 'Favourite'}).id,
