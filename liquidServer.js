@@ -1,6 +1,7 @@
 var Fiber = require('fibers');
 
 var liquidCommon = require('./public/js/liquid/liquidCommon.js');
+var liquidEntity = require('./public/js/liquid/liquidEntity.js');
 var liquidSelection = require('./public/js/liquid/liquidSelection.js');
 var liquidRepetition = require('./public/js/liquid/liquidRepetition.js');
 var neo4j = require('./liquidNeo4jInterface.js');
@@ -13,6 +14,7 @@ require( 'console-group' ).install();
 var liquid = {};
 liquid.onServer = true;
 liquidCommon.addCommonLiquidFunctionality(liquid);
+liquidEntity.addLiquidEntity(liquid)
 liquidSelection.addLiquidSelectionFunctionality(liquid);
 liquidRepetition.addLiquidRepetitionFunctionality(liquid);
 
