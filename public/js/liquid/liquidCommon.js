@@ -831,9 +831,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 				}
 				
 				if (newValue != null) {
-					console.log("adding new value");
-					console.log(newValue._relationDefinitions);
-					console.log(incomingRelationQualifiedName);
+					// console.log("adding new value");
+					// console.log(newValue._relationDefinitions);
+					// console.log(incomingRelationQualifiedName);
 					if (typeof(newValue._relationDefinitions[incomingRelationQualifiedName]) !== 'undefined') {
 						var incomingRelation = newValue._relationDefinitions[incomingRelationQualifiedName];
 						if (!incomingRelation.isSet) {
@@ -846,7 +846,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 							newValue[incomingAdderName](this);
 						}
 					} else {
-						console.log("New value did not have the right outgoing relation!");
+						console.log("Error: New value did not have the right outgoing relation!");
 						// Trying to set a reverse relation to a object that does not have the relation that the reverse relation is reverse to!
 					}
 				}
@@ -1000,7 +1000,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			object[definition.adderName] = function(added) {
 				console.log(definition.adderName + "(...)");
 				var incomingRelation = added._relationDefinitions[incomingRelationQualifiedName];
-				console.log(incomingRelation);
+				// console.log(incomingRelation);
 				if (incomingRelation.isSet) {
 					added[incomingRelation.adderName](this);
 				} else {
@@ -1122,8 +1122,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 				
 				object.addMethod('getActiveUser', function(liquidPassword) {
 					if (this.getSession() != null) {
-						console.log(this.getSession());
-						console.log(this.getSession().getUser);
+						// console.log(this.getSession());
+						// console.log(this.getSession().getUser);
 						return this.getSession().getUser();
 					}
 					return null;
@@ -1169,29 +1169,26 @@ var addCommonLiquidFunctionality = function(liquid) {
 				};
 				
 				object.init = function(initData) {
-					console.log("=== Init in entity ===");
-
 					for(var property in initData) {
-						console.log("property: " + property);
+						// console.log("property: " + property);
 						setterName = 'set' + capitaliseFirstLetter(property);
 						if (typeof(this[setterName]) !== 'undefined') {
 							console.log("setting using standard constructor:" + setterName);
 							this[setterName](initData[property]);
 						} else {
-							console.log("Setter not found: (" + this.id + ")" + setterName);
-							console.log(this);
+							console.log("Error: Setter not found: (" + this.id + ")" + setterName + "!");
+							// console.log(this);
 						}
 					}
 				};
 				
 				object.is = function(className) {
 					return typeof(this.classNames[className]) !== 'undefined';
-				}
+				};
 				
 				object.getObjectSignum = function() {
 					return "(" + this.className + "." + this.id + ")";
-				}
-				
+				};
 				
 				object.selectAll = function(selection) {
 					if (typeof(selection[this.id]) === 'undefined') {

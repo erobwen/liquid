@@ -88,10 +88,10 @@ liquidSocket.on('connection', function (socket) {
 	});
 	
 	socket.on('batchSave', function(hardToGuessPageId, saverId, changeList){
-		console.log('batchSave');
-		console.log(hardToGuessPageId);
-		console.log(saverId);
-		console.log(changeList);
+		// console.log('batchSave');
+		// console.log(hardToGuessPageId);
+		// console.log(saverId);
+		// console.log(changeList);
 		liquid.dataRequest(hardToGuessPageId, function(user, session, page) {
 			changeList.forEach(function(change) {
 				var object = liquid.getEntity(change.objectId);
