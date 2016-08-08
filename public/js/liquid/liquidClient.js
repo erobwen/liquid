@@ -134,7 +134,7 @@ function serializeChangelist(changelist) {
  * Relations
  */
 liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
-	console.log("notifyAddingRelation: (" + object._  + ")." + definition.name + " ... " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
+	console.log("notifyAddingRelation: " + object.__()  + "." + definition.name + " ... " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
 	if (!changesOriginateFromServer()) {
 		pushChange({type: 'addingRelation', object: object, relation: definition, relatedObject: relatedObject});
 	}
@@ -142,7 +142,7 @@ liquid.notifyAddingRelation = function(object, definition, instance, relatedObje
 };
 
 liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
-	console.log("notifyDeletingRelation: (" + object._  + ")." + definition.name + " ... " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
+	console.log("notifyDeletingRelation: " + object.__()  + "." + definition.name + " ... " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
 	if (!changesOriginateFromServer()) {
 		pushChange({type: 'deletingRelation', object: object, relation: definition, relatedObject: relatedObject});
 	}
@@ -154,7 +154,7 @@ liquid.notifyDeletingRelation = function(object, definition, instance, relatedOb
  * Properties
  */
 liquid.notifySettingProperty = function(object, propertyDefinition, propertyInstance, newValue, oldValue) {
-	console.log("notifySettingProperty: (" + object._  + ")." + propertyDefinition.name + " = " + newValue + ", " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
+	console.log("notifySettingProperty: " + object.__()  + "." + propertyDefinition.name + " = " + newValue + ", " + (liquid.activeSaver !== null ? "with saver!" : "no saver!"));
 	if (!changesOriginateFromServer()) {
 		pushChange({type: 'settingProperty', object: object, property: propertyDefinition, newValue: newValue, oldValue: oldValue});
 	}

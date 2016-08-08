@@ -76,13 +76,27 @@ liquid.findEntities = function(properties) {
 }
 
 /**--------------------------------------------------------------
+ *                Object persisting
+ *----------------------------------------------------------------*/
+liquid.persist = function(object) {
+	object.persistentId =  neo4j.createNode(liquidClass.tagName, className);
+
+}
+
+
+
+/**--------------------------------------------------------------
 *                Object creation 
 *----------------------------------------------------------------*/
-	
-liquid.createEntity = function(className, initData) {	
+
+var lastLocalId = 0;
+liquid.createEntity = function(className, initData) {
 	var object = liquid.createClassInstance(className);	
     var liquidClass = liquid.classRegistry[className];
-	object.id =  neo4j.createNode(liquidClass.tagName, className);
+	object.localId = lastLocalId++;
+	object.persistentId =  neo4j.createNode(liquidClass.tagName, className);
+	object.id =  object.persistentId;
+	
 	// console.log("Created an object");
 	// console.log(object);
 	
@@ -101,7 +115,7 @@ liquid.createEntity = function(className, initData) {
 	object.init(initData);
 	
 	// Set object signum for easy debug
-	object._ = object.getObjectSignum();
+	object._ = object.__();
 	
 	// console.log("Finish setup object ...");
 	//console.log("Created object: " + className + " id:" + object.id);
@@ -166,7 +180,7 @@ liquid.loadNodeFromId = function(objectId) {
 	
 	// console.log("Initialized instance:");
 	// console.log(object);
-	object._ = object.getObjectSignum();
+	object._ = object.__();
 
 	liquid.idObjectMap[object.id] = object;
 	return object;
@@ -215,7 +229,7 @@ liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualified
 	
 liquid.loadSetRelation = function(object, definition, instance) {
 	// Load relation
-	console.log("loadSetRelation: (" + object.className + "." + object.id + ") --[" + definition.name + "]--> ?");
+	console.log("loadSetRelation: " + object.__() + " --[" + definition.name + "]--> ?");
 	var set = [];
 	var relationIds = neo4j.getRelationIds(object.id, definition.qualifiedName);
 	// console.log(relationIds);
@@ -277,7 +291,7 @@ liquid.notifyDeletingRelation = function(object, definition, instance, relatedOb
  * Properties
  */
 liquid.notifySettingProperty = function(object, propertyDefinition, propertyInstance, newValue, oldValue) {
-	console.log("notifySettingProperty: " + propertyDefinition.name + " = " + newValue);
+	console.log("notifySettingProperty: " + object.__() + "." + propertyDefinition.name + " = " + newValue);
 	for (id in object._observingPages) {
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
 			object._observingPages[id]._socket.emit("settingProperty", object.id, propertyDefinition.name, newValue);

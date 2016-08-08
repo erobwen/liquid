@@ -80,9 +80,9 @@ registerClass({
 			}
 		});
 		
-		object.overrideMethod('getObjectSignum', function(parent) {
+		object.overrideMethod('__', function(parent) {
 			var unloadedOrName = this.noDataLoaded ? "[no data]" : this.getName();
-			return "(" + this.className + "." + this.id + ":" + unloadedOrName + ")";
+			return "(" + this.className + "." + this._idString() + ":" + unloadedOrName + ")";
 		});
 		
 		object.addMethod("isParentOf", function(category) {
@@ -96,7 +96,7 @@ registerClass({
 		});
 		
 		object.addMethod("canAddAsSubCategory", function(category) {
-			// console.log("canAddAsSubCategory: " + this._);
+			// console.log("canAddAsSubCategory: " + this.__();
 			var allTransitiveParents = this.getAllTransitiveParents();
 			allTransitiveParents[this.id] = this; // Add this self
 			
@@ -143,14 +143,14 @@ registerClass({
 		});
 		
 		object.addMethod("getAllTransitiveParents", function() {
-			// console.log("getAllTransitiveParents: " + this._);
+			// console.log("getAllTransitiveParents: " + this.__());
 			var categories = {};
 			this.addAllTransitiveParents(categories);
 			return categories;
 		});
 		
 		object.addMethod("addAllTransitiveParents", function(categories) {
-			// console.log("addAllTransitiveParents:" + this._);
+			// console.log("addAllTransitiveParents:" + this.__());
 			if (typeof(categories[this.id]) === 'undefined') {
 				this.getParents().forEach(function(parentCategory) {
 					parentCategory.addAllTransitiveParents(categories);

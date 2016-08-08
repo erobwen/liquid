@@ -265,7 +265,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.loadReverseSetRelation = function(object, definition, instance) {
 		// Load relation
-		console.log("loadReverseSetRelation: (" + object.className + "." + object.id + ") <-- ["+ definition.incomingRelationQualifiedName + "] --?");
+		console.log("loadReverseSetRelation: " + object.__() + " <-- ["+ definition.incomingRelationQualifiedName + "] --?");
 		liquid.ensureIncomingRelationLoaded(object, definition.incomingRelationQualifiedName);
 		
 		var set = [];
@@ -342,12 +342,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 * Relations
 	 */
 	liquid.notifyGettingRelation = function(object, definition, instance) {
-		// console.log("notifyGettingRelation: " + object._ + "." + definition.name);
+		// console.log("notifyGettingRelation: " + object.__() + "." + definition.name);
 		liquid.setupObservation(object, instance);
 	};
 
 	liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
-		// console.log("notifySettingRelation: " + object._ + "." + definition.name);
+		// console.log("notifySettingRelation: " + object.__() + "." + definition.name);
 		liquid.holdChangePropagation(function() {
 			liquid.notifyDeletingRelation(object, definition, instance, previousValue);
 			liquid.notifyAddingRelation(object, definition, instance, value);
@@ -380,7 +380,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 * Properties
 	 */
 	liquid.notifyGettingProperty = function(object, definition, instance) {
-		// console.log("notifyGettingProperty: " + object._ + "." + propertyDefinition.name);
+		// console.log("notifyGettingProperty: " + object.__() + "." + propertyDefinition.name);
 		liquid.setupObservation(object, instance);
 	};
 
@@ -644,7 +644,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				liquid.notifyGettingProperty(object, definition, instance);
 				return instance.data;
 			} else {
-				console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
+				console.log("Access violation: " + this.__() + "." + definition.getterName + "() not allowed by page/user");
 				return clone(definition.defaultValue);
 			}
 		};
@@ -658,7 +658,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					instance.data = value;
 					liquid.notifySettingProperty(this, definition, instance, value, oldValue);
 				} else {
-					console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
+					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 				}
 			}
 		};
@@ -751,7 +751,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					}
 					return instance.data;
 				} else {
-					console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
+					console.log("Access violation: " + this.__() + "." + definition.getterName + "() not allowed by page/user");
 					return clone(definition.defaultValue);
 				}
 			};
@@ -780,7 +780,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				}
 				return instance.data;
 				// } else {
-					// console.log("Access violation: " + this._ + "." + definition.getterName + "() not allowed by page/user");
+					// console.log("Access violation: " + this.__() + "." + definition.getterName + "() not allowed by page/user");
 					// return clone(definition.defaultValue);
 				// }
 			}
@@ -807,7 +807,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						}
 						liquid.notifySettingRelation(this, definition, instance, newValue, previousValue);
 					} else {
-						console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
+						console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 					}
 				}
 			}
@@ -869,7 +869,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						action(child);
 					}.bind(this));
 				} else {
-					console.log("Access violation: " + this._ + "." + definition.forAllName + "() not allowed by page/user");
+					console.log("Access violation: " + this.__() + "." + definition.forAllName + "() not allowed by page/user");
 				}
 			};
 			
@@ -887,7 +887,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					liquid.notifyGettingRelation(this, definition, instance);
 					return instance.data;
 				} else {
-					console.log("Access violation: " + this._ + "." + definition.forAllName + "() not allowed by page/user");
+					console.log("Access violation: " + this.__() + "." + definition.forAllName + "() not allowed by page/user");
 					return [];
 				}
 			};
@@ -925,14 +925,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 					liquid.notifyAddingRelation(this, definition, instance, added);
 				} else {
-					console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
+					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 				}
 			};
 			
 			// Init remover
 			object[definition.removerName] = function(removed) {
 				if (allowWrite(this, liquid.page)) {
-					// console.group(this._ + "." + definition.removerName + "(" + removed._ + ")");
+					// console.group(this.__() + "." + definition.removerName + "(" + removed.__() + ")");
 					var instance = this._relationInstances[definition.qualifiedName];
 					if (typeof(instance.data) === 'undefined') {
 						liquid.loadSetRelation(this, definition, instance);
@@ -947,7 +947,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					liquid.notifyDeletingRelation(this, definition, instance, removed);
 					// console.groupEnd();
 				} else {
-					console.log("Access violation: " + this._ + "." + definition.setterName + "(...) not allowed by page/user");
+					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 				}
 			}
 		} else {
@@ -1051,7 +1051,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		}
 		
 		serialized = {};
-		serialized._ = object._;
+		serialized._ = object.__();
 		serialized.className = object.className;
 		serialized.id = object.id;
 		for (relationName in object._relationDefinitions) {

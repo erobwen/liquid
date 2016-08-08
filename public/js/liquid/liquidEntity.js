@@ -114,11 +114,23 @@ var addLiquidEntity = function(liquid) {
                 object.is = function(className) {
                     return typeof(this.classNames[className]) !== 'undefined';
                 };
-    
-                object.getObjectSignum = function() {
-                    return "(" + this.className + "." + this.id + ")";
+                    
+                object._idString = function() {
+                    var idString = "";
+                    if (typeof(this.id) !== 'undefined') {
+                        idString = "id." + this.id;
+                    } else if (typeof(this.localId) !== 'undefined'){
+                        idString = "localId." + this.id;
+                    } else if (typeof(this.persistentId) !== 'undefined') {
+                        idString = "persistentId." + this.id;
+                    }
+                    return idString;                    
                 };
-    
+                
+                object.__ = function() {
+                    return "(" + this.className + "." + this._idString() + ")";
+                };
+
                 object.selectAll = function(selection) {
                     if (typeof(selection[this.id]) === 'undefined') {
                         // console.log("Selecting " + this.className + ":" + this.id);
@@ -159,7 +171,7 @@ var addLiquidEntity = function(liquid) {
                 // Note: This information needs to match what is in the database definition (fields and their default values) and the model and its relations.
             },
             addMethods : function (object) {
-                object.getObjectSignum = function() {
+                object.__ = function() {
                     return "[Index]";
                 }
             }

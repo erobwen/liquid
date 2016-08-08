@@ -226,7 +226,7 @@ window.CategoryView = React.createClass(liquidClassData({
 				console.log(droppedCategory.getParents());
 				var parents = copyArray(droppedCategory.getParents());
 				parents.forEach(function(parentCategory) {
-					console.log("Dropping parent: " + parentCategory._);
+					console.log("Dropping parent: " + parentCategory.__());
 					droppedCategory.removeParent(parentCategory);
 				});
 				category.addSubCategory(droppedCategory);	

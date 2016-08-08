@@ -291,7 +291,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	liquid.setupObservation = function(object, propertyOrRelation) { // or repeater if observing its return value, object only needed for debugging. 
 		if (liquid.repeatersBeeingRefreshed.length > 0) {
 			if (traceRepetition) {
-				console.log("setupObservation: " + object._ + "." + propertyOrRelation.name);
+				console.log("setupObservation: " + object.__() + "." + propertyOrRelation.name);
 			}
 			var repeaterBeeingRefreshed = liquid.repeatersBeeingRefreshed[liquid.repeatersBeeingRefreshed.length - 1];
 			// console.log("Reading property " + object.entityId + "." + propertyOrRelation + " with repeater " + repeaterBeeingRefreshed.id);
@@ -344,7 +344,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			var methodName = argumentsArray.shift();
 			var methodArguments = argumentsArray;
 
-			console.log(this._ + '.[cachedCall]' +  methodName);
+			console.log(this.__() + '.[cachedCall]' +  methodName);
 			
 			// Establish method caches
 			if (typeof(this["__cachedCalls"]) === 'undefined') {
@@ -370,7 +370,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						return this[methodName].apply(this, methodArguments);
 					}.bind(this), 
 					function() {
-						console.log("Terminating cached method repeater: " + this._ + '.[cachedCall]' +  methodName);
+						console.log("Terminating cached method repeater: " + this.__() + '.[cachedCall]' +  methodName);
 						// liquid.holdChangePropagation(function() {
 						var methodCaches = this.__cachedCalls[methodName];
 						var methodCacheRepeater = methodCaches[argumentHash];
@@ -411,7 +411,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				this["__" + repeaterName + "_instances"] = {};
 			}
 			var repeaterInstances = this["__" + repeaterName + "_instances"];
-			// console.log("Calling cached method: " + object._ + "."+ repeaterName);
+			// console.log("Calling cached method: " + object.__() + "."+ repeaterName);
 			var repeaterArguments = argumentsToArray(arguments);
 			var argumentHash = makeArgumentHash(repeaterArguments);
 			if (typeof(repeaterInstances[argumentHash]) === 'undefined') {
