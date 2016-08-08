@@ -393,7 +393,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	*                 Object structure
 	*----------------------------------------------------------------*/
 
-	var nextUniqueSessionId = 1;
+	var nextLocalId = 1;
 	
 	// Creates a blank instance, without data or id! Just Interface. 
 	liquid.createClassInstance = function(className) {
@@ -404,7 +404,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		var object = Object.create(liquidClass.liquidObjectPrototype);
 		// console.log(object);
 		liquid.cloneCommonInstanceFields(object, liquidClass.liquidObjectPrototype);
-		object.__uniqueSessionId = nextUniqueSessionId++;
+		object._localId = nextLocalId++;
 		return object;
 	};
 	
@@ -417,7 +417,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			className : className,
 		});	
 		liquid.setupObject(object);
-		object.__uniqueSessionId = nextUniqueSessionId++;
+		object._localId = nextLocalId++;
 		return object;		
 	};
 	

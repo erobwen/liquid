@@ -79,7 +79,7 @@ liquid.findEntities = function(properties) {
  *                Object persisting
  *----------------------------------------------------------------*/
 liquid.persist = function(object) {
-	object.persistentId =  neo4j.createNode(liquidClass.tagName, className);
+	object._persistentId =  neo4j.createNode(liquidClass.tagName, className);
 
 }
 
@@ -89,13 +89,12 @@ liquid.persist = function(object) {
 *                Object creation 
 *----------------------------------------------------------------*/
 
-var lastLocalId = 0;
+
 liquid.createEntity = function(className, initData) {
 	var object = liquid.createClassInstance(className);	
     var liquidClass = liquid.classRegistry[className];
-	object.localId = lastLocalId++;
-	object.persistentId =  neo4j.createNode(liquidClass.tagName, className);
-	object.id =  object.persistentId;
+	object._persistentId =  neo4j.createNode(liquidClass.tagName, className);
+	object.id =  object._persistentId;
 	
 	// console.log("Created an object");
 	// console.log(object);
@@ -378,13 +377,12 @@ liquid.pageRequest = function(req, res, operation) {
 }
 
 liquid.dataRequest = function(hardToGuessPageId, operation) {
-	console.log("dataRequest");
-	console.log(hardToGuessPageId);
-	console.log(liquid.pagesMap);
+	console.log("dataRequest: " + hardToGuessPageId);
+	// console.log(liquid.pagesMap);
 	var result;
 	var page = liquid.pagesMap[hardToGuessPageId];
 	liquid.page = page;
-	console.log(page);
+	// console.log(page);
 	Fiber(function() {  // consider, remove fiber when not using rest api?
 		// Measure query time and pageRequest time
 		neo4j.resetStatistics();
