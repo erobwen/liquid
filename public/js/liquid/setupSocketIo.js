@@ -29,8 +29,8 @@ socket.on('addingRelation', function(objectId, relationName, relatedObjectId) {
 	liquid.holdChangePropagation(function() {
 		liquid.withoutPushingToServer(function() {
 			liquid.activeSaver = null;
-			var object = liquid.getEntity(objectId);
-			var relatedObject = liquid.getEntity(relatedObjectId);
+			var object = liquid.getUpstreamEntity(objectId);
+			var relatedObject = liquid.getUpstreamEntity(relatedObjectId);
 			var adderName = object._relationDefinitions[relationName].adderName;
 			object[adderName](relatedObject);
 			liquid.activeSaver = liquid.defaultSaver;
@@ -43,8 +43,8 @@ socket.on('deletingRelation', function(objectId, relationName, relatedObjectId) 
 	liquid.holdChangePropagation(function() {
 		liquid.withoutPushingToServer(function() {
 			liquid.activeSaver = null;
-			var object = liquid.getEntity(objectId);
-			var relatedObject = liquid.getEntity(relatedObjectId);
+			var object = liquid.getUpstreamEntity(objectId);
+			var relatedObject = liquid.getUpstreamEntity(relatedObjectId);
 			var removerName = object._relationDefinitions[relationName].removerName;
 			object[removerName](relatedObject);
 			liquid.activeSaver = liquid.defaultSaver;
@@ -57,7 +57,7 @@ socket.on('settingProperty', function(objectId, propertyName, newValue) {
 	liquid.holdChangePropagation(function() {
 		liquid.withoutPushingToServer(function() {
 			liquid.activeSaver = null;
-			var object = liquid.getEntity(objectId);
+			var object = liquid.getUpstreamEntity(objectId);
 			var setterName = object._propertyDefinitions[propertyName].setterName;
 			object[setterName](newValue);
 			liquid.activeSaver = liquid.defaultSaver;

@@ -247,10 +247,16 @@ liquid.loadSetRelation = function(object, definition, instance) {
  * Relations
  */
 liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
+	console.log("notifyAddingRelation: " + object.__()  + "." + definition.name);
 	for (id in object._observingPages) { // TODO: Notify observing pages for related object as well!!!
+		observingPage = object._observingPages[id];
+		console.log(observingPage.__());
+		console.log(typeof(observingPage._socket));
+
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
 			// TODO: only notify those who has read write to both objects.
-			// 
+
+			console.log("emit: addingRelation");
 			object._observingPages[id]._socket.emit("addingRelation", object._id, definition.qualifiedName, relatedObject._id);
 
 			// TODO: check if the related object has a reverse relation, in that case
@@ -263,6 +269,7 @@ liquid.notifyAddingRelation = function(object, definition, instance, relatedObje
 };
 
 liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
+	console.log("notifyDeletingRelation: " + object.__()  + "." + definition.name);
 	for (id in object._observingPages) {// TODO: Notify observing pages for related object as well!!!
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
 			// TODO: only notify those who has read write to both objects.
