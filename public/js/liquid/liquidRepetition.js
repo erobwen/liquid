@@ -294,7 +294,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				console.log("setupObservation: " + object.__() + "." + propertyOrRelation.name);
 			}
 			var repeaterBeeingRefreshed = liquid.repeatersBeeingRefreshed[liquid.repeatersBeeingRefreshed.length - 1];
-			// console.log("Reading property " + object.entityId + "." + propertyOrRelation + " with repeater " + repeaterBeeingRefreshed.id);
+			// console.log("Reading property " + object.__() + "." + propertyOrRelation + " with repeater " + repeaterBeeingRefreshed.id);
 
 			// Ensure observer structure in place (might be unecessary)
 			if (typeof(propertyOrRelation.observers) === 'undefined') {
@@ -329,7 +329,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			if (isArray(argument)) {
 				hash += "[" + makeArgumentHash(argument) + "]";
 			} else if (typeof(argument) === 'object') {
-				hash += "{id=" + argument._localId + "}";   // Note! Do not use id here as it can change when source is shifted.  
+				hash += "{id=" + argument._id + "}";   // Note! Do not use id here as it can change when source is shifted.  
 			} else {
 				hash += argument;
 			}
@@ -365,7 +365,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				console.log("Cached method not seen before, or re-caching needed... ");
 
 				// Never encountered these arguments before, make a new cache
-				var methodCacheRepeater = uponChangeDo("(" + this.className + "." + this.id+ ")" + methodName, 
+				var methodCacheRepeater = uponChangeDo(this.__() + "." + methodName, 
 					function() {
 						return this[methodName].apply(this, methodArguments);
 					}.bind(this), 
@@ -423,7 +423,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 					previousReturnValue : null,
 				};
 				liquid.setupObservation(this, repeaterRecord.repeater);
-				repeaterRecord.repeater = repeatOnChange("(" + this.className + "." + this.id+ ")" + repeaterName, function() {
+				repeaterRecord.repeater = repeatOnChange(this.__() + "." + repeaterName, function() {
 					var returnValue = method.apply(this, repeaterArguments);
 					// console.log("Evaluating repeater");
 					// console.log(returnValue);

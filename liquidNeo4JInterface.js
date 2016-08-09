@@ -114,8 +114,8 @@ neo4j.setPropertyValue = function(id, propertyName, value) {
 // };
 
 // liquid.loadProperty = function(object, property) {
-	// if (neo4j.query("MATCH (n) WHERE id(n) = " + object.id + " RETURN HAS(n." + property.name + ")")) {
-		// return neo4j.query("MATCH (n) WHERE id(n) = " + object.id + " RETURN n." + property.name);				
+	// if (neo4j.query("MATCH (n) WHERE id(n) = " + object._persistentId + " RETURN HAS(n." + property.name + ")")) {
+		// return neo4j.query("MATCH (n) WHERE id(n) = " + object._persistentId + " RETURN n." + property.name);				
 	// } else {
 		// return property.defaultValue;
 	// }

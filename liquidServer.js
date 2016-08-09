@@ -56,21 +56,22 @@ liquid.getIndex = function(className) {
 }
 
 /**--------------------------------------------------------------
-*                Object finding 
+*                Persistent object finding 
 *----------------------------------------------------------------*/
 
-liquid.findEntity = function(properties) {
-	return liquid.findEntities(properties)[0];
+
+liquid.findPersistentEntity = function(properties) {
+	return liquid.findPersistentEntities(properties)[0];
 }
 
-liquid.findEntities = function(properties) {
+liquid.findPersistentEntities = function(properties) {
 	// console.log("findEntities:");
 	// console.log(properties);
-	var entityIds = neo4j.findEntitiesIds(properties);
+	var persistentEntityIds = neo4j.findEntitiesIds(properties);
 	// console.log(entityIds);
 	var result = [];
-	entityIds.forEach(function(id) {
-		result.push(liquid.getEntity(id));
+	persistentEntityIds.forEach(function(persistentId) {
+		result.push(liquid.getPersistentEntity(persistentId));
 	}); 
 	return result;
 }
@@ -89,37 +90,33 @@ liquid.persist = function(object) {
 *                Object creation 
 *----------------------------------------------------------------*/
 
+liquid.setAllPropertiesToDefault = function(object) {
+	for (propertyName in object._propertyDefinitions) {
+		var definition = object._propertyDefinitions[propertyName];
+		var defaultValue = definition.defaultValue;
+		object[definition.setterName](defaultValue);
 
-liquid.createEntity = function(className, initData) {
+		// console.log("propertyName: " + propertyName)
+		// var instance = object._propertyInstances[propertyName];
+		// instance.data = defaultValue;
+		// liquid.notifySettingProperty(object, definition, instance, defaultValue, null);
+	}
+} 
+
+liquid.createPersistentEntity = function(className, initData) {
 	var object = liquid.createClassInstance(className);	
     var liquidClass = liquid.classRegistry[className];
 	object._persistentId =  neo4j.createNode(liquidClass.tagName, className);
-	object.id =  object._persistentId;
-	
-	// console.log("Created an object");
-	// console.log(object);
-	
-	// Setup default values and save to database. 
-	// console.log("----------- setting default values -------------")
-	for (propertyName in object._propertyDefinitions) {
-		// console.log("propertyName: " + propertyName)
-		var instance = object._propertyInstances[propertyName];
-		var definition = object._propertyDefinitions[propertyName];
-		var defaultValue = definition.defaultValue;
-		instance.data = defaultValue;
-		liquid.notifySettingProperty(object, definition, instance, defaultValue, null);
-	}
-	
-	// console.log("init: (" + object.className + "." + object.id + ")");
+	liquid.persistentIdObjectMap[object._persistentId] = object;
+	object._globalId = "1." + object._persistentId;
+
+	// Set default and initialize 
+	liquid.setAllPropertiesToDefault(object);
 	object.init(initData);
 	
 	// Set object signum for easy debug
 	object._ = object.__();
-	
-	// console.log("Finish setup object ...");
-	//console.log("Created object: " + className + " id:" + object.id);
-	
-	liquid.idObjectMap[object.id] = object;
+		
 	return object;
 }
 
@@ -132,10 +129,10 @@ liquid.createEntity = function(className, initData) {
 /**
 * Get object
 */
-liquid.getEntity = function(id) {
+liquid.getPersistentEntity = function(id) {
 	// console.log("getEntity");
 	// console.log(id);
-	var stored = liquid.idObjectMap[id];
+	var stored = liquid.persistentIdObjectMap[id];
 	if (typeof(stored) !== 'undefined') {
 		// console.log("Found a stored value!");
 		return stored;
@@ -148,22 +145,13 @@ liquid.getEntity = function(id) {
 /**
  * Node creation
  */	
-liquid.loadNodeFromId = function(objectId) {
-	// console.log("Load object from id:" + objectId);
-	var nodeData = neo4j.getNodeInfo(objectId);			
-	// console.log("loadNodeFromId, nodeData");
-	// console.log(nodeData);
+liquid.loadNodeFromId = function(persistentId) {
+	// console.log("loadNodeFromId:" + persistentId);
+	var nodeData = neo4j.getNodeInfo(persistentId);
 	var className = nodeData['className'];
 	var object = liquid.createClassInstance(className);
-	// console.log(objectId);
-	// console.log("Created instance:");
-	// console.log(object);
-	// console.log("Set id");
-	// console.log(object.id);
-	object.id = objectId;
-	object.isSource = false;
-	// console.log(object.id);
-		
+	object._persistentId = persistentId;
+
 	// Load all values for properties, or use default where no saved data present.
 	if (typeof(nodeData) !== 'undefined') {
 		for (var propertyName in object._propertyDefinitions) {
@@ -176,12 +164,10 @@ liquid.loadNodeFromId = function(objectId) {
 			}		
 		}
 	}	
-	
-	// console.log("Initialized instance:");
-	// console.log(object);
-	object._ = object.__();
 
-	liquid.idObjectMap[object.id] = object;
+	object._ = object.__(); // Debug field
+
+	liquid.persistentIdObjectMap[object._persistentId] = object;
 	return object;
 }
 
@@ -191,12 +177,12 @@ liquid.loadNodeFromId = function(objectId) {
 *----------------------------------------------------------------*/
 
 liquid.loadSingleRelation = function(object, definition, instance) {
-	console.log("loadSingleRelation: (" + object.className + "." + object.id + ") -- [" + definition.name + "] --> ?");
+	console.log("loadSingleRelation: " + object.__() + " -- [" + definition.name + "] --> ?");
 	instance.data = null;
-	var relationIds = neo4j.getRelationIds(object.id, definition.qualifiedName);
+	var relationIds = neo4j.getRelationIds(object._persistentId, definition.qualifiedName);
 	// console.log(relationIds);
 	if (relationIds.length == 1) {
-		var relatedObject = liquid.getEntity(relationIds[0]);
+		var relatedObject = liquid.getPersistentEntity(relationIds[0]);
 		instance.data = relatedObject;
 		instance.isLoaded = true;
 	} else if (relationIds.length > 1) {
@@ -208,15 +194,15 @@ liquid.loadSingleRelation = function(object, definition, instance) {
 };
 
 liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualifiedName) {
-	console.log("ensureIncomingRelationLoaded: (" + object.className + "." + object.id + ") <-- [" + incomingRelationQualifiedName + "] -- ?");
+	console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationQualifiedName + "] -- ?");
 	if (typeof(object.incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
 		// console.log("run liquid version of ensureIncomingRelationLoaded");
-		var incomingRelationIds = neo4j.getReverseRelationIds(object.id, incomingRelationQualifiedName); // This now contains potentially too many ids. 
+		var incomingRelationIds = neo4j.getReverseRelationIds(object._persistentId, incomingRelationQualifiedName); // This now contains potentially too many ids.
 		// console.log("Load incoming relations id");
 		// console.log(incomingRelationIds);
 		if (incomingRelationIds.length > 0) {
 			incomingRelationIds.forEach(function(incomingId) {
-				var relatedObject = liquid.getEntity(incomingId);
+				var relatedObject = liquid.getPersistentEntity(incomingId);
 				// Call getter on the incoming relations
 				relatedObject[relatedObject._relationDefinitions[incomingRelationQualifiedName].getterName]();
 			});
@@ -230,10 +216,10 @@ liquid.loadSetRelation = function(object, definition, instance) {
 	// Load relation
 	console.log("loadSetRelation: " + object.__() + " --[" + definition.name + "]--> ?");
 	var set = [];
-	var relationIds = neo4j.getRelationIds(object.id, definition.qualifiedName);
+	var relationIds = neo4j.getRelationIds(object._persistentId, definition.qualifiedName);
 	// console.log(relationIds);
 	relationIds.forEach(function(objectId) {
-		set.push(liquid.getEntity(objectId));			
+		set.push(liquid.getPersistentEntity(objectId));
 	});
 	// console.log(set);
 	set.forEach(function(relatedObject) {
@@ -265,12 +251,14 @@ liquid.notifyAddingRelation = function(object, definition, instance, relatedObje
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
 			// TODO: only notify those who has read write to both objects.
 			// 
-			object._observingPages[id]._socket.emit("addingRelation", object.id, definition.qualifiedName, relatedObject.id);
+			object._observingPages[id]._socket.emit("addingRelation", object._id, definition.qualifiedName, relatedObject._id);
 
 			// TODO: check if the related object has a reverse relation, in that case
 		}
 	}
-	neo4j.createRelationTo(object.id, relatedObject.id, definition.qualifiedName);
+	if (object._persistentId !== null && relatedObject._persistentId !== null) {
+		neo4j.createRelationTo(object._persistentId, relatedObject._persistentId, definition.qualifiedName);
+	}
 	liquid.observersDirty(instance.observers);
 };
 
@@ -278,10 +266,12 @@ liquid.notifyDeletingRelation = function(object, definition, instance, relatedOb
 	for (id in object._observingPages) {// TODO: Notify observing pages for related object as well!!!
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
 			// TODO: only notify those who has read write to both objects.
-			object._observingPages[id]._socket.emit("deletingRelation", object.id, definition.qualifiedName, relatedObject.id);
+			object._observingPages[id]._socket.emit("deletingRelation", object._id, definition.qualifiedName, relatedObject._id);
 		}
 	}
-	neo4j.deleteRelationTo(definition.qualifiedName, object.id);
+	if (object._persistentId != null) {
+		neo4j.deleteRelationTo(definition.qualifiedName, object._persistentId);
+	}
 	liquid.observersDirty(instance.observers);
 };
 
@@ -293,10 +283,12 @@ liquid.notifySettingProperty = function(object, propertyDefinition, propertyInst
 	console.log("notifySettingProperty: " + object.__() + "." + propertyDefinition.name + " = " + newValue);
 	for (id in object._observingPages) {
 		if (object._observingPages[id] !== liquid.requestingPage && object._observingPages[id]._socket !==  null) {
-			object._observingPages[id]._socket.emit("settingProperty", object.id, propertyDefinition.name, newValue);
+			object._observingPages[id]._socket.emit("settingProperty", object._id, propertyDefinition.name, newValue);
 		}
 	}
-	neo4j.setPropertyValue(object.id, propertyDefinition.name, newValue);
+	if (object._persistentId != null) {
+		neo4j.setPropertyValue(object._persistentId, propertyDefinition.name, newValue);
+	}
 	liquid.observersDirty(propertyInstance.observers);
 }
 
@@ -312,13 +304,13 @@ liquid.pagesMap = {};
 liquid.sessionsMap = {};
 
 liquid.createPageObject = function(hardToGuessPageId, session) {
-	var page = createEntity('LiquidPage', { hardToGuessPageId: hardToGuessPageId, Session : session });
+	var page = createPersistentEntity('LiquidPage', { hardToGuessPageId: hardToGuessPageId, Session : session });
 	page._socket = null;
 	return page;
 };
 
 liquid.createSessionObject = function(hardToGuessSessionId) {
-	return createEntity('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
+	return createPersistentEntity('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
 };
 
 liquid.generateUniqueKey = function(keysMap) {
@@ -413,7 +405,12 @@ module.exports.liquidPageRequest = liquid.pageRequest;
 module.exports.liquidDataRequest = liquid.dataRequest;
 
 module.exports.createEntity = liquid.createEntity;
+module.exports.createPersistentEntity = liquid.createPersistentEntity;
+
 module.exports.getEntity = liquid.getEntity;
+module.exports.getPersistentEntity = liquid.getPersistentEntity;
+module.exports.getUpstreamEntity = liquid.getUpstreamEntity;
+
 module.exports.findEntity = liquid.findEntity;
 module.exports.findEntities = liquid.findEntities;
 

@@ -1,3 +1,4 @@
+// http://unitstep.net/blog/2015/03/03/using-react-animations-to-transition-between-ui-states/
 
 var reactRootComponentInstance = null;
 

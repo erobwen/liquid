@@ -44,7 +44,7 @@ var UserView = React.createClass(liquidClassData({
 					<PropertyField label="Name" object = { this.props.user} propertyName = "Name"/>
 					<div style={{height: "1em"}}></div>
 					<CategoriesView
-						key = { this.props.user.id }
+						key = { this.props.user._id }
 						categories = { rootCategories }  // This should evaluate to a new list upon change. This would not work with a relation... Should we create a new object on every change? However, it still means that both components needs reevaluation
 					/>
 					<button onClick= { function() { performScript(); }} >Execute script</button>
@@ -76,7 +76,7 @@ var PropertyField = React.createClass(liquidClassData({
 			if (this.state.focused) {
 				return (
 					<span onClick={ this.clickOnField } style={{marginBottom: '1em'}}>
-						<span>{ labelString }<input type="text" value={this.props.object['get' + this.props.propertyName]()} onChange={ this.propertyChanged } ></input></span>
+						<span>{ labelString }<input type="text" value={this.props.object['get' + this.props.propertyName]()} onChange={ this.propertyChanged } /></span>
 					</span>
 				);
 			} else {
@@ -96,10 +96,10 @@ var CategoriesView = React.createClass(liquidClassData({
 		return invalidateUponLiquidChange("CategoriesView", this, function() {
 			var categoriesElements = [];
 			this.props.categories.forEach(function(category) {
-				// console.log("A key: " + category.id);
+				// console.log("A key: " + category._id);
 				categoriesElements.push(
 					<CategoryView 
-						key = { category.id }
+						key = { category._id }
 						category = {category}
 					/>
 				);
@@ -155,7 +155,7 @@ window.CategoryView = React.createClass(liquidClassData({
 	onDragStart: function(event) {
 		// console.log("onDragStart:" + this.props.category.getName());
 		draggedCategory = this.props.category;
-		// event.dataTransfer.setData("categoryId", this.props.category.id);
+		// event.dataTransfer.setData("categoryId", this.props.category._id);
 	},
 	
 	dragEnterCounter: 0,
@@ -263,13 +263,13 @@ window.CategoryView = React.createClass(liquidClassData({
 
 				subCategories.push(
 					<CategoryView 
-						key = { this.props.category.id + "." + category.id }
+						key = { this.props.category._id + "." + category._id }
 						category = {category}
 					/>
 				);
 				
 				// How to do it if we get element name as a string:
-				// subCategories.push(React.createElement(window[categoryViewElementName], { key : category.id, category : category }));				
+				// subCategories.push(React.createElement(window[categoryViewElementName], { key : category._id, category : category }));				
 			}.bind(this));
 
 			var collapseButton = 

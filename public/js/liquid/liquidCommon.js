@@ -17,19 +17,58 @@ var addCommonLiquidFunctionality = function(liquid) {
 	} 
 	
 	/**--------------------------------------------------------------
-	*                 The id object map
+	*                 The id object maps
 	*----------------------------------------------------------------*/
  
 	/**
-	 * Id to node map, in order to assure correct identity of node. 
-	 */ 
-	liquid.idObjectMap = {};
-	liquid.restart = function() {
-		liquid.idObjectMap = {};
-	}
+	 * Id to node maps, in order to assure correct identity of objects. 
+	 */
+	liquid.idObjectMap = {}; // Local id. 
+	liquid.upstreamIdObjectMap = {}; // Objects id at server. 
+	liquid.persistentIdObjectMap = {}; // Database id.
 	
-	liquid.canLoadDataAsynchronously = false; // true for server, false for client.
+	// Global identities, for URL:s etc. 
+	liquid.globalIdObjectMap = {};
+	liquid.canIssueGlobalIdentities = false; // True only for web servers in a cluster. False for localhost server and for client. 
+
 	
+	/**
+	 * Get entity
+	 */
+	liquid.getEntity = function(entityId) {
+		return liquid.idObjectMap[entityId];
+	};
+
+
+	/**
+	 * Get entity
+	 */
+	liquid.getUpstreamEntity = function(entityId) {
+		return liquid.upstreamIdObjectMap[entityId];
+	};
+
+
+	/**
+	 * Get persistent entity (for instances with a database) 
+	 */
+	liquid.getPersistentEntity = function(entityId) {
+		return liquid.persistentIdObjectMap[entityId];
+	};
+
+	
+	
+	/**
+	 * Get entity
+	 */
+	liquid.getGlobalEntity = function(entityId) {
+		return liquid.globalIdObjectMap[entityId];
+	};
+
+
+
+
+
+
 	/**--------------------------------------------------------------
 	*                 Class handling
 	*----------------------------------------------------------------*/
@@ -235,11 +274,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 		} else if (isArray(data)) {
 			var logArray = [];
 			data.forEach(function(child) {
-				logArray.push("(" + child.className + "." + child.id + ")");
+				logArray.push(child.__());
 			});
 			//console.log(logArray);
 		} else if(typeof(data) === 'object'){
-			//console.log("(" + data.className + "." + data.id + ")");
+			//console.log(data.__());
 		} else {
 			//console.log(data);			
 		}
@@ -247,19 +286,19 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 	liquid.loadSingleRelation = function(object, definition, instance) {
 		instance.data = null;
-		//console.log("loadSingleRelation: (" + object.className + "." + object.id + ") -- [" + definition.name + "] --> ?");
+		//console.log("loadSingleRelation: " + object.__() + " -- [" + definition.name + "] --> ?");
 		// throw new Exception("Not implemented!");
 		return instance.data;
 	};
 
 	liquid.ensureIncomingRelationLoaded = function(object, incomingRelationName) {
-		// console.log("ensureIncomingRelationLoaded: (" + object.className + "." + object.id + ") <-- [" + incomingRelationName + "] -- ?");
+		// console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationName + "] -- ?");
 		// throw new Exception("Not implemented!");
 	};
 		
 	liquid.loadSetRelation = function(object, definition, instance) {
 		instance.data = [];
-		// console.log("loadSetRelation: (" + object.className + "." + object.id + ") -- ["+ definition.qualifiedName + "] --> ?");
+		// console.log("loadSetRelation: " + object.__() + " -- ["+ definition.qualifiedName + "] --> ?");
 		// throw new Exception("Not implemented!");
 	};
 
@@ -315,7 +354,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			instance.sortRepeater = repeater;
 		} else {
 			// Just sort once. Ids will never change, so we do not repeat until element changed
-			instance.data.sort(function(a, b) { return a.id - b.id }); // Default, sort by ID. 
+			instance.data.sort(function(a, b) { return a._id - b._id }); // Default, sort by ID. 
 		}
 	};
 	
@@ -324,7 +363,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			liquid.repeaterDirty(instance.sortRepeater);
 		} else {
 			// Just sort once. Ids will never change, so we do not repeat until element changed
-			instance.data.sort(function(a, b) { return a.id - b.id }); // Default, sort by ID. 			
+			instance.data.sort(function(a, b) { return a._id - b._id }); // Default, sort by ID. 			
 		}
 	};
 	
@@ -404,7 +443,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 		var object = Object.create(liquidClass.liquidObjectPrototype);
 		// console.log(object);
 		liquid.cloneCommonInstanceFields(object, liquidClass.liquidObjectPrototype);
-		object._localId = nextLocalId++;
+		object._id = nextLocalId++;
+		liquid.idObjectMap[object._id] = object;
 		return object;
 	};
 	
@@ -412,12 +452,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.createAugmentedClassInstance = function(className) {
 		var liquidClass = liquid.classRegistry[className];
 		var object = liquid.createCommonObjectStructure({
-			id : null, 
+			_id : null, 
 			class : liquidClass,
 			className : className,
 		});	
 		liquid.setupObject(object);
-		object._localId = nextLocalId++;
+		object._id = nextLocalId++;
+		liquid.idObjectMap[object._id] = object;
 		return object;		
 	};
 	
@@ -442,8 +483,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.cloneCommonInstanceFields = function(object, prototypeObject) {
 		// function cloneInstance(instance) {
 		// }
-		object.id = null;
-		object.isSource = true; // When set to false, this objects exists in underlying system and has an object id known by underlying system. Underlying system is either server or database depending on objects whereabouts, 			
+		object._id = null;
+		object._upstreamId = null;
+		object._persistentId = null;
+		object._globalId = null;
+		
 		object.incomingRelations = clone(prototypeObject.incomingRelations);   // A general store of all incoming relations. This way we always have back-references!!! (this is important for any kind of garbage collection, or freeing up of memory)
 		// Note:  Clone will only work as long as instance data is empty!
 		object._relationInstances = clone(prototypeObject._relationInstances);   // relationName (qualified?) -> relation
@@ -460,8 +504,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 	
 	liquid.addCommonInstanceFields = function(object) {
 		// Specific for object
-		object.id = null;
-		object.isSource = true, // When set to false, this objects exists in underlying system and has an object id known by underlying system. Underlying system is either server or database depending on objects whereabouts, 			
+		object._id = null;
+		object._upstreamId = null;
+		object._persistentId = null;
+		object._globalId = null;
+		
 		object.incomingRelations = {};   // A general store of all incoming relations. This way we always have back-references!!! (this is important for any kind of garbage collection, or freeing up of memory)
 		object._relationInstances = {};   // relationName (qualified?) -> relation
 		object._propertyInstances = {};  // propertyName -> property		
@@ -481,13 +528,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 	*----------------------------------------------------------------*/
 		
 	liquid.addIncomingRelation = function(object, incomingRelationQualifiedName, referingObject) {
-		// return;
-		// console.log("addIncomingRelation: (" + object.className + "." + object.id + ") <-- [" + incomingRelationQualifiedName + "]--(" + referingObject.className + "." + referingObject.id + ")");
+		// console.log("addIncomingRelation: " + object.__() + " <-- [" + incomingRelationQualifiedName + "]-- " + referingObject.__());
 		// Add in incoming relations, create a new map if necessary
 		if (typeof(object.incomingRelations[incomingRelationQualifiedName]) === 'undefined') {
 			object.incomingRelations[incomingRelationQualifiedName] = {};
 		}
-		object.incomingRelations[incomingRelationQualifiedName][referingObject.id] = referingObject;
+		object.incomingRelations[incomingRelationQualifiedName][referingObject._id] = referingObject;
 
 		// Update data of any reverse relation
 		if (typeof(object._reverseRelations[incomingRelationQualifiedName]) !== 'undefined') {
@@ -510,8 +556,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.deleteIncomingRelation = function(object, incomingRelationQualifiedName, referingObject) {
 		// return;
-		//console.log("deleteIncomingRelation: (" + object.className + "." + object.id + ") <-X- [" + incomingRelationQualifiedName + "]--(" + referingObject.className + "." + referingObject.id + ")");
-		delete object.incomingRelations[incomingRelationQualifiedName][referingObject.id]; // Note, this HAS to exist here. Every link should have a back link!	
+		// console.log("deleteIncomingRelation: " + object.__() + " <-X- [" + incomingRelationQualifiedName + "]--" + referingObject.__());
+		delete object.incomingRelations[incomingRelationQualifiedName][referingObject._id]; // Note, this HAS to exist here. Every link should have a back link!	
 
 		// Delete data of any reverse relation
 		var reverseDefinition = object._reverseRelations[incomingRelationQualifiedName];
@@ -1025,14 +1071,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.subscribeToSelection = function(selection) {
 		for (id in selection) {
 			var object = selection[id];
-			object._observingPages[liquid.requestingPage.id] = liquid.requestingPage;
+			object._observingPages[liquid.requestingPage._id] = liquid.requestingPage;
 		}
 	};
 
 	liquid.serializeSelection = function(selection) {
 		var serialized = [];
 		for (id in selection) {
-			// console.log(liquid.idObjectMap);
 			var object = liquid.idObjectMap[id];
 			serialized.push(liquid.serializeObject(object));
 		}
@@ -1044,7 +1089,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.serializeObject = function(object) {
 		function serializedReference(object) {
 			if (object !== null) {
-				return object.className + ":" + object.id; 
+				return object.className + ":" + object._id; 
 			} else {
 				return null;
 			}
@@ -1053,7 +1098,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		serialized = {};
 		serialized._ = object.__();
 		serialized.className = object.className;
-		serialized.id = object.id;
+		serialized.id = object._id;
 		for (relationName in object._relationDefinitions) {
 			var definition = object._relationDefinitions[relationName];
 			if (!definition.isReverseRelation) {
@@ -1069,10 +1114,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 			serialized[definition.name] = object[definition.getterName]();
 		}
 		return serialized;
-
-		// id:this.id,
-		// className: this.className,
-		// noDataLoaded : true
 	};
 };
 

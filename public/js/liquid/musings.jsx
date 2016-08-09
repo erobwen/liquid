@@ -12,13 +12,13 @@ var UserView = React.createClass(liquidClassData({
 					</div>
 				);
 			} else {
-				// console.log("A key: " + this.props.user.id);
+				// console.log("A key: " + this.props.user._id);
 				var rootCategories = this.props.user.getRootCategories();
 				return (
 					<div className="UserView">
 						<div style={{marginBottom: '1em'}}>Name: {this.props.user.getName()}</div>
 						<CategoriesView
-							key = { this.props.user.id }
+							key = { this.props.user._id }
 							categories = { rootCategories }  // This should evaluate to a new list upon change. This would not work with a relation... Should we create a new object on every change? However, it still means that both components needs reevaluation
 						/>
 						<button onClick= { function() { window.performScript(); }} >Execute script</button>

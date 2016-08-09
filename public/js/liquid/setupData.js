@@ -5,14 +5,14 @@ console.log(serialized);
 var hardToGuessPageId = data.hardToGuessPageId;
 
 var start = new Date().getTime();
-var unserialized = unserialize(serialized);
+unserialize(serialized);
 var end = new Date().getTime();
 var time = (end - start);
 console.log("Time to unserialize: " + time + " milliseconds.");
 // console.log(liquid.idObjectMap);
 
 for(objectName in data) {
-	data[objectName] = getEntity(data[objectName]);
+	data[objectName] = getUpstreamEntity(data[objectName]);
 }
 data.hardToGuessPageId = hardToGuessPageId;
 liquid.hardToGuessPageId = hardToGuessPageId;

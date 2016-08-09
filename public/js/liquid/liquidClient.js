@@ -18,32 +18,16 @@ addLiquidRepetitionFunctionality(liquid);
  *                   Object/Entity retreival
  *----------------------------------------------------------------*/
 
-/**
- * Setup temp id
- */
-liquid.nextTemporaryId = 0;
-liquid.getTemporaryId = function(className) {
-	return className + ".temporaryId=" + liquid.nextTemporaryId;
-};
-
-
-
-/**
- * Get entity
- */
-liquid.getEntity = function(entityId) {
-	return liquid.idObjectMap[entityId];
-};
 
 /**
 * Find entity
 */
-liquid.findEntity = function(properties) {
+liquid.findLocalEntity = function(properties) {
 	return liquid.findEntities(properties)[0];
 }
 liquid.find = liquid.findEntity;
 
-liquid.findEntities = function(properties) {
+liquid.findLocalEntities = function(properties) {
 	var result = [];
 	for (id in liquid.idObjectMap) {
 		var object = liquid.idObjectMap[id];
@@ -95,7 +79,7 @@ function pushChange(change) {
 function serializeChangelist(changelist) {
 	// Translate change from objects to entityIds. Do this as late as possible so that objects that change from a temporary id to a real one gets the right id in the save.
 	changelist.forEach(function(change) {
-		change.objectId = change.object.id;
+		change.objectId = change.object.upstreamId;
 		delete change.object;
 
 		if (typeof(change.relation) !== 'undefined') {
@@ -109,12 +93,12 @@ function serializeChangelist(changelist) {
 		}
 
 		if (typeof(change.relatedObject) !== 'undefined') {
-			change.relatedObjectId = change.relatedObject.id;
+			change.relatedObjectId = change.relatedObject.upstreamId;
 			delete change.relatedObject;
 		}
 
 		if (typeof(change.previouslyRelatedObject) !== 'undefined') {
-			change.previouslyRelatedObjectId = change.previouslyRelatedObject.id;
+			change.previouslyRelatedObjectId = change.previouslyRelatedObject.upstreamId;
 			delete change.previouslyRelatedObject;
 		}
 	});
@@ -177,25 +161,24 @@ function unserializeReference(reference) {
 	return ensureEmptyObjectExists(id, className);
 }
 
-function ensureEmptyObjectExists(id, className) {
-	if (typeof(liquid.idObjectMap[id]) === 'undefined') {
+function ensureEmptyObjectExists(upstreamId, className) {
+	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 		var newObject = liquid.createClassInstance(className);
-		newObject.id = id;
+		newObject.upstreamId = upstreamId;
 		newObject.noDataLoaded = true;
-		liquid.idObjectMap[id] = newObject;
+		liquid.upstreamIdObjectMap[upstreamId] = newObject;
 	}
-	return liquid.idObjectMap[id];
+	return liquid.upstreamIdObjectMap[upstreamId];
 }
 
 function unserializeObject(serializedObject) {
 	// console.log("unserializeObject");
 	// console.log(serializedObject);
-	var id = serializedObject.id;
-	var idObjectMap = liquid.idObjectMap;
-	if (typeof(idObjectMap[id]) === 'undefined') {
-		ensureEmptyObjectExists(id, serializedObject.className);
+	var upstreamId = serializedObject.id;
+	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
+		ensureEmptyObjectExists(upstreamId, serializedObject.className);
 	}
-	var targetObject = idObjectMap[id];
+	var targetObject = liquid.upstreamIdObjectMap[upstreamId];
 	// console.log(targetObject);
 	if (targetObject.noDataLoaded) {
 		for (relationName in targetObject._relationDefinitions) {
@@ -291,10 +274,17 @@ console.log(liquid);
 
 
 window.find = liquid.find;
+
 window.uponChangeDo = liquid.uponChangeDo;
 window.repeatOnChange = liquid.repeatOnChange;
+
 window.createEntity = liquid.createEntity;
+
 window.getEntity = liquid.getEntity;
+window.getUpstreamEntity = liquid.getUpstreamEntity;
+window.getPersistentEntity = liquid.getPersistentEntity;
+window.getGlobalEntity = liquid.getGlobalEntity;
+
 window.registerClass = liquid.registerClass;
 
 window.liquid = liquid;

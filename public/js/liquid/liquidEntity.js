@@ -96,6 +96,12 @@ var addLiquidEntity = function(liquid) {
                     // Do something with: liquidPage.getUser();
                     return [];
                 };
+
+                object.getGlobalId = function() {
+                    // TODO: find source of object.
+                    // Only some persitent servers can create global ids.
+                    // https://github.com/rauschma/strint
+                };
     
                 object.init = function(initData) {
                     for(var property in initData) {
@@ -105,7 +111,7 @@ var addLiquidEntity = function(liquid) {
                             console.log("setting using standard constructor:" + setterName);
                             this[setterName](initData[property]);
                         } else {
-                            console.log("Error: Setter not found: (" + this.id + ")" + setterName + "!");
+                            console.log("Error: Setter not found: " + this.__() + "." + setterName + "!");
                             // console.log(this);
                         }
                     }
@@ -117,12 +123,12 @@ var addLiquidEntity = function(liquid) {
                     
                 object._idString = function() {
                     var idString = "";
-                    if (typeof(this.id) !== 'undefined') {
-                        idString = "id." + this.id;
-                    } else if (typeof(this._localId) !== 'undefined'){
-                        idString = "localId." + this._localId;
-                    } else if (typeof(this._persistentId) !== 'undefined') {
-                        idString = "persistentId." + this.id;
+                    if (typeof(this._globalId) !== 'undefined') {
+                        idString = "¤." + this._globalId;
+                    } else if (typeof(this._persistentId) !== 'undefined'){
+                        idString = "#." + this._persistentId;
+                    } else if (typeof(this._id) !== 'undefined') {
+                        idString = "id." + this._id;
                     }
                     return idString;                    
                 };
@@ -133,9 +139,9 @@ var addLiquidEntity = function(liquid) {
                 };
 
                 object.selectAll = function(selection) {
-                    if (typeof(selection[this.id]) === 'undefined') {
-                        // console.log("Selecting " + this.className + ":" + this.id);
-                        selection[this.id] = true;
+                    if (typeof(selection[this._id]) === 'undefined') {
+                        // console.log("Selecting " + this.__());
+                        selection[this._id] = true;
                         this._relationDefinitions.forEach(function(definition) {
                             if(definition.isSet) {
                                 this[definition.forAllName](function(related) {

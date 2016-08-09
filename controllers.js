@@ -7,48 +7,48 @@ module.exports = {
 			liquid.clearDatabase();
 		
 			// User
-			var user = createEntity('User', {name: "Some Person", email: "some.person@gmail.com" });
+			var user = createPersistentEntity('User', {name: "Some Person", email: "some.person@gmail.com" });
 			
 			
 			// Create categories
-			var favourite = createEntity('Category', {name: 'Favourite', description: '', user: user});
+			var favourite = createPersistentEntity('Category', {name: 'Favourite', description: '', user: user});
 			
-			var funny = createEntity('Category', {name: 'Funny', description: '', user: user});		
+			var funny = createPersistentEntity('Category', {name: 'Funny', description: '', user: user});		
 			
-			var politics = createEntity('Category', {name: 'Politics', description: '', user: user});
+			var politics = createPersistentEntity('Category', {name: 'Politics', description: '', user: user});
 
-			var georgism = createEntity('Category', {name: 'Georgism', description: '', user: user});
+			var georgism = createPersistentEntity('Category', {name: 'Georgism', description: '', user: user});
 			politics.addSubCategory(georgism);
 			
-			var myPolitics = createEntity('Category', {name: 'MyPoliticalCommitments', description: '', user: user});
+			var myPolitics = createPersistentEntity('Category', {name: 'MyPoliticalCommitments', description: '', user: user});
 			politics.addSubCategory(myPolitics);
 			
-			var directDemocracy = createEntity('Category', {name: 'Direct Democracy', description: '', user: user});
+			var directDemocracy = createPersistentEntity('Category', {name: 'Direct Democracy', description: '', user: user});
 			politics.addSubCategory(directDemocracy);
 			
-			var liquidDemocracy = createEntity('Category', {name: 'Liquid Democracy', description: '', user: user});
+			var liquidDemocracy = createPersistentEntity('Category', {name: 'Liquid Democracy', description: '', user: user});
 			directDemocracy.addSubCategory(liquidDemocracy);
 			
-			var direktdemokraterna = createEntity('Category', {name: 'Direktdemokraterna', description: '', user: user});
+			var direktdemokraterna = createPersistentEntity('Category', {name: 'Direktdemokraterna', description: '', user: user});
 			liquidDemocracy.addSubCategory(direktdemokraterna);
 			myPolitics.addSubCategory(direktdemokraterna);
 			
 			// Create References
 			var created = 0;
 			while (created++ < 3) {
-				var reference1 = createEntity('Reference', {url : 'http://foo.com/' + created, user: user, category:georgism});
+				var reference1 = createPersistentEntity('Reference', {url : 'http://foo.com/' + created, user: user, category:georgism});
 			}
 			// created = 0;
 			// while (created++ < 10) {
-				// var reference2 = createEntity('Reference', {url : 'http://fie.com/' + created, user: user, categories:[georgism, liquidDemocracy]});
+				// var reference2 = createPersistentEntity('Reference', {url : 'http://fie.com/' + created, user: user, categories:[georgism, liquidDemocracy]});
 			// }
 			// created = 0;
 			// while (created++ < 10) {
-				// var reference3 = createEntity('Reference', {url : 'http://fum.com/' + created, user: user, category: direktdemokraterna});
+				// var reference3 = createPersistentEntity('Reference', {url : 'http://fum.com/' + created, user: user, category: direktdemokraterna});
 			// }
 			// created = 0;
 			// while (created++ < 10) {
-				// var reference4 = createEntity('Reference', {url : 'http://foobarkazong.com/'  + created, user: user, category: direktdemokraterna});
+				// var reference4 = createPersistentEntity('Reference', {url : 'http://foobarkazong.com/'  + created, user: user, category: direktdemokraterna});
 			// }
 			res.send("Finished");
 			// console.log("====================");
@@ -60,7 +60,7 @@ module.exports = {
 		// console.log(sails);
 		liquidPageRequest(req, res, function(user, session, page) {
 			// console.log("Page id;");
-			// console.log(page.id);
+			// console.log(page._id);
 			
 			var politics = liquid.findEntity({className: 'Category', name: "Politics"});
 			console.log(politics.getSubCategories());
@@ -73,9 +73,9 @@ module.exports = {
 		liquidPageRequest(req, res, function(user, session, page) {
 
 			// console.log("Page id;");
-			// console.log(page.id);
+			// console.log(page._id);
 			
-			var somePerson = liquid.findEntity({className: 'User'});
+			var somePerson = liquid.findPersistentEntity({className: 'User'});
 			// console.log("Get name")
 			// console.log(somePerson.getName());
 			// console.log("Get owned categories")
@@ -95,22 +95,36 @@ module.exports = {
 			// console.log(selection);
 
 			// Subscribe to these objects. 
+			console.log("Selection");
+			console.log(selection);
+			console.log("idObjectMap:")
+			printIdMap(liquid.idObjectMap);
+			console.log("persistentIdObjectMap:")
+			printIdMap(liquid.persistentIdObjectMap);
+			
+			function printIdMap(map) {
+				for(id in map) {
+					object = map[id];
+					console.log(id + " : " + object.__());
+				}
+			} 
+			
 			for (id in selection) {
 				var object = liquid.getEntity(id);
-				object._observingPages[liquid.requestingPage.id] = liquid.requestingPage;
+				object._observingPages[liquid.requestingPage._id] = liquid.requestingPage;
 			}
 			
-			selection[page.id] = true;
-			selection[session.id] = true;
+			selection[page._id] = true;
+			selection[session._id] = true;
 
 			var data = {
 				hardToGuessPageId : page.getHardToGuessPageId(),
 				serialized : liquid.serializeSelection(selection),
-				user: somePerson.id,
-				session: session.id,
-				page: page.id,
-				// favourite : liquid.findEntity({className:'Category', name: 'Favourite'}).id,
-				// politics : liquid.findEntity({className:'Category', name: 'Politics'}).id
+				user: somePerson._id,
+				session: session._id,
+				page: page._id,
+				// favourite : liquid.findEntity({className:'Category', name: 'Favourite'})._id,
+				// politics : liquid.findEntity({className:'Category', name: 'Politics'})._id
 			};
 			// console.log("Serialized data:");
 			// console.log(data);

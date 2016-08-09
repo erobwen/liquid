@@ -31,12 +31,12 @@ registerClass({
 	
 	addMethods : function (object) {
 		object.addMethod('selectAllCategories', function(selection) {
-			liquid.mergeToSelection(this.id, true, selection);
+			liquid.mergeToSelection(this._id, true, selection);
 			// console.log(this.getOwnedCategories());
 			this.getOwnedCategories().forEach(function(category) {
 				// console.log("Selecting");
-				// liquid.mergeToSelection(category.id, true, selection);
-				liquid.mergeToSelection(category.id, true, selection);
+				// liquid.mergeToSelection(category._id, true, selection);
+				liquid.mergeToSelection(category._id, true, selection);
 				// console.log(selection);
 			});
 		});
@@ -98,10 +98,10 @@ registerClass({
 		object.addMethod("canAddAsSubCategory", function(category) {
 			// console.log("canAddAsSubCategory: " + this.__();
 			var allTransitiveParents = this.getAllTransitiveParents();
-			allTransitiveParents[this.id] = this; // Add this self
+			allTransitiveParents[this._id] = this; // Add this self
 			
 			var allTransitiveSubCategories = category.getAllTransitiveSubCategories();
-			allTransitiveSubCategories[category.id] = category; // Add category
+			allTransitiveSubCategories[category._id] = category; // Add category
 			
 			// console.log(allTransitiveParents);
 			// console.log(allTransitiveSubCategories);
@@ -115,8 +115,8 @@ registerClass({
 			// console.log(this.getSubCategories());
 			this.getSubCategories().forEach(function(subCategory) {
 				// console.log("Comparing");
-				// console.log(subCategory.id);
-				// console.log(category.id);
+				// console.log(subCategory._id);
+				// console.log(category._id);
 				
 				if (subCategory === category) {
 					// console.log("Aha!");
@@ -134,10 +134,10 @@ registerClass({
 		});
 		
 		object.addMethod("addAllTransitiveSubCategories", function(categories) {
-			if (typeof(categories[this.id]) === 'undefined') {
+			if (typeof(categories[this._id]) === 'undefined') {
 				this.getSubCategories().forEach(function(subCategory) {
 					subCategory.addAllTransitiveSubCategories(categories);
-					categories[subCategory.id] = subCategory;
+					categories[subCategory._id] = subCategory;
 				});
 			}
 		});
@@ -151,10 +151,10 @@ registerClass({
 		
 		object.addMethod("addAllTransitiveParents", function(categories) {
 			// console.log("addAllTransitiveParents:" + this.__());
-			if (typeof(categories[this.id]) === 'undefined') {
+			if (typeof(categories[this._id]) === 'undefined') {
 				this.getParents().forEach(function(parentCategory) {
 					parentCategory.addAllTransitiveParents(categories);
-					categories[parentCategory.id] = parentCategory;
+					categories[parentCategory._id] = parentCategory;
 				});
 			} else {
 				// console.log("Added already");
