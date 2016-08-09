@@ -5,8 +5,8 @@ var socket = io('http://localhost:8080');
 
 socket.on('connect', function(){
 	console.log("received CONNECT");
-	console.log(data.hardToGuessPageId);
-	socket.emit("registerPageId", data.hardToGuessPageId);
+	console.log(liquid.hardToGuessPageId);
+	socket.emit("registerPageId", liquid.hardToGuessPageId);
 });
 
 socket.on('settingRelation', function(objectId, relationName, relatedObjectId) {

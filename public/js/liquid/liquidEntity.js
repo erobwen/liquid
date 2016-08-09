@@ -122,15 +122,19 @@ var addLiquidEntity = function(liquid) {
                 };
                     
                 object._idString = function() {
-                    var idString = "";
-                    if (typeof(this._globalId) !== 'undefined') {
-                        idString = "¤." + this._globalId;
-                    } else if (typeof(this._persistentId) !== 'undefined'){
-                        idString = "#." + this._persistentId;
-                    } else if (typeof(this._id) !== 'undefined') {
-                        idString = "id." + this._id;
+                    // var idString = "";
+                    // if (this._globalId !== null) {
+                    //     idString = "¤." + this._globalId;
+                    // } else if (this._persistentId !== null){
+                    //     idString = "#." + this._persistentId;
+                    // } else if (this._id !== null) {
+                    //     idString = "id." + this._id;
+                    // }
+                    // return idString;
+                    function removeNull(value) {
+                        return (value === null) ? 'x' : value;
                     }
-                    return idString;                    
+                    return this._id + "." + removeNull(this._upstreamId) + "." + removeNull(this._persistentId) + "." + removeNull(this._globalId);
                 };
 
                 // This is the signum function, useful for debugging and tracing.

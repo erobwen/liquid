@@ -122,7 +122,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		for(var liquidClassName in liquid.classRegistry) {
 			var liquidClass = liquid.classRegistry[liquidClassName];
 			// console.log("Creating prototype for " + liquidClassName);
-			var objectPrototype = liquid.createAugmentedClassInstance(liquidClassName);
+			var objectPrototype = liquid.createAugmentedClassInstance(liquidClassName, true);
 			liquidClass.liquidObjectPrototype = objectPrototype;
 		}
 	}
@@ -444,12 +444,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// console.log(object);
 		liquid.cloneCommonInstanceFields(object, liquidClass.liquidObjectPrototype);
 		object._id = nextLocalId++;
+		object._ = object.__();
+		
 		liquid.idObjectMap[object._id] = object;
 		return object;
 	};
 	
 	
-	liquid.createAugmentedClassInstance = function(className) {
+	liquid.createAugmentedClassInstance = function(className, invisible) {
 		var liquidClass = liquid.classRegistry[className];
 		var object = liquid.createCommonObjectStructure({
 			_id : null, 
@@ -457,8 +459,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 			className : className,
 		});	
 		liquid.setupObject(object);
-		object._id = nextLocalId++;
-		liquid.idObjectMap[object._id] = object;
+
+		if (!invisible) {
+			object._id = nextLocalId++;
+			object._ = object.__();
+			liquid.idObjectMap[object._id] = object;
+		}
 		return object;		
 	};
 	
@@ -636,7 +642,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 		delete object.addMethod;
 		delete object.overrideMethod;
 		
-		object._ = "(object shell for " + object.className + ")";
 		// Utilities ? 
 		// liquid.setupStreaming(object);
 		// liquid.setupIterators(object);

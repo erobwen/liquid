@@ -108,7 +108,7 @@ liquid.createPersistentEntity = function(className, initData) {
     var liquidClass = liquid.classRegistry[className];
 	object._persistentId =  neo4j.createNode(liquidClass.tagName, className);
 	liquid.persistentIdObjectMap[object._persistentId] = object;
-	object._globalId = "1." + object._persistentId;
+	object._globalId = "1:" + object._persistentId;
 
 	// Set default and initialize 
 	liquid.setAllPropertiesToDefault(object);
@@ -129,15 +129,15 @@ liquid.createPersistentEntity = function(className, initData) {
 /**
 * Get object
 */
-liquid.getPersistentEntity = function(id) {
+liquid.getPersistentEntity = function(persistentId) {
 	// console.log("getEntity");
-	// console.log(id);
-	var stored = liquid.persistentIdObjectMap[id];
+	// console.log(persistentId);
+	var stored = liquid.persistentIdObjectMap[persistentId];
 	if (typeof(stored) !== 'undefined') {
 		// console.log("Found a stored value!");
 		return stored;
 	} else {
-		return liquid.loadNodeFromId(id);
+		return liquid.loadNodeFromId(persistentId);
 	}
 }
 

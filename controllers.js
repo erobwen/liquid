@@ -96,12 +96,16 @@ module.exports = {
 
 			// Subscribe to these objects. 
 			console.log("Selection");
-			console.log(selection);
+			printSelection(selection);
 			console.log("idObjectMap:")
 			printIdMap(liquid.idObjectMap);
 			console.log("persistentIdObjectMap:")
 			printIdMap(liquid.persistentIdObjectMap);
-			
+			function printSelection(selection) {
+				for (id in selection) {
+					console.log(id + " : " + liquid.getEntity(id).__());
+				}
+			}
 			function printIdMap(map) {
 				for(id in map) {
 					object = map[id];

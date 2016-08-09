@@ -79,7 +79,7 @@ function pushChange(change) {
 function serializeChangelist(changelist) {
 	// Translate change from objects to entityIds. Do this as late as possible so that objects that change from a temporary id to a real one gets the right id in the save.
 	changelist.forEach(function(change) {
-		change.objectId = change.object.upstreamId;
+		change.objectId = change.object._upstreamId;
 		delete change.object;
 
 		if (typeof(change.relation) !== 'undefined') {
@@ -93,12 +93,12 @@ function serializeChangelist(changelist) {
 		}
 
 		if (typeof(change.relatedObject) !== 'undefined') {
-			change.relatedObjectId = change.relatedObject.upstreamId;
+			change.relatedObjectId = change.relatedObject._upstreamId;
 			delete change.relatedObject;
 		}
 
 		if (typeof(change.previouslyRelatedObject) !== 'undefined') {
-			change.previouslyRelatedObjectId = change.previouslyRelatedObject.upstreamId;
+			change.previouslyRelatedObjectId = change.previouslyRelatedObject._upstreamId;
 			delete change.previouslyRelatedObject;
 		}
 	});
@@ -164,9 +164,10 @@ function unserializeReference(reference) {
 function ensureEmptyObjectExists(upstreamId, className) {
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 		var newObject = liquid.createClassInstance(className);
-		newObject.upstreamId = upstreamId;
+		newObject._upstreamId = upstreamId;
 		newObject.noDataLoaded = true;
 		liquid.upstreamIdObjectMap[upstreamId] = newObject;
+		newObject._ = newObject.__();
 	}
 	return liquid.upstreamIdObjectMap[upstreamId];
 }
@@ -204,6 +205,8 @@ function unserializeObject(serializedObject) {
 				targetObject[definition.setterName](data);
 			});
 		}
+		targetObject.noDataLoaded = false;
+		targetObject._ = targetObject.__();
 	} else {
 		console.log("Loaded data that was already loaded!!!");
 	}
