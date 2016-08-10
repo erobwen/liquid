@@ -5,14 +5,16 @@ Liquid is a web-development framework that will make it possible to create high 
 1. Integrate server and client.
 2. Create an all Javascript programming environment from backend to frontend (with React, we even replace things such as CSS)
 3. Real-time synchronization of data between server/client and peer clients.
-4. Advanced change propagation using dependency recording. (No more "observers", "watches" and similar! see MobX for similar technique)
+4. Advanced change propagation using dependency recording. (No more "observers", "watches" and similar! see MobX for similar technique). Examples:
     * repeatOnChange(function() { ...general Javscript code...}) // Will reevaluate automatically on each change in read data.
     * object.callCached('methodName', param1, param2, param3)    // Will not reevaluate for same arguments if nothing the method reads hasn't changed.
 5. Real OOP for models with model inheritance etc. (No more limitation of SQL databases, multi table inheritance and the like!)
-6. Data structure synchronization between client and server.
+6. REACT integration, supporting recursive views.
+7. Data structure synchronization between client and server.
     * Saving data will use all outgoing relations as "part-of" relations, that dictate what is to be pushed to server/saved to database. Supporting cascading deletes/saves.
     * Data selection will be used to facilitate data structure subscription, to continously push out arbitrarily shaped data structures to client.
-7. Object version control
+8. Integrated security model based on custom user/object access levels. Each user has a certain access level (readwrite/read/none) for each object, defined by custom Javascript callback.
+9. Client side routing with url/browser navigation support.
 
 The aim of liquid, is to create a developer experience for web-programming, that has similarities with developing desktop applications. No data-shuffling code between client and server has to be written. You get true OOP for models! It is also built with a "recursive mindset", in particular when it comes to view creation and REACT integration, making recursive view definitions possible.
 
@@ -24,7 +26,10 @@ https://docs.google.com/document/d/1GRvU7RE23RzrpRRky8FIEYQon3L4_6x_4LV4AGnnkR0/
 
 # Roadmap
 
-Features 1-5 are generally done to specification. The current development focuses on features 6-7.
+Features 1-6 are generally done to specification. The current development focuses on features 7-9. Future development is:
+
+1. Object version control.
+2. Liquid server clustering. It should be possible to organize Liquid servers in cluster-trees where end users communicate with leafs, and where the cluster tree act as a multi level data-cache.
 
 
 # Folder structure
