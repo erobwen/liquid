@@ -1,22 +1,30 @@
 
 
-var addLiquidRepetitionFunctionality = function(liquid) { 
+var addLiquidRepetitionFunctionality = function(liquid) {
+	/**
+	 * Move to pulse
+	 * @type {Array}
+     */
+	liquid.noModeDirtyRepeatersCallback = [];
+	liquid.addNoMoreDirtyRepeaterCallback = function(callback) {
+		liquid.noModeDirtyRepeatersCallback.push(callback);
+	}
 
-	/*********************************
-	* repeatOnChange (watch handling) 
-	**********************************/
-	
+
+
+	/**********************************
+	 *  Dependency recording
+	 *
+	 *  Upon change do
+	 **********************************/
+
+	// Debug
 	var traceRepetition = false;
-	liquid.repeatersBeeingRefreshed = [];
-	var dirtyRepeaters = [];
-	var allRepeaters = []; // Needed for debug only
-	var repeaterId = 0;
-	
-	// Debugging
-	liquid.dirtyRepeaters = dirtyRepeaters;
-	liquid.allRepeters = allRepeaters;
-	// liquid.repeatersBeeingRefreshed = repeatersBeeingRefreshed;
-	
+
+	// Recorder stack
+	liquid.activeRecorders = [];
+
+	var recorderId = 0;
 	liquid.uponChangeDo = function() { // description(optional), doFirst, doAfterChange
 		// Arguments
 		var doFirst;
@@ -30,24 +38,114 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			doFirst = arguments[0];
 			doAfterChange = arguments[1];
 		}
-		
-		var repeater = createRepeaterStructure({
-			terminateOnDirty : true,
-			afterTerminationAction : doAfterChange,
+
+		var recorder = {
+			id : recorderId++,
 			description : description,
-			action : doFirst,
+			sources : [],
+			uponChangeAction : doAfterChange
+		};
+
+		liquid.activeRecorders.push(repeater);
+		var returnValue = doFirst();
+		liquid.activeRecorders.pop();
+
+		return returnValue;
+	};
+
+	liquid.setupObservation = function(object, propertyOrRelation) { // or repeater if observing its return value, object only needed for debugging.
+		if (liquid.activeRecorders.length > 0) {
+			if (traceRepetition) {
+				console.log("setupObservation: " + object.__() + "." + propertyOrRelation.name);
+			}
+			var activeRecorder = liquid.activeRecorders[liquid.activeRecorders.length - 1];
+			// console.log("Reading property " + object.__() + "." + propertyOrRelation + " with repeater " + activeRecorder.id);
+
+			// Ensure observer structure in place (might be unecessary)
+			if (typeof(propertyOrRelation.observers) === 'undefined') {
+				// console.log("setting up observers...");
+				propertyOrRelation.observers = {};
+			}
+			var observerSet = propertyOrRelation.observers;
+
+			// Add repeater on object beeing observed, if not already added before
+			var recorderId = activeRecorder.id;
+			if (typeof(observerSet[recorderId]) === 'undefined') {
+				observerSet[recorderId] = activeRecorder;
+
+				// Note dependency in repeater itself (for cleaning up)
+				activeRecorder.sources.push(observerSet);
+			}
+			// console.group("Just set up observation");
+			// console.log(activeRecorder.description);
+			// console.log(Object.keys(propertyOrRelation.observers));
+			// console.log(propertyOrRelation);
+			// console.groupEnd();
+		}
+	};
+
+	// Recorders is a map from id => recorder
+	liquid.recordersDirty = function(recorders) {
+		liquid.holdRepeaterRepitition(function() {
+			for (id in recorders) {
+				liquid.recorderDirty(recorders[id]);
+			}
 		});
-		
-		allRepeaters.push(repeater);
-		// if (allRepeaters.length == 10) {
+	};
+
+
+	liquid.recorderDirty = function(recorder) { // TODO: Add update block on this stage?
+		if (traceRepetition) {
+			console.log("Recorder noticed change: " + recorder.id + "." + recorder.description);
+		}
+
+		liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
+		recorder.uponChangeAction();
+
+		if (traceRepetition) {
+			console.log("Recorder finished upon change action: " + recorder.id + "." + recorder.description);
+		}
+	};
+
+
+	liquid.removeObservation = function(recorder) {
+		// console.group("removeFromObservation: " + recorder.id + "." + recorder.description);
+		if (recorder.id == 1)  {
 			// debugger;
-		// }
-		// console.log("repeatOnChange activated: " + repeater.id + "." + description);
-		liquid.refreshRepeater(repeater);
-		return repeater;
-	}
-	
-	
+		}
+		// Clear out previous observations
+		recorder.sources.forEach(function(observerSet) { // From observed object
+			// console.log("Removing a source");
+			// console.log(observerSet[recorder.id]);
+			delete observerSet[recorder.id];
+		});
+		clearArray(recorder.sources);  // From repeater itself.
+		// console.groupEnd();
+	};
+
+
+	/**********************************
+	 *
+	 *   Repetition
+	 *
+	 **********************************/
+
+	var pausingRepeaters = 0;
+	liquid.pauseRepeaters = function(action) {
+		pausingRepeaters++;
+		action();
+		pausingRepeaters--;
+		liquid.refreshAllDirtyRepeaters();
+	};
+
+
+	// Debugging
+	var dirtyRepeaters = [];
+	var allRepeaters = [];
+
+	// Repeater stack
+	liquid.activeRepeaters = [];
+
 	liquid.repeatOnChange = function() { // description(optional), action
 		// Arguments
 		var repeaterAction;
@@ -56,23 +154,25 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			description = arguments[0];
 			repeaterAction = arguments[1];
 		} else {
-			repeaterAction = arguments[0];			
+			repeaterAction = arguments[0];
 		}
-			
-		var repeater = createRepeaterStructure({
-			terminateOnDirty : false,
-			description : description,
-			action : repeaterAction
-		});
 
-		if (liquid.repeatersBeeingRefreshed.length > 0) {
-			var parentRepeater = lastOfArray(liquid.repeatersBeeingRefreshed);
-			if (!parentRepeater.terminateOnDirty && !repeater.terminateOnDirty) {
-				parentRepeater.childRepeaters.push(repeater);
-			}
+		var repeater = {
+			id : repeaterId++,
+			description : description,
+			childRepeaters: [],
+			removed : false,
+			action : repeaterAction
 		};
 
-		allRepeaters.push(repeater);
+		// Attatch to parent repeater.
+		if (liquid.activeRepeaters.length > 0) {
+			var parentRepeater = lastOfArray(liquid.activeRepeaters);
+			parentRepeater.childRepeaters.push(repeater);
+		};
+
+		// Debug
+		// allRepeaters.push(repeater);
 		// if (allRepeaters.length == 10) {
 			// debugger;
 		// }
@@ -80,98 +180,56 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		liquid.refreshRepeater(repeater);
 		return repeater;
 	};
-	
-	var createRepeaterStructure = function(values) {
-		var defaultStructure = {
-			id : repeaterId++,
-			description : null,
 
-			dirty : true,
-			
-			terminateOnDirty : false, 
-			afterTerminationAction : null,
-			
-			sources : [],
-			
-			childRepeaters: [],
-			
-			returnValue : null
-		};
-		for (property in values) {
-			defaultStructure[property] = values[property];
-		}
-		return defaultStructure;
-	}
-	
-	liquid.noModeDirtyRepeatersCallback = [];
-	liquid.addNoMoreDirtyRepeaterCallback = function(callback) {
-		liquid.noModeDirtyRepeatersCallback.push(callback);
-	}
-	
-	var holdingChangePropagation = 0;
-	liquid.holdChangePropagation = function(action) {
-		holdingChangePropagation++;
-		action();
-		holdingChangePropagation--;
-		liquid.refreshAllDirtyRepeaters();
-	};
-	
-	
-	// Observers is a map from id => observer
-	liquid.observersDirty = function(observers) {
-		liquid.holdChangePropagation(function() {
-			for (id in observers) {
-				liquid.repeaterDirty(observers[id]);
-			}			
-		});
-	};
-
-		
-	liquid.repeaterDirty = function(repeater) { // TODO: Add update block on this stage?
-		if (!repeater.dirty) {
-			if (traceRepetition) {
-				console.log("Repeater dirty: " + repeater.id + "." + repeater.description);
-			}			
-			liquid.removeObservation(repeater); // Cannot be any more dirty than it already is!
-			if (!repeater.terminateOnDirty) {
-				repeater.dirty = true;
-				dirtyRepeaters.push(repeater);
-				liquid.tryToRefreshAllDirtyRepeaters();				
-			} else {
-				if (traceRepetition) {
-					console.group("Terminating one-time repeater " + repeater.id + "." + repeater.description);
-				}
-				var doAfterTerminate = repeater.afterTerminationAction;
-				liquid.removeRepeaterItself(repeater);
-				doAfterTerminate(); 
-				if (dirtyRepeaters.length == 0) {
-					liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() });
-				}
-				// Do actual repetition
-				// console.log("Before call");
-				// repeater.returnValue = repeater.action();
-				// console.log(repeater.returnValue);
-				// liquid.removeOrphinedSubRepeaters(repeater);			
-				// repeater.dirty = false;
-				// if (startedToMeasureTime) {
-					// var end = new Date().getTime();
-					// var time = (end - start);
-					// refreshAccumulatedTime += time;
-
-					// console.log(allRepeaters);
-					// debugger;
-					// measuringTime = false;
-				// }			
-				if (traceRepetition) {
-					console.log("Finished terminating one-time repeater " + repeater.id + "." + repeater.description + ". (total time spent on refresh so far:" + refreshAccumulatedTime + ")");
-					console.groupEnd();
+	liquid.refreshRepeater = function(repeater) {
+		liquid.activeRepeaters.push(repeater);
+		repeater.removed = false;
+		repeater.returnValue = liquid.uponChangeDo(
+			repeater.action(),
+			function() {
+				if (!repeater.removed) {
+					liquid.repeaterDirty(repeater);
 				}
 			}
+		);
+		liquid.activeRepeaters.pop();
+	};
+
+	liquid.repeaterDirty = function(repeater) { // TODO: Add update block on this stage?
+		if (traceRepetition) {
+			console.log("Repeater dirty: " + repeater.id + "." + repeater.description);
+		}
+		liquid.removeSubRepeaters(repeater);
+		dirtyRepeaters.push(repeater);
+		liquid.tryToRefreshAllDirtyRepeaters();
+	};
+
+	liquid.removeSubRepeaters = function(repeater) {
+		if (repeater.childRepeaters.length > 0) {
+			repeater.childRepeaters.forEach(function(repeater) {
+				liquid.removeRepeater(repeater);
+			});
+			repeater.childRepeaters = [];
 		}
 	};
-	
+
+	liquid.removeRepeater = function(repeater) {
+		// console.log("removeRepeater: " + repeater.id + "." + repeater.description);
+		repeater.removed = true; // In order to block any lingering recorder that triggers change
+		if (repeater.childRepeaters.length > 0) {
+			repeater.childRepeaters.forEach(function(repeater) {
+				liquid.removeRepeater(repeater);
+			});
+			repeater.childRepeaters.length = 0;
+		}
+
+		//removeFromArray(repeater, liquid.activeRecorders);
+		removeFromArray(repeater, dirtyRepeaters);
+		removeFromArray(repeater, allRepeaters);
+	};
+
 	liquid.tryToRefreshAllDirtyRepeaters = function() {
-		if (holdingChangePropagation === 0) {
+		if (pausingRepeaters=== 0) {
 			liquid.refreshAllDirtyRepeaters();
 		}
 	};
@@ -188,7 +246,6 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 					var repeater = dirtyRepeaters.shift();
 					liquid.refreshRepeater(repeater);
 				}
-				liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() });
 				refreshingAllDirtyRepeaters = false;
 				if (traceRepetition) {
 					console.log("Finished refresh of all dirty repeaters, current count of dirty:" + dirtyRepeaters.length + ", all current and refreshed repeaters:");
@@ -198,127 +255,14 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			}
 		}
 	};
-	
-	liquid.removeObservation = function(repeater) {
-		// console.group("removeFromObservation: " + repeater.id + "." + repeater.description);
-		if (repeater.id == 1)  {
-			// debugger;
-		}
-		// Clear out previous observations
-		repeater.sources.forEach(function(observerSet) { // From observed object
-			// console.log("Removing a source");
-			// console.log(observerSet[repeater.id]);
-			delete observerSet[repeater.id];
-		});
-		clearArray(repeater.sources);  // From repeater itself.
-		// console.groupEnd();
-	};	
-	
-	liquid.removeSubRepeaters = function(repeater) {
-		if (repeater.childRepeaters.length > 0) {
-			repeater.childRepeaters.forEach(function(repeater) {
-				liquid.removeRepeater(repeater);
-			});
-			repeater.childRepeaters = [];
-		}
-	};
 
-	liquid.removeRepeaterItself = function(repeater) {
-		// console.log("removeRepeaterItself: " + repeater.id + "." + repeater.description);
-		// console.log(repeater);
-		// if (repeater.childRepeaters.length > 0) {
-			// repeater.childRepeaters.forEach(function(repeater) {
-				// liquid.removeRepeater(repeater);
-			// });
-			// repeater.childRepeaters.length = 0;
-		// }
-		
-		// liquid.removeObservation(repeater);   // We are already dirty at this stage, so we do not need to remove observation
-		//removeFromArray(repeater, liquid.repeatersBeeingRefreshed);
-		removeFromArray(repeater, dirtyRepeaters);
-		removeFromArray(repeater, allRepeaters);		
-	};
-	
-	liquid.removeRepeater = function(repeater) {
-		// console.log("removeRepeater: " + repeater.id + "." + repeater.description);
-		// console.log(repeater);
-		if (repeater.childRepeaters.length > 0) {
-			repeater.childRepeaters.forEach(function(repeater) {
-				liquid.removeRepeater(repeater);
-			});
-			repeater.childRepeaters.length = 0;
-		}
-		
-		liquid.removeObservation(repeater);
-		//removeFromArray(repeater, liquid.repeatersBeeingRefreshed);
-		removeFromArray(repeater, dirtyRepeaters);
-		removeFromArray(repeater, allRepeaters);		
-	};
-	
-	var refreshAccumulatedTime = 0;
-	var measuringTime = false;
-	liquid.refreshRepeater = function(repeater) {
-		// var start = new Date().getTime();
-		// var startedToMeasureTime = !measuringTime;
-		// measuringTime = true;
-		// var trace = repeater.childRepeaters.length > 0;
-		
-		// if (traceRepetition) {
-			// console.group("Refreshing repeater " + repeater.id + "." + repeater.description);
-		// }
 
-		liquid.removeSubRepeaters(repeater);
-		liquid.repeatersBeeingRefreshed.push(repeater);
-		repeater.returnValue = repeater.action();
-		repeater.dirty = false;		
-		liquid.repeatersBeeingRefreshed.pop();
+	/**********************************
+	 *  Cached methods
+	 *
+	 *  Upon change do
+	 **********************************/
 
-		// if (startedToMeasureTime) {
-			// var end = new Date().getTime();
-			// var time = (end - start);
-			// refreshAccumulatedTime += time;
-
-			// console.log(allRepeaters);
-			// debugger;
-			// measuringTime = false;
-		// }			
-		// if (traceRepetition) {
-			// console.log("Finished refresing clocked repeater. Total time spent on refresh so far:" + refreshAccumulatedTime);
-			// console.groupEnd();
-		// }
-	};
-	
-	liquid.setupObservation = function(object, propertyOrRelation) { // or repeater if observing its return value, object only needed for debugging. 
-		if (liquid.repeatersBeeingRefreshed.length > 0) {
-			if (traceRepetition) {
-				console.log("setupObservation: " + object.__() + "." + propertyOrRelation.name);
-			}
-			var repeaterBeeingRefreshed = liquid.repeatersBeeingRefreshed[liquid.repeatersBeeingRefreshed.length - 1];
-			// console.log("Reading property " + object.__() + "." + propertyOrRelation + " with repeater " + repeaterBeeingRefreshed.id);
-
-			// Ensure observer structure in place (might be unecessary)
-			if (typeof(propertyOrRelation.observers) === 'undefined') {
-				// console.log("setting up observers...");
-				propertyOrRelation.observers = {};
-			}
-			var observerSet = propertyOrRelation.observers;
-			
-			// Add repeater on object beeing observed, if not already added before
-			var repeaterId = repeaterBeeingRefreshed.id;
-			if (typeof(observerSet[repeaterId]) === 'undefined') {
-				observerSet[repeaterId] = repeaterBeeingRefreshed;
-				
-				// Note dependency in repeater itself (for cleaning up)
-				repeaterBeeingRefreshed.sources.push(observerSet);				
-			}
-			// console.group("Just set up observation");
-			// console.log(repeaterBeeingRefreshed.description);
-			// console.log(Object.keys(propertyOrRelation.observers));
-			// console.log(propertyOrRelation);
-			// console.groupEnd();
-		}
-	};
-	
 	function makeArgumentHash(argumentList) {
 		var hash =  "";
 		var first = true;
