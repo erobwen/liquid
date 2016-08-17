@@ -39,6 +39,7 @@ var focusComponent = function(component) {
 var componentsNeedOfForceUpdate = [];
 liquid.addNoMoreDirtyRepeaterCallback(function() {
 	// console.group("All repeaters refreshed, " + componentsNeedOfForceUpdate.length + " components needs updating");
+	console.log("Starting UI update with " + componentsNeedOfForceUpdate.length + " required updates");
 	componentsNeedOfForceUpdate.forEach(function(component) {
 		// console.log(component);
 		if (component._mounted) {
@@ -129,10 +130,10 @@ var liquidClassData = function(classData) {
 var invalidateUponLiquidChange = function(className, component, renderFunction) {
 	// console.group(className + ".render:");
 	component._ = "<" + className + " />";
-	var repeater = uponChangeDo("Component:" + className, renderFunction, function() {
+	return uponChangeDo("Component:" + className, renderFunction, function() {
 		console.log("Component:" + className + " in need of update");
 		componentsNeedOfForceUpdate.push(component);
 	});
 	// console.groupEnd();
-	return repeater.returnValue; //getReturnValueWithoutObservation(); // To not bind the surrounding repeater to this one. 
+	// return repeater.returnValue; //getReturnValueWithoutObservation(); // To not bind the surrounding repeater to this one.
 }

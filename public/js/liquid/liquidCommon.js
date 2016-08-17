@@ -637,7 +637,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Add methods, direct, cached and repeated.
 		liquid.addGenericMethodCacher(object);
-		liquid.addGenericMethodRepeater(object);
+		liquid.addGenericReevaluatedMethodRepeater(object);
 		liquid.addClassMethods(object);
 		delete object.addMethod;
 		delete object.overrideMethod;

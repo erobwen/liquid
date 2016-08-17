@@ -1,16 +1,6 @@
 
 
 var addLiquidRepetitionFunctionality = function(liquid) {
-	/**
-	 * Move to pulse
-	 * @type {Array}
-     */
-	liquid.noModeDirtyRepeatersCallback = [];
-	liquid.addNoMoreDirtyRepeaterCallback = function(callback) {
-		liquid.noModeDirtyRepeatersCallback.push(callback);
-	};
-
-
 
 	/**********************************
 	 *  Dependency recording
@@ -19,7 +9,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	 **********************************/
 
 	// Debug
-	var traceRepetition = false;
+	var traceRepetition = true;
 
 	// Recorder stack
 	liquid.activeRecorders = [];
@@ -46,7 +36,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			uponChangeAction : doAfterChange
 		};
 
-		liquid.activeRecorders.push(repeater);
+		liquid.activeRecorders.push(recorder);
 		var returnValue = doFirst();
 		liquid.activeRecorders.pop();
 
@@ -56,7 +46,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	liquid.setupObservation = function(object, propertyOrRelation) { // or repeater if observing its return value, object only needed for debugging.
 		if (liquid.activeRecorders.length > 0) {
 			if (traceRepetition) {
-				console.log("setupObservation: " + object.__() + "." + propertyOrRelation.name);
+				console.log("setupObservation: " + object._ + "." + propertyOrRelation.name);
 			}
 			var activeRecorder = liquid.activeRecorders[liquid.activeRecorders.length - 1];
 			// console.log("Reading property " + object.__() + "." + propertyOrRelation + " with repeater " + activeRecorder.id);
@@ -86,26 +76,35 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 	// Recorders is a map from id => recorder
 	liquid.recordersDirty = function(recorders) {
-		liquid.holdRepeaterRepitition(function() {
+		liquid.pauseRepeaters(function() {
 			for (id in recorders) {
 				liquid.recorderDirty(recorders[id]);
 			}
 		});
 	};
 
+	liquid.observersDirty = liquid.recordersDirty;
 
-	liquid.recorderDirty = function(recorder) { // TODO: Add update block on this stage?
+	liquid.recorderDirty = function(recorder) {
 		if (traceRepetition) {
 			console.log("Recorder noticed change: " + recorder.id + "." + recorder.description);
 		}
 
-		liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
-		recorder.uponChangeAction();
+		if (pausingRepeaters == 0) {
+			liquid.pauseRepeaters(function() {
+				liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
+				recorder.uponChangeAction();
+			});
+		} else {
+			liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
+			recorder.uponChangeAction();
+		}
 
 		if (traceRepetition) {
-			console.log("Recorder finished upon change action: " + recorder.id + "." + recorder.description);
+			console.log("... recorder finished upon change action: " + recorder.id + "." + recorder.description);
 		}
 	};
+	liquid.observerDirty = liquid.recorderDirty;
 
 
 	liquid.removeObservation = function(recorder) {
@@ -130,13 +129,25 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	 *
 	 **********************************/
 
+	/**
+	 * Move to pulse
+	 * @type {Array}
+	 */
+	liquid.noModeDirtyRepeatersCallback = [];
+	liquid.addNoMoreDirtyRepeaterCallback = function(callback) {
+		liquid.noModeDirtyRepeatersCallback.push(callback);
+	};
+
+
 	var pausingRepeaters = 0;
 	liquid.pauseRepeaters = function(action) {
 		pausingRepeaters++;
 		action();
 		pausingRepeaters--;
 		liquid.refreshAllDirtyRepeaters();
+		liquid.noModeDirtyRepeatersCallback.forEach(function(callback) {callback();});
 	};
+	liquid.holdChangePropagation = liquid.pauseRepeaters;
 
 
 	// Debugging
@@ -145,11 +156,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 	// Repeater stack
 	liquid.activeRepeaters = [];
-
+	repeaterId = 0;
 	liquid.repeatOnChange = function() { // description(optional), action
 		// Arguments
 		var repeaterAction;
-		var description = null;
+		var description = '';
 		if (arguments.length > 1) {
 			description = arguments[0];
 			repeaterAction = arguments[1];
@@ -187,6 +198,9 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		repeater.returnValue = liquid.uponChangeDo(
 			repeater.action(),
 			function() {
+				if (traceRepetition) {
+					console.log("Repeater's recorder notified change: " + repeater.id + "." + repeater.description);
+				}
 				if (!repeater.removed) {
 					liquid.repeaterDirty(repeater);
 				}
@@ -246,6 +260,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 					var repeater = dirtyRepeaters.shift();
 					liquid.refreshRepeater(repeater);
 				}
+
 				refreshingAllDirtyRepeaters = false;
 				if (traceRepetition) {
 					console.log("Finished refresh of all dirty repeaters, current count of dirty:" + dirtyRepeaters.length + ", all current and refreshed repeaters:");
@@ -307,6 +322,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			// console.log("Argument hash:" + argumentHash);
 			if (typeof(methodCaches[argumentHash]) === 'undefined') {
 				console.log("Cached method not seen before, or re-caching needed... ");
+				var methodCache = {
+					observers : {},
+					returnValue : returnValue
+				};
+				methodCaches[argumentHash] = methodCache;
 
 				// Never encountered these arguments before, make a new cache
 				var returnValue = uponChangeDo(this.__() + "." + methodName,
@@ -321,20 +341,17 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						delete methodCaches[argumentHash];
 
 						// Recorders dirty
-						liquid.recordersDirty(methodCacheRepeater.observers);
+						liquid.recordersDirty(methodCache.observers);
 					}.bind(this));
-				methodCaches[argumentHash] = {
-					observers : {},
-					returnValue : returnValue
-				};
-				liquid.setupObservation(this, methodCacheRepeater);
+				methodCache.returnValue = returnValue;
+				liquid.setupObservation(this, methodCache);
 				return returnValue;
 			} else {
 				// Encountered these arguments before, reuse previous repeater
 				console.log("Cached method seen before ...");
-				var methodCacheRepeater = methodCaches[argumentHash];
-				liquid.setupObservation(this, methodCacheRepeater);
-				return methodCacheRepeater.returnValue;
+				var methodCache = methodCaches[argumentHash];
+				liquid.setupObservation(this, methodCache);
+				return methodCache.returnValue;
 			}
 		}
 	};
