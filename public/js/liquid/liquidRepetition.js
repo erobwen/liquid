@@ -196,7 +196,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		liquid.activeRepeaters.push(repeater);
 		repeater.removed = false;
 		repeater.returnValue = liquid.uponChangeDo(
-			repeater.action(),
+			repeater.action,
 			function() {
 				if (traceRepetition) {
 					console.log("Repeater's recorder notified change: " + repeater.id + "." + repeater.description);
