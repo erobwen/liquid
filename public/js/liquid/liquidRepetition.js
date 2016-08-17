@@ -8,7 +8,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	liquid.noModeDirtyRepeatersCallback = [];
 	liquid.addNoMoreDirtyRepeaterCallback = function(callback) {
 		liquid.noModeDirtyRepeatersCallback.push(callback);
-	}
+	};
 
 
 
@@ -309,89 +309,89 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				console.log("Cached method not seen before, or re-caching needed... ");
 
 				// Never encountered these arguments before, make a new cache
-				var methodCacheRepeater = uponChangeDo(this.__() + "." + methodName, 
+				var returnValue = uponChangeDo(this.__() + "." + methodName,
 					function() {
 						return this[methodName].apply(this, methodArguments);
 					}.bind(this), 
 					function() {
 						console.log("Terminating cached method repeater: " + this.__() + '.[cachedCall]' +  methodName);
-						// liquid.holdChangePropagation(function() {
+						// Get and delete method cache
 						var methodCaches = this.__cachedCalls[methodName];
-						var methodCacheRepeater = methodCaches[argumentHash];
-						var observers = methodCacheRepeater.observers;
+						var methodCache = methodCaches[argumentHash];
 						delete methodCaches[argumentHash];
-						// console.log(methodCaches[argumentHash]);
-						for (id in observers) {
-							liquid.repeaterDirty(observers[id]);
-						}
-						// }.bind(this));
+
+						// Recorders dirty
+						liquid.recordersDirty(methodCacheRepeater.observers);
 					}.bind(this));
-				methodCaches[argumentHash] = methodCacheRepeater;
+				methodCaches[argumentHash] = {
+					observers : {},
+					returnValue : returnValue
+				};
 				liquid.setupObservation(this, methodCacheRepeater);
-				return methodCacheRepeater.returnValue;
+				return returnValue;
 			} else {
 				// Encountered these arguments before, reuse previous repeater
 				console.log("Cached method seen before ...");
-				// console.log("Repeater returning");
-				// console.log(methodCache.returnValue);
 				var methodCacheRepeater = methodCaches[argumentHash];
-				if (methodCacheRepeater.dirty) {
-					debugger;
-				}
 				liquid.setupObservation(this, methodCacheRepeater);
 				return methodCacheRepeater.returnValue;
 			}
 		}
-	}
+	};
 	
-	liquid.addGenericMethodRepeater = function(object, repeaterName, method) {
-		// Consider: Should repeater instances be set on the object somehow?
-		// if (typeof(object.parentRepeaters) === 'undefined') {
-			// object.parentRepeaters = {}; // TODO: this should be removed before object usage!
-		// }
-		// object.parentRepeaters[repeaterName] = method;
-		object[repeaterName] = function() {
-			if (typeof(this["__" + repeaterName + "_instances"]) === 'undefined') {
-				this["__" + repeaterName + "_instances"] = {};
-			}
-			var repeaterInstances = this["__" + repeaterName + "_instances"];
-			// console.log("Calling cached method: " + object.__() + "."+ repeaterName);
-			var repeaterArguments = argumentsToArray(arguments);
-			var argumentHash = makeArgumentHash(repeaterArguments);
-			if (typeof(repeaterInstances[argumentHash]) === 'undefined') {
-				// Never encountered these arguments before, make a new repeater
-				// console.log("New arguments...");
-				var repeaterRecord = {
-					name: repeaterName + "(repeater)",
-					repeater : null,
-					previousReturnValue : null,
-				};
-				liquid.setupObservation(this, repeaterRecord.repeater);
-				repeaterRecord.repeater = repeatOnChange(this.__() + "." + repeaterName, function() {
-					var returnValue = method.apply(this, repeaterArguments);
-					// console.log("Evaluating repeater");
-					// console.log(returnValue);
+	liquid.addGenericReevaluatedMethodRepeater = function(object, repeaterName, method) {
+		object['cachedReevaluatedCall'] = function() {
+			// Split arguments
+			var argumentsArray = argumentsToArray(arguments);
+			var methodName = argumentsArray.shift();
+			var methodArguments = argumentsArray;
 
-					return returnValue;
-				}.bind(this));
-				repeaterInstances[argumentHash] = repeaterRecord;
-				// console.log("Repeater returning");
-				// console.log(repeaterRecord.returnValue);
-				return repeaterRecord.repeater.returnValue;
+			// Establish method caches
+			if (typeof(this["__cachedReevaluatedCalls"]) === 'undefined') {
+				this["__cachedReevaluatedCalls"] = {};
+			}
+			var methodCaches = null;
+			if (typeof(this.__cachedReevaluatedCalls[methodName]) === 'undefined') {
+				methodCaches = {};
+				this.__cachedReevaluatedCalls[methodName] = methodCaches;
+			} else {
+				methodCaches = this.__cachedReevaluatedCalls[methodName];
+			}
+
+			// Establish argument hash
+			var argumentHash = makeArgumentHash(methodArguments);
+
+			// console.log("Argument hash:" + argumentHash);
+			if (typeof(methodCaches[argumentHash]) === 'undefined') {
+				console.log("Cached method not seen before, or re-caching needed... ");
+				var methodCache = {
+					observers : {},
+					returnValue : null
+				};
+				methodCaches[argumentHash] = methodCache;
+
+				// Never encountered these arguments before, make a new cache
+				methodCache.repeater = repeatOnChange(this.__() + "." + methodName,
+					function() {
+						console.log("Reevaluating cached method repeater: " + this.__() + '.[cachedCall]' +  methodName);
+						var newReturnValue = this[methodName].apply(this, methodArguments);
+						methodCache.returnValue = newReturnValue;
+
+						// Recorders dirty
+						if (newReturnValue !== methodCache.returnValue) {
+							methodCache.returnValue = newReturnValue;
+							liquid.recordersDirty(methodCacheRepeater.observers);
+						}
+					}.bind(this));
+
+				liquid.setupObservation(this, methodCacheRepeater);
+				return returnValue;
 			} else {
 				// Encountered these arguments before, reuse previous repeater
-				// console.log("Seen before ...");
-				// console.log(repeaterRecord.repeater.returnValue);
-				var repeaterRecord = repeaterInstances[argumentHash];
-				var repeater = repeaterRecord.repeater;
-				liquid.setupObservation(this, repeaterRecord.repeater);
-				if (repeater.dirty) {
-					// console.log("Refreshing a sub repeater as a part of refreshing a repeater...");
-					liquid.refreshRepeater(repeater);
-				}
-				// console.log("Repeater returning");
-				// console.log(repeaterRecord.returnValue);
-				return repeaterRecord.repeater.returnValue; // return method repeater. 
+				console.log("Cached method seen before ...");
+				var methodCacheRepeater = methodCaches[argumentHash];
+				liquid.setupObservation(this, methodCacheRepeater);
+				return methodCacheRepeater.returnValue;
 			}
 		}
 	} 
@@ -399,13 +399,6 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 // TODO: handle consolidation of newly created objects into existing ones. 
 
-// New syntax:
-
-// var result = uponChangeDo(function() {	
-	// return foo(;
-// }, function() {
-	// this.
-// });
 
 if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') {
 	module.exports.addLiquidRepetitionFunctionality = addLiquidRepetitionFunctionality;
