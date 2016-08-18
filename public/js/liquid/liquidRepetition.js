@@ -260,11 +260,14 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	};
 
 
-	/**********************************
+	/************************************************************************
 	 *  Cached methods
 	 *
-	 *  Upon change do
-	 **********************************/
+	 * A cached method will not reevaluate for the same arguments, unless
+	 * some of the data it has read for such a call has changed. If there 
+	 * is a parent cached method, it will be notified upon change. 
+	 * (even if the parent does not actually use/read any return value)
+	 ************************************************************************/
 
 	function makeArgumentHash(argumentList) {
 		var hash =  "";
@@ -343,7 +346,18 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			}
 		}
 	};
-	
+
+
+	/*********************************************************************************************************
+	 *  Cached reevaluated methods
+	 *
+	 *  A cached reevaluated method call will not notify change to its caller directly upon change in data.
+	 *  
+	 *  Instead it will reevaluate the method upon data change, and only if 
+	 *  the resulting return value changes, it will notify its caller. 
+	 *  
+	 *******************************************************************************************************/
+
 	liquid.addGenericReevaluatedMethodRepeater = function(object, repeaterName, method) {
 		object['cachedReevaluatedCall'] = function() {
 			// Split arguments

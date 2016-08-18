@@ -128,6 +128,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 		// Push data to persistent storage
 		liquid.pushDataToDatabase();
+		// if (object._persistentId != null) {
+		// 	neo4j.createRelationTo(object._persistentId, relatedObject._persistentId, definition.qualifiedName);
+		// 	neo4j.setPropertyValue(object._persistentId, propertyDefinition.name, newValue);
+		// }
+
 
 		liquid.activePulse = null;
 	};
@@ -486,28 +491,37 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 	liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
-		liquid.addToPulse({action: 'settingRelation', object: object, definition: definition, instance: instance, value: value, previousValue: previousValue});
-		liquid.notifyDeletingRelation(object, definition, instance, previousValue);
-		liquid.notifyAddingRelation(object, definition, instance, value);
+		liquid.pauseRepeaters(function() {
+			liquid.observersDirty(instance.observers);
+			liquid.addToPulse({action: 'settingRelation', object: object, definition: definition, instance: instance, value: value, previousValue: previousValue});
+			liquid.notifyDeletingRelation(object, definition, instance, previousValue);
+			liquid.notifyAddingRelation(object, definition, instance, value);
+		});
 	};
 
 	liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
+		liquid.observersDirty(instance.observers);
 		liquid.addToPulse({action: 'addingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyAddReverseRelation = function(object, definition, instance, relatedObject) {
+		liquid.observersDirty(instance.observers);
 		liquid.addToPulse({action: 'addingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
+		liquid.observersDirty(instance.observers);
 		liquid.addToPulse({action: 'deletingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyDeletingReverseRelation = function(object, definition, instance, relatedObject) {
+		liquid.observersDirty(instance.observers);
 		liquid.addToPulse({action: 'deletingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 	
 	liquid.notifyRelationReordered = function(object, definition, instance, relationData) {
+		// console.log("notifySettingProperty: " + object.__() + "." + propertyDefinition.name + " = " + newValue);
+		liquid.observersDirty(instance.observers);
 		liquid.addToPulse({action: 'relationReordered', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 

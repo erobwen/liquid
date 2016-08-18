@@ -107,47 +107,6 @@ function serializeChangelist(changelist) {
 
 
 /**--------------------------------------------------------------
-*                   Detailed Observation
-*
-* Detailed observation ignores mirror relations. Therefore all 
-* Events in detailed obervation are unique, and can be used to 
-* Save data, transmitt changes to peers etc. 
-*----------------------------------------------------------------*/
-
-/***
- * Relations
- */
-liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
-	console.log("notifyAddingRelation: " + object.__()  + "." + definition.name);
-	if (!changesOriginateFromServer()) {
-		pushChange({type: 'addingRelation', object: object, relation: definition, relatedObject: relatedObject});
-	}
-	liquid.observersDirty(instance.observers);
-};
-
-liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
-	console.log("notifyDeletingRelation: " + object.__()  + "." + definition.name);
-	if (!changesOriginateFromServer()) {
-		pushChange({type: 'deletingRelation', object: object, relation: definition, relatedObject: relatedObject});
-	}
-	liquid.observersDirty(instance.observers);
-};
-
-
-/***
- * Properties
- */
-liquid.notifySettingProperty = function(object, propertyDefinition, propertyInstance, newValue, oldValue) {
-	console.log("notifySettingProperty: " + object.__() + "." + propertyDefinition.name + " = " + newValue);
-	if (!changesOriginateFromServer()) {
-		pushChange({type: 'settingProperty', object: object, property: propertyDefinition, newValue: newValue, oldValue: oldValue});
-	}
-	liquid.observersDirty(propertyInstance.observers);
-}
-
-
-
-/**--------------------------------------------------------------
 *   Unserialization
 *----------------------------------------------------------------*/
 
