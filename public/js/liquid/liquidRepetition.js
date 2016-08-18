@@ -129,15 +129,6 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	 *
 	 **********************************/
 
-	/**
-	 * Move to pulse
-	 * @type {Array}
-	 */
-	liquid.noModeDirtyRepeatersCallback = [];
-	liquid.addNoMoreDirtyRepeaterCallback = function(callback) {
-		liquid.noModeDirtyRepeatersCallback.push(callback);
-	};
-
 
 	var pausingRepeaters = 0;
 	liquid.pauseRepeaters = function(action) {
@@ -145,10 +136,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		action();
 		pausingRepeaters--;
 		liquid.refreshAllDirtyRepeaters();
-		liquid.noModeDirtyRepeatersCallback.forEach(function(callback) {callback();});
 	};
-	liquid.holdChangePropagation = liquid.pauseRepeaters;
-
 
 	// Debugging
 	var dirtyRepeaters = [];

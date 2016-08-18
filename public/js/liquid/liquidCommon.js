@@ -14,7 +14,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		liquid.addCommonLiquidClasses(liquid);
 		// console.log(liquid.classRegistry);
 		liquid.ensureClassRegistryLinked();
-	} 
+	};
 	
 	/**--------------------------------------------------------------
 	*                 The id object maps
@@ -65,8 +65,107 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 
+	/**--------------------------------------------------------------
+	 *                 Liquid Pulse 
+	 *----------------------------------------------------------------*/
+
+	liquid.activePulse = null;
+	liquid.pulse = function(originator, action) { // Changes origin: "downstream", "upstream", "user".
+		if (liquid.activePulse !== null) { 
+			throw "Pulses cannot overlap in time!"; 
+		} else {
+			// Setup pulse data			
+			liquid.activePulse = {
+				originator : originator, // 'upstream', 'user' or a Page object
+				events : [],
+				add : function(event) {
+					events.push(event);
+				}
+			};
+		}
+
+		// Pulse action that adds original events
+		action();    // some repeater events might be here too, interleved with original events!!!
+
+		// Refresh user interface typically
+		liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() });
+
+		// Push data downstream. (to all peers of originator)
+		if (liquid.activePulse.originator === liquid.clientPage) {
+			liquid.pushDataDownstreamToPeers(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
+		}
+
+		// Push data upstream
+		if (liquid.hasUpstreamSource && liquid.activePulse.originator !== 'upstream') {
+			// Find data that needs to be pushed upstream
+			var requiredObjects = {};
+			function addRequiredCascade(object, requiredObjects) {
+				if (object._upstreamId == null && typeof(requiredObjects[object.id]) === 'undefined') {
+					requiredObjects[object.id] = object;
+					for(relationName in object._relationDefinitions) {
+						var definition = object._relationDefinitions[relationName];
+						if (!definition.isReverseRelation) {
+							var instance = object._relationInstances[relationName];
+							if (definition.isSet) {
+								instance.data.forEach(function(related) {
+									addRequiredCascade(related);
+								});
+							} else {
+								addRequiredCascade(related);
+							}
+						}
+					}
+				}
+			}
+
+			// liquid.activePulse.events.forEach(function(event) {
+			// 	if (event.action == 'addingRelation') {
+            //
+			// 		}
+			// 	}
+			// });
+		}
+
+		// Push data to persistent storage
+		liquid.pushDataToDatabase();
+
+		liquid.activePulse = null;
+	};
 
 
+	liquid.addToPulse = function(event) {
+		if (liquid.activePulse === null) {
+			var originator = liquid.clientPage !== null ? liquid.clientPage : liquid.page; // Liquid page, means this page.
+			liquid.pulse(originator, function() {
+				liquid.activePulse.add(event);
+			});// Here the pulse is finished.
+			return;
+		}
+		liquid.activePulse.add(event);
+	};
+
+
+	/**
+	 *  After repeaters callback. Typically user interface update hooks.
+     */
+	liquid.noModeDirtyRepeatersCallback = [];
+	liquid.addNoMoreDirtyRepeaterCallback = function(callback) {
+		liquid.noModeDirtyRepeatersCallback.push(callback);
+	};
+
+	var lockModel = 0;  //Model = all liquid entites that are not created within call
+	var createdEntitiesInCall = null;
+	liquid.withoutChangingModel = function(action) {
+		if (lockModel == 0) {
+			createdEntitiesInCall = [];
+		}
+		lockModel++;
+		action();
+		lockModel--;
+		if (lockModel == 0) {
+			createdEntitiesInCall = null;
+		}
+	};
 
 
 	/**--------------------------------------------------------------
@@ -338,7 +437,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				index++;
 			}
 			return true;
-		} 
+		};
 		
 		// console.log("setupRelationSorting: " + definition.name);
 		if (typeof(definition.compareFunction) !== 'undefined') {
@@ -381,36 +480,35 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 * Relations
 	 */
 	liquid.notifyGettingRelation = function(object, definition, instance) {
+		// Do not start pulse. Getters are completley safe. Only writing to the model should start a pulse!
 		// console.log("notifyGettingRelation: " + object.__() + "." + definition.name);
 		liquid.setupObservation(object, instance);
 	};
 
 	liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
-		// console.log("notifySettingRelation: " + object.__() + "." + definition.name);
-		liquid.holdChangePropagation(function() {
-			liquid.notifyDeletingRelation(object, definition, instance, previousValue);
-			liquid.notifyAddingRelation(object, definition, instance, value);
-		});
+		liquid.addToPulse({action: 'settingRelation', object: object, definition: definition, instance: instance, value: value, previousValue: previousValue});
+		liquid.notifyDeletingRelation(object, definition, instance, previousValue);
+		liquid.notifyAddingRelation(object, definition, instance, value);
 	};
 
 	liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
-		liquid.observersDirty(instance.observers);
+		liquid.addToPulse({action: 'addingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
-	liquid.notifyAddIncomingRelation = function(object, definition, instance, relatedObject) {
-		liquid.observersDirty(instance.observers);
+	liquid.notifyAddReverseRelation = function(object, definition, instance, relatedObject) {
+		liquid.addToPulse({action: 'addingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
-		liquid.observersDirty(instance.observers);
+		liquid.addToPulse({action: 'deletingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
-	liquid.notifyDeletingIncomingRelation = function(object, definition, instance, relatedObject) {
-		liquid.observersDirty(instance.observers);
+	liquid.notifyDeletingReverseRelation = function(object, definition, instance, relatedObject) {
+		liquid.addToPulse({action: 'deletingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 	
 	liquid.notifyRelationReordered = function(object, definition, instance, relationData) {
-		liquid.observersDirty(instance.observers);
+		liquid.addToPulse({action: 'relationReordered', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	
@@ -424,10 +522,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 	liquid.notifySettingProperty = function(object, definition, instance, newValue, oldValue) {
-		liquid.observersDirty(instance.observers);
+		liquid.addToPulse({action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: newValue, oldValue: oldValue});
 	};
 
-	
+
+
 	/**--------------------------------------------------------------
 	*                 Object structure
 	*----------------------------------------------------------------*/
@@ -555,7 +654,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				reverseInstance.data = referingObject;
 			}
 			// delete object._reverseRelations[incomingRelationQualifiedName].data; // TODO: not just delete the data, update it!
-			liquid.notifyAddIncomingRelation(object, reverseDefinition, reverseInstance);				
+			liquid.notifyAddReverseRelation(object, reverseDefinition, reverseInstance);
 		}
 	};
 
@@ -574,7 +673,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			} else {
 				reverseInstance.data = null
 			}
-			liquid.notifyDeletingIncomingRelation(object, reverseDefinition, reverseInstance);
+			liquid.notifyDeletingReverseRelation(object, reverseDefinition, reverseInstance);
 		}
 	};
 	

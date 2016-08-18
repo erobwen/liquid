@@ -354,7 +354,7 @@ liquid.pageRequest = function(req, res, operation) {
 		var hardToGuessPageId = liquid.generateUniqueKey(liquid.pagesMap);
 		var page = liquid.createPageObject(hardToGuessPageId, session);
 		// MATCH (n {className:'LiquidPage'}) DELETE n
-		liquid.page = page;
+		liquid.clientPage = page;
 		liquid.pagesMap[hardToGuessPageId] = page;
 
 		var user = session.getUser(); // Can be null!
@@ -380,7 +380,7 @@ liquid.dataRequest = function(hardToGuessPageId, operation) {
 	// console.log(liquid.pagesMap);
 	var result;
 	var page = liquid.pagesMap[hardToGuessPageId];
-	liquid.page = page;
+	liquid.clientPage = page;
 	// console.log(page);
 	Fiber(function() {  // consider, remove fiber when not using rest api?
 		// Measure query time and pageRequest time
