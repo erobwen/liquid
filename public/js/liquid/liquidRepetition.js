@@ -83,7 +83,6 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		});
 	};
 
-	liquid.observersDirty = liquid.recordersDirty;
 
 	liquid.recorderDirty = function(recorder) {
 		if (traceRepetition) {
@@ -104,8 +103,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			console.log("... recorder finished upon change action: " + recorder.id + "." + recorder.description);
 		}
 	};
-	liquid.observerDirty = liquid.recorderDirty;
-
+	
 
 	liquid.removeObservation = function(recorder) {
 		// console.group("removeFromObservation: " + recorder.id + "." + recorder.description);
