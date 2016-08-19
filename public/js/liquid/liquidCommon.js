@@ -23,7 +23,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	/**
 	 * Id to node maps, in order to assure correct identity of objects. 
 	 */
-	liquid.idObjectMap = {}; // Local id. 
+	liquid.idObjectMap = {}; // Local id. TODO: Remove this one! This one prevents GC from functioning. Instead, all individual subscribers/pages should keep a map of their own, that is removed when page is removed. 
 	liquid.upstreamIdObjectMap = {}; // Objects id at server. 
 	liquid.persistentIdObjectMap = {}; // Database id.
 	
@@ -79,6 +79,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				originator : originator, // 'upstream', 'user' or a Page object
 				events : [],
 				add : function(event) {
+					event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
 					events.push(event);
 				}
 			};

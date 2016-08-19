@@ -127,6 +127,14 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	 *
 	 **********************************/
 
+	liquid.isRefreshingRepeater = function() {
+		return liquid.activeRepeaters.length > 0;
+	};
+
+	
+	liquid.activeRepeater = function() {
+		return lastOfArray(liquid.activeRepeaters);
+	};
 
 	var pausingRepeaters = 0;
 	liquid.pauseRepeaters = function(action) {
