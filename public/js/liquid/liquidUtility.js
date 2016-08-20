@@ -27,6 +27,13 @@ var clearArray = function(array) {
 	return array.lenght = 0;
 }
 
+var replaceArrayContents = function(source, target) {
+    clearArray(target);
+    source.forEach(function(element) {
+        target.push(element);
+    })
+}
+
 var lastOfArray = function(array) {
 	return array[array.length - 1];
 }
@@ -278,6 +285,7 @@ if (typeof(module) !== 'undefined') {
 	module.exports.argumentsToArray = argumentsToArray;
 	module.exports.copyArray = copyArray;
 	module.exports.clearArray = clearArray;
+	module.exports.replaceArrayContents = replaceArrayContents;
 	module.exports.arrayToMap = arrayToMap;
 	module.exports.lastOfArray = lastOfArray;
 	module.exports.removeFromArray = removeFromArray;
