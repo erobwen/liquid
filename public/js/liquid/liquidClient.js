@@ -141,22 +141,17 @@ function unserializeObject(serializedObject) {
 	var targetObject = liquid.upstreamIdObjectMap[upstreamId];
 	// console.log(targetObject);
 	if (targetObject.noDataLoaded) {
-		for (relationQualifiedName in targetObject._relationDefinitions) {
-			var definition = targetObject._relationDefinitions[relationQualifiedName];
-			if (!definition.isReverseRelation) {
-				// console.log(definition);
-				var data = serializedObject[definition.name];
-				// console.log(data);
-				if (definition.isSet) {
-					data = data.map(unserializeReference);
-				} else {
-					data = unserializeReference(data);
-				}
-				liquid.withoutPushingToServer(function() {
-					targetObject[definition.setterName](data);
-				});
+		targetObject.forAllOutgoingRelations(function(definition, instance) {
+			var data = serializedObject[definition.name];
+			if (definition.isSet) {
+				data = data.map(unserializeReference);
+			} else {
+				data = unserializeReference(data);
 			}
-		}
+			liquid.withoutPushingToServer(function() {
+				targetObject[definition.setterName](data);
+			});
+		});
 		for (propertyName in targetObject._propertyDefinitions) {
 			definition = targetObject._propertyDefinitions[propertyName];
 			var data = serializedObject[definition.name];

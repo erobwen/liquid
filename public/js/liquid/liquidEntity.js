@@ -146,17 +146,8 @@ var addLiquidEntity = function(liquid) {
                     if (typeof(selection[this._id]) === 'undefined') {
                         // console.log("Selecting " + this.__());
                         selection[this._id] = true;
-                        this._relationDefinitions.forEach(function(definition) {
-                            if(definition.isSet) {
-                                this[definition.forAllName](function(related) {
-                                    related.selectAll(selection)
-                                });
-                            } else {
-                                related = this[definition.getterName]();
-                                if (related !== null) {
-                                    related.selectAll(selection);
-                                }
-                            }
+                        this.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {
+                            relatedObject.selectAll(selection);
                         });
                     }
                 };
