@@ -79,44 +79,105 @@ liquid.findPersistentEntities = function(properties) {
 /**--------------------------------------------------------------
  *                Object persisting
  *----------------------------------------------------------------*/
+
 liquid.persist = function(object) {
-	object._persistentId =  neo4j.createNode(liquidClass.tagName, className);
+	if (object._persistentId === null) {
+		liquid.ensurePersisted(object);
+	} 
+	neo4j.setPropertyValue(object._persistentId, "_persistedDirectly", true);
+};
 
+
+liquid.ensurePersisted = function(object) {
+	if (object._persistentId === null) {
+		object._persistentId =  neo4j.createNode(liquidClass.tagName, className);
+
+		object.forAllProperties(function (definition, instance) {
+			if (typeof(instance.data) !== 'undefined') {
+				neo4j.setPropertyValue(object._persistentId, "definition.name", instance.data); // TODO: Set multiple values at the same time!
+			}
+		});
+		object.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject){
+			liquid.ensurePersisted(relatedObject);
+			neo4j.createRelationTo(object._persistentId, relatedObject._persistentId, definition.qualifiedName);
+		});
+	}
+};
+
+liquid.unpersist = function(object) {
+	if (object._persistedDirectly === true) {
+		object._persistedDirectly == false;
+		neo4j.setPropertyValue(object._persistentId, "_persistedDirectly", false);
+		liquid.unpersistIfOrphined(object);
+	}
+};
+
+liquid.hasDirectlyPersistedAncestor = function(object) {
+	var visitedSet = {};
+	var result = false;
+	object.forAllIncomingRelations(function(relatedObject) { // TODO: consider change to "forAllStrongIncomingRelations" ?
+		if (liquid.hasDirectlyPersistedAncestorLoopControl(relatedObject, visitedSet)) {
+			result = true;
+		}
+	});
+	return result;
+};
+
+liquid.hasDirectlyPersistedAncestorLoopControl = function(object, visitedSet) {
+	if (typeof(visitedSet[object.id]) !== 'undefined') {
+		return false;
+	} else {
+		visitedSet[object.id] = true;
+		if (object._persistentId === null) {
+			return false;
+		}
+		if (object._persistedDirectly) {
+			return true;
+		}
+		var result = false;
+		object.forAllIncomingRelations(function(relatedObject) { // TODO: consider change to "forAllStrongIncomingRelations" ?
+			if (liquid.hasDirectlyPersistedAncestorLoopControl(relatedObject, visitedSet)) {
+				result = true;
+			}
+		});
+		return result;
+	}
+};
+
+liquid.unpersistIfOrphined = function() {
+	if (object._persistedDirectly === false && !liquid.hasDirectlyPersistedAncestor(object)) {
+		neo4j.query("MATCH (n) WHERE n.id() = '" + object._persistentId + "' DETACH DELETE n");
+		object._persistentId = null;
+		object.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject){
+			liquid.unpersistIfOrphined(relatedObject);
+		});
+	}
 }
-
 
 
 /**--------------------------------------------------------------
 *                Object creation 
 *----------------------------------------------------------------*/
 
-liquid.setAllPropertiesToDefault = function(object) {
-	for (propertyName in object._propertyDefinitions) {
-		var definition = object._propertyDefinitions[propertyName];
-		var defaultValue = definition.defaultValue;
-		object[definition.setterName](defaultValue);
-
-		// console.log("propertyName: " + propertyName)
-		// var instance = object._propertyInstances[propertyName];
-		// instance.data = defaultValue;
-		// liquid.notifySettingProperty(object, definition, instance, defaultValue, null);
-	}
-} 
+// liquid.setAllPropertiesToDefault = function(object) {
+// 	for (propertyName in object._propertyDefinitions) {
+// 		var definition = object._propertyDefinitions[propertyName];
+// 		var defaultValue = definition.defaultValue;
+// 		object[definition.setterName](defaultValue);
+// 	}
+// }
 
 liquid.createPersistentEntity = function(className, initData) {
-	var object = liquid.createClassInstance(className);	
+	var object = liquid.create(className, initData);
+
+	// Save to database
     var liquidClass = liquid.classRegistry[className];
+	object._persistedDirectly = true;
 	object._persistentId =  neo4j.createNode(liquidClass.tagName, className);
+	neo4j.setPropertyValue(object._persistentId, "_persistedDirectly", true)
 	liquid.persistentIdObjectMap[object._persistentId] = object;
 	object._globalId = "1:" + object._persistentId;
 
-	// Set default and initialize 
-	liquid.setAllPropertiesToDefault(object);
-	object.init(initData);
-	
-	// Set object signum for easy debug
-	object._ = object.__();
-		
 	return object;
 }
 
@@ -193,6 +254,34 @@ liquid.loadSingleRelation = function(object, definition, instance) {
 	return instance.data;
 };
 
+
+liquid.ensureIncomingRelationsLoaded = function(object) {
+	console.log("ensureIncomingRelationsLoaded: " + object.__() + " <--  ?");
+	if (typeof(object._allIncomingRelationsLoaded) === 'undefined') {
+		// console.log("run liquid version of ensureIncomingRelationLoaded");
+		var incomingRelationAndIds = neo4j.getAllIncomingRelationsAndIds(object._persistentId); // This now contains potentially too many ids.
+		// console.log("Load incoming relations id");
+		// console.log(incomingRelationIds);
+		if (incomingRelationIds.length > 0) {
+			incomingRelationIds.forEach(function(relationAndId) {
+				var incomingRelationQualifiedName = relationAndId.relationName;
+				var incomingId = relationAndId.id;
+
+				var relatedObject = liquid.getPersistentEntity(incomingId);
+
+				// Call getter on the incoming relations to load them TODO: remove observer registration in this call!?
+				var definition = relatedObject.getRelationDefinitionFromQualifiedName(incomingRelationQualifiedName);
+				relatedObject[definition.getterName]();
+			});
+		}
+	}
+	object._allIncomingRelationsLoaded = true;
+	object.forAllReverseRelations(function(definition, instance) {
+		object.incomingRelationsComplete[definition.incomingRelationQualifiedName] = true; // Make a note all incoming relations loaded
+	});
+};
+
+
 liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualifiedName) {
 	console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationQualifiedName + "] -- ?");
 	if (typeof(object.incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
@@ -204,7 +293,8 @@ liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualified
 			incomingRelationIds.forEach(function(incomingId) {
 				var relatedObject = liquid.getPersistentEntity(incomingId);
 				// Call getter on the incoming relations
-				relatedObject[relatedObject._relationDefinitions[incomingRelationQualifiedName].getterName]();
+				var definition = relatedObject.getRelationDefinitionFromQualifiedName(incomingRelationQualifiedName);
+				relatedObject[definition.getterName]();
 			});
 		}
 	}
@@ -343,7 +433,7 @@ liquid.dataRequest = function(hardToGuessPageId, operation) {
 module.exports.liquidPageRequest = liquid.pageRequest;
 module.exports.liquidDataRequest = liquid.dataRequest;
 
-module.exports.createEntity = liquid.createEntity;
+module.exports.create = liquid.create;
 module.exports.createPersistentEntity = liquid.createPersistentEntity;
 
 module.exports.getEntity = liquid.getEntity;

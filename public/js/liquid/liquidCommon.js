@@ -558,6 +558,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 * @param className
      */
 	liquid.create = function(className) { // optional: object initData  optional: string/integer projectionId
+		// Get parameters		
 		var projectionId = null;
 		var initData = {};
 		if (arguments.length > 1) {
@@ -579,7 +580,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 				projectionId = arguments[2];
 			}
 		}
+		
+		// Create class instance
 		var object = liquid.createClassInstance(className);
+		
+		// Setup projection id. 
 		if (liquid.isProjecting()) {
 			var projection = liquid.activeProjection();
 			if (projectionId == null) {
@@ -589,7 +594,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 			object._projectionId = projectionId;
 			projection.temporaryProjectionIdToObjectMap[projectionId] = object;
 		}
+		
+		// Init
 		object.init(initData);
+
+		// Set object signum for easy debug
+		object._ = object.__();
+
 		return object;
 	};
 	
@@ -652,6 +663,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object._upstreamId = null;
 		object._persistentId = null;
 		object._globalId = null;
+		object._persistedDirectly = false;
 		
 		object.incomingRelations = clone(prototypeObject.incomingRelations);   // A general store of all incoming relations. This way we always have back-references!!! (this is important for any kind of garbage collection, or freeing up of memory)
 		// Note:  Clone will only work as long as instance data is empty!
@@ -673,7 +685,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object._upstreamId = null;
 		object._persistentId = null;
 		object._globalId = null;
-		
+		object._persistedDirectly = false;
+
 		object.incomingRelations = {};   // A general store of all incoming relations. This way we always have back-references!!! (this is important for any kind of garbage collection, or freeing up of memory)
 		object._relationInstances = {};   // relationName (qualified?) -> relation
 		object._propertyInstances = {};  // propertyName -> property		
@@ -812,11 +825,41 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.addGenericRelationBrowsing = function(object) {
 		object['forAllRelations'] = function(callback) {
-			for (definitionName in object._relationDefinitions) {
-				var definition = object._relationDefinitions[definitionName];
-				var instance = object._relationInstances[definitionName];
+			for (relationName in this._relationDefinitions) {
+				var definition = this._relationDefinitions[relationName];
+				var instance = this._relationInstances[relationName];
 				callback(definition, instance);
 			} 
+		};
+
+		object['forAllOutgoingRelatedObjects'] = function(callback) {
+			for (relationName in this._relationDefinitions) {
+				var definition = this._relationDefinitions[relationName];
+				if (!definition.isReverseRelation) {
+					var instance = this._relationInstances[relationName];
+					if (definition.isSet) {
+						instance.data.forEach(function(relatedObject) {
+							callback(definition, instance, relatedObject);
+						});
+					} else {
+						callback(instance.data);
+					}
+				}
+			}
+		};
+
+		object['getRelationDefinitionFromQualifiedName'] = function(qualifiedName) {
+			for (relationName in this._relationDefinitions) {
+				var definition = this._relationDefinitions[relationName];
+				if (definition.qualifiedName = qualifiedName) {
+					return definition;
+				}
+			}
+			throw object._ + ": Could not find definition of qualified name: " + qualifiedName;
+		};
+
+		object['forAllIncomingRelations'] = function (callback) { herehere
+				
 		};
 		
 		object['forAllOutgoingRelations'] = function (callback) {
@@ -878,13 +921,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Initialize getter
 		object[definition.getterName] = function() {
-			if (allowRead(this, liquid.page)) {
+			if (typeof(instance.data) !== 'undefined') {
 				var instance = this._propertyInstances[definition.name];
 				liquid.notifyGettingProperty(object, definition, instance);
 				return instance.data;
 			} else {
-				console.log("Access violation: " + this.__() + "." + definition.getterName + "() not allowed by page/user");
-				return clone(definition.defaultValue);
+				// return clone(definition.defaultValue);
+				return definition.defaultValue;
 			}
 		};
 		
@@ -936,11 +979,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.registerRelation = function(object, definition, instance) {
 		// console.log("registerRelation: " + definition.name);
-		if (typeof(object._relationDefinitions[definition.qualifiedName]) !== 'undefined') {
+		if (typeof(object._relationDefinitions[definition.name]) !== 'undefined') {
 			throw new Exception("Cannot have two relations of the same name on one single object. Consider inherited relations of the same name, or relations in the same class that has the same name.");
 		}
-		object._relationDefinitions[definition.qualifiedName] = definition;
-		object._relationInstances[definition.qualifiedName] = instance;  // Only used in object augmentation mode
+		object._relationDefinitions[definition.name] = definition;
+		object._relationInstances[definition.name] = instance;  // Only used in object augmentation mode
 
 		if (definition.isReverseRelation) {
 			object._reverseRelations[definition.incomingRelationQualifiedName] = definition; // To instance also?

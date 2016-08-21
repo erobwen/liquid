@@ -240,7 +240,7 @@ window.find = liquid.find;
 window.uponChangeDo = liquid.uponChangeDo;
 window.repeatOnChange = liquid.repeatOnChange;
 
-window.createEntity = liquid.createEntity;
+window.create = liquid.create;
 
 window.getEntity = liquid.getEntity;
 window.getUpstreamEntity = liquid.getUpstreamEntity;
