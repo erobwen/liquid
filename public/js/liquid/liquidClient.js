@@ -141,8 +141,8 @@ function unserializeObject(serializedObject) {
 	var targetObject = liquid.upstreamIdObjectMap[upstreamId];
 	// console.log(targetObject);
 	if (targetObject.noDataLoaded) {
-		for (relationName in targetObject._relationDefinitions) {
-			var definition = targetObject._relationDefinitions[relationName];
+		for (relationQualifiedName in targetObject._relationDefinitions) {
+			var definition = targetObject._relationDefinitions[relationQualifiedName];
 			if (!definition.isReverseRelation) {
 				// console.log(definition);
 				var data = serializedObject[definition.name];

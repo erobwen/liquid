@@ -9,38 +9,38 @@ socket.on('connect', function(){
 	socket.emit("registerPageId", liquid.hardToGuessPageId);
 });
 
-socket.on('settingRelation', function(objectId, relationName, relatedObjectId) {
-	console.log("socket: settingRelation (" + objectId + ")." + relationName + " = " + "(" + relatedObjectId + ")");
+socket.on('settingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
+	console.log("socket: settingRelation (" + objectId + ")." + relationQualifiedName + " = " + "(" + relatedObjectId + ")");
 	// TODO: Assert object in idObjectMap?
 	liquid.pulse('upstream', function() {
 		liquid.activeSaver = null;
 		var object = liquid.getEntity(objectId);
 		var relatedObject = liquid.getEntity(relatedObjectId);
-		var setterName = object._relationDefinitions[relationName].setterName;
+		var setterName = object._relationDefinitions[relationQualifiedName].setterName;
 		object[setterName](relatedObject);
 		liquid.activeSaver = liquid.defaultSaver;
 	});
 })
 
-socket.on('addingRelation', function(objectId, relationName, relatedObjectId) {
-	console.log("socket: addingRelation (" + objectId + ")." + relationName + ".add(" + "(" + relatedObjectId + "))");
+socket.on('addingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
+	console.log("socket: addingRelation (" + objectId + ")." + relationQualifiedName + ".add(" + "(" + relatedObjectId + "))");
 	liquid.pulse('upstream', function() {
 		liquid.activeSaver = null;
 		var object = liquid.getUpstreamEntity(objectId);
 		var relatedObject = liquid.getUpstreamEntity(relatedObjectId);
-		var adderName = object._relationDefinitions[relationName].adderName;
+		var adderName = object._relationDefinitions[relationQualifiedName].adderName;
 		object[adderName](relatedObject);
 		liquid.activeSaver = liquid.defaultSaver;
 	});
 })
 
-socket.on('deletingRelation', function(objectId, relationName, relatedObjectId) {
-	console.log("socket: deletingRelation (" + objectId + ")." + relationName + ".delete(" + "(" + relatedObjectId + "))");
+socket.on('deletingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
+	console.log("socket: deletingRelation (" + objectId + ")." + relationQualifiedName + ".delete(" + "(" + relatedObjectId + "))");
 	liquid.pulse('upstream', function() {
 		liquid.activeSaver = null;
 		var object = liquid.getUpstreamEntity(objectId);
 		var relatedObject = liquid.getUpstreamEntity(relatedObjectId);
-		var removerName = object._relationDefinitions[relationName].removerName;
+		var removerName = object._relationDefinitions[relationQualifiedName].removerName;
 		object[removerName](relatedObject);
 		liquid.activeSaver = liquid.defaultSaver;
 	});

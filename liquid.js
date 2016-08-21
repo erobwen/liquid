@@ -101,13 +101,13 @@ liquidSocket.on('connection', function (socket) {
 					var relatedObject = liquid.getEntity(change.relatedObjectId);
 
 					if (change.type === 'settingRelation') {
-						var setterName = object._relationDefinitions[change.relationName].setterName;
+						var setterName = object._relationDefinitions[change.relationQualifiedName].setterName;
 						object[setterName](relatedObject);
 					} else if (change.type === 'addingRelation') {
-						var adderName = object._relationDefinitions[change.relationName].adderName;
+						var adderName = object._relationDefinitions[change.relationQualifiedName].adderName;
 						object[adderName](relatedObject);
 					} else if (change.type === 'deletingRelation'){
-						var removerName = object._relationDefinitions[change.relationName].removerName;
+						var removerName = object._relationDefinitions[change.relationQualifiedName].removerName;
 						object[removerName](relatedObject);	
 					}
 				} else if (change.type === "settingProperty") {

@@ -103,19 +103,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 			function addRequiredCascade(object, requiredObjects) {
 				if (object._upstreamId == null && typeof(requiredObjects[object.id]) === 'undefined') {
 					requiredObjects[object.id] = object;
-					for(relationName in object._relationDefinitions) {
-						var definition = object._relationDefinitions[relationName];
-						if (!definition.isReverseRelation) {
-							var instance = object._relationInstances[relationName];
-							if (definition.isSet) {
-								instance.data.forEach(function(related) {
-									addRequiredCascade(related);
-								});
-							} else {
-								addRequiredCascade(related);
-							}
-						}
-					}
+					object.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {
+						addRequiredCascade(relatedObject);
+					});
 				}
 			}
 
@@ -825,18 +815,18 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.addGenericRelationBrowsing = function(object) {
 		object['forAllRelations'] = function(callback) {
-			for (relationName in this._relationDefinitions) {
-				var definition = this._relationDefinitions[relationName];
-				var instance = this._relationInstances[relationName];
+			for (relationQualifiedName in this._relationDefinitions) {
+				var definition = this._relationDefinitions[relationQualifiedName];
+				var instance = this._relationInstances[relationQualifiedName];
 				callback(definition, instance);
 			} 
 		};
 
 		object['forAllOutgoingRelatedObjects'] = function(callback) {
-			for (relationName in this._relationDefinitions) {
-				var definition = this._relationDefinitions[relationName];
+			for (relationQualifiedName in this._relationDefinitions) {
+				var definition = this._relationDefinitions[relationQualifiedName];
 				if (!definition.isReverseRelation) {
-					var instance = this._relationInstances[relationName];
+					var instance = this._relationInstances[relationQualifiedName];
 					if (definition.isSet) {
 						instance.data.forEach(function(relatedObject) {
 							callback(definition, instance, relatedObject);
@@ -848,25 +838,15 @@ var addCommonLiquidFunctionality = function(liquid) {
 			}
 		};
 
-		object['getRelationDefinitionFromQualifiedName'] = function(qualifiedName) {
-			for (relationName in this._relationDefinitions) {
-				var definition = this._relationDefinitions[relationName];
-				if (definition.qualifiedName = qualifiedName) {
-					return definition;
-				}
-			}
-			throw object._ + ": Could not find definition of qualified name: " + qualifiedName;
-		};
-
-		object['forAllIncomingRelations'] = function (callback) { herehere
-				
+		object['forAllIncomingRelations'] = function (callback) {
+			//TODO
 		};
 		
 		object['forAllOutgoingRelations'] = function (callback) {
-			for (definitionName in object._relationDefinitions) {
-				var definition = object._relationDefinitions[definitionName];
+			for (relationQualifiedName in object._relationDefinitions) {
+				var definition = object._relationDefinitions[relationQualifiedName];
 				if (!definition.isReverseRelation) {
-					var instance = object._relationInstances[definitionName];
+					var instance = object._relationInstances[relationQualifiedName];
 					callback(definition, instance);
 				}
 			}
@@ -979,11 +959,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.registerRelation = function(object, definition, instance) {
 		// console.log("registerRelation: " + definition.name);
-		if (typeof(object._relationDefinitions[definition.name]) !== 'undefined') {
-			throw new Exception("Cannot have two relations of the same name on one single object. Consider inherited relations of the same name, or relations in the same class that has the same name.");
-		}
-		object._relationDefinitions[definition.name] = definition;
-		object._relationInstances[definition.name] = instance;  // Only used in object augmentation mode
+		// if (typeof(object._relationDefinitions[definition.qualifiedName]) !== 'undefined') {
+		// 	throw new Exception("Cannot have two relations of the same name on one single object. Consider inherited relations of the same name, or relations in the same class that has the same name.");
+		// }
+		object._relationDefinitions[definition.qualifiedName] = definition;
+		object._relationInstances[definition.qualifiedName] = instance;  // Only used in object augmentation mode
 
 		if (definition.isReverseRelation) {
 			object._reverseRelations[definition.incomingRelationQualifiedName] = definition; // To instance also?
@@ -1335,8 +1315,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 		serialized._ = object.__();
 		serialized.className = object.className;
 		serialized.id = object._id;
-		for (relationName in object._relationDefinitions) {
-			var definition = object._relationDefinitions[relationName];
+		for (relationQualifiedName in object._relationDefinitions) {
+			var definition = object._relationDefinitions[relationQualifiedName];
 			if (!definition.isReverseRelation) {
 				if (definition.isSet) {
 					serialized[definition.name] = object[definition.getterName]().map(serializedReference);
