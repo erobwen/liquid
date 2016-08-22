@@ -171,8 +171,8 @@ liquid.createPersistentEntity = function(className, initData) {
 	var object = liquid.create(className, initData);
 
 	// Save to database
-    var liquidClass = liquid.classRegistry[className];
 	object._persistedDirectly = true;
+	var liquidClass = liquid.classRegistry[className];
 	object._persistentId =  neo4j.createNode(liquidClass.tagName, className);
 	neo4j.setPropertyValue(object._persistentId, "_persistedDirectly", true)
 	liquid.persistentIdObjectMap[object._persistentId] = object;

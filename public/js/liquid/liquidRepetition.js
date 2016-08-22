@@ -328,7 +328,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				// Never encountered these arguments before, make a new cache
 				var returnValue = uponChangeDo(this.__() + "." + methodName,
 					function() {
-						return this[methodName].apply(this, methodArguments);
+						var returnValue;
+						liquid.blockSideEffects(function() {
+							returnValue = this[methodName].apply(this, methodArguments);
+						});
+						return returnValue;
 					}.bind(this), 
 					function() {
 						console.log("Terminating cached method repeater: " + this.__() + '.[cachedCall]' +  methodName);
@@ -421,7 +425,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 						liquid.activeProjections.push(projection);
 						// Run the projection code
-						var newReturnValue = this[methodName].apply(this, methodArguments);
+						var newReturnValue;
+						liquid.blockSideEffects(function() {
+							newReturnValue = this[methodName].apply(this, methodArguments);
+						});
+
 						liquid.activeProjections.pop();
 
 						// Build a final projectionId to object map that contains all objects present in the final projection.
@@ -563,12 +571,41 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				return projectionRepeater.returnValue;
 			}
 		}
-	} 
+	}
+
+
+
+
+	/*********************************************************************************************************
+	 *  Block side effects
+	 *******************************************************************************************************/
+
+	liquid.activeSideEffectBlockers = [];
+
+	liquid.isBlockingSideEffects = function() {
+		return liquid.activeSideEffectBlockers.length > 0;
+	};
+
+	liquid.activeSideEffectBlocker = function() {
+		return lastOfArray(liquid.activeSideEffectBlockers);
+	};
+
+	liquid.blockSideEffects = function(callback) {
+		liquid.activeSideEffectBlockers.push({
+			createdObjects: {}  // id ->    It is ok to modify objects that have been created in this call, so we need to keep track of them 
+		});
+		callback();
+		liquid.activeSideEffectBlockers.pop();
+	};
 };
 
-// TODO: handle consolidation of newly created objects into existing ones. 
+
+
+
 
 
 if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') {
 	module.exports.addLiquidRepetitionFunctionality = addLiquidRepetitionFunctionality;
 }
+
+

@@ -79,6 +79,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 				originator : originator, // 'upstream', 'user' or a Page object
 				events : [],
 				add : function(event) {
+					if (liquid.isBlockingSideEffects()) {
+						if (typeof(liquid.activeSideEffectBlocker().createdObjects[event.object.id]) === 'undefined' ) {
+							console.low("Blocked sideffect");
+							console.low(event);
+							return;
+						}
+					}
 					event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
 					events.push(event);
 				}
@@ -590,6 +597,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 		// Set object signum for easy debug
 		object._ = object.__();
+
+		// Note that this object was created in a specific call
+		if (liquid.isBlockingSideEffects()) {
+			liquid.activeSideEffectBlocker().createdObjects[object._id] = true;
+		}
 
 		return object;
 	};
