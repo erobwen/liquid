@@ -13,7 +13,7 @@ console.log(liquid.hardToGuessPageId);
 // Unserialize
 console.log("");console.log("=== Unserialize: ===");
 var start = new Date().getTime();
-unserialize(serialized);
+unserializeFromUpstream(serialized);
 var end = new Date().getTime();
 var time = (end - start);
 console.log("Time to unserialize: " + time + " milliseconds.");

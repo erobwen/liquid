@@ -70,47 +70,91 @@ liquid.withoutPushingToServer = function(action) {
 };
 
 
-function pushChange(change) {
-	var changelist = [change];
-	serializeChangelist(changelist);
-	liquid.socket.emit("batchSave", liquid.hardToGuessPageId, 42, changelist); //42 is unused saver id
-}
 
-function serializeChangelist(changelist) {
-	// Translate change from objects to entityIds. Do this as late as possible so that objects that change from a temporary id to a real one gets the right id in the save.
-	changelist.forEach(function(change) {
-		change.objectId = change.object._upstreamId;
-		delete change.object;
-
-		if (typeof(change.relation) !== 'undefined') {
-			change.relationName = change.relation.qualifiedName;
-			delete change.relation;
+liquid.pushDataUpstream = function() {
+	if (typeof(liquid.upstreamSocket) !== undefined) {
+		// Find data that needs to be pushed upstream
+		var requiredObjects = {};
+		var serializedEvents = [];
+		function addRequiredCascade(object, requiredObjects) {
+			if (object._upstreamId == null && typeof(requiredObjects[object.id]) === 'undefined') {
+				requiredObjects[object.id] = object;
+				object.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {
+					addRequiredCascade(relatedObject);
+				});
+			}
 		}
 
-		if (typeof(change.property) !== 'undefined') {
-			change.propertyName = change.property.name;
-			delete change.property;
+		liquid.activePulse.events.forEach(function(event) {
+			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
+			if (!eventIsFromUpstream) {
+				var requiredObjects = {};
+				if (event.object._upstreamId !== null && event.action == 'addingRelation' && event.relatedObject._upstreamId === null) {
+					addRequiredCascade(event.relatedObject, requiredObjects);
+				}
+			}
+		});
+
+		var serializedObjects = [];
+		for(id in requiredObjects) {
+			serializedObjects.push(serializeObject(requiredObjects[id], true));
 		}
 
-		if (typeof(change.relatedObject) !== 'undefined') {
-			change.relatedObjectId = change.relatedObject._upstreamId;
-			delete change.relatedObject;
+		function serializeEvent(event) {
+			var serialized  = {
+				action: event.action
+			};
+
+			if (event.object._upstreamId !== null) {
+				serialized.objectId = event.object._upstreamId;
+			} else {
+				serialized.downstreamId = event.object._id;
+			}
+
+			if (event.definition.type === 'relation') {
+				serialized.relationName = event.definition.name;
+
+				if (typeof(event.relatedObject) !== 'undefined') {
+					if (event.relatedObject._upstreamId !== null) {
+						serialized.relatedObjectId = event.relatedObject._upstreamId;
+					} else {
+						serialized.relatedObjectDownstreamId = event.relatedObject._id;
+					}
+				}
+			} else {
+				serialized.propertyName = event.definition.name;
+				serialized.value = event.value;
+			}
+
+			return serialized;
 		}
 
-		if (typeof(change.previouslyRelatedObject) !== 'undefined') {
-			change.previouslyRelatedObjectId = change.previouslyRelatedObject._upstreamId;
-			delete change.previouslyRelatedObject;
-		}
-	});
-}
+		liquid.activePulse.events.forEach(function(event) {
+			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
+			if (!event.redundant && !eventIsFromUpstream) {
+				if (event.object._upstreamId !== null) {
+					serializedEvents.push(serializeEvent(event));
+				} else if (typeof(requiredObjects[event.object._id]) !== 'undefined') {
+					serializedEvents.push(serializeEvent(event));
+				}
+			}
+		});
+
+		var pulse = {
+			serializedEvents : serializedEvents,
+			serializedObjects : []
+		};
+		liquid.upstreamSocket.emit("downstreamPulse", liquid.hardToGuessPageId, pulse); //42 is unused saver id
+	}
+};
 
 
 
 /**--------------------------------------------------------------
-*   Unserialization
+*   Unserialization from upstream
 *----------------------------------------------------------------*/
 
-function unserializeReference(reference) {
+function unserializeUpstreamReference(reference) {
 	if (reference === null) {
 		return null;
 	}
@@ -131,7 +175,7 @@ function ensureEmptyObjectExists(upstreamId, className) {
 	return liquid.upstreamIdObjectMap[upstreamId];
 }
 
-function unserializeObject(serializedObject) {
+function unserializeUpstreamObject(serializedObject) {
 	// console.log("unserializeObject");
 	// console.log(serializedObject);
 	var upstreamId = serializedObject.id;
@@ -144,9 +188,9 @@ function unserializeObject(serializedObject) {
 		targetObject.forAllOutgoingRelations(function(definition, instance) {
 			var data = serializedObject[definition.name];
 			if (definition.isSet) {
-				data = data.map(unserializeReference);
+				data = data.map(unserializeUpstreamReference);
 			} else {
-				data = unserializeReference(data);
+				data = unserializeUpstreamReference(data);
 			}
 			liquid.withoutPushingToServer(function() {
 				targetObject[definition.setterName](data);
@@ -167,9 +211,9 @@ function unserializeObject(serializedObject) {
 }
 
 
-function unserialize(arrayOfSerialized) { // If optionalSaver is undefined it will be used to set saver for all unserialized objects.
+function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is undefined it will be used to set saver for all unserialized objects.
 	arrayOfSerialized.forEach(function(serialized) {
-		unserializeObject(serialized);
+		unserializeUpstreamObject(serialized);
 	});
 }
 

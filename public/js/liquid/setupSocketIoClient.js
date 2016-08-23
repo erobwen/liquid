@@ -2,6 +2,7 @@
 
 //Socket_io is your front-end library you included before
 var socket = io('http://localhost:8080');
+liquid.upstreamSocket = socket;
 
 socket.on('connect', function(){
 	console.log("received CONNECT");

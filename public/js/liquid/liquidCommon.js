@@ -87,6 +87,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						}
 					}
 					event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
+					event.isDirectEvent = event.repeater === null;
 					events.push(event);
 				}
 			};
@@ -98,43 +99,17 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// Refresh user interface typically
 		liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() });
 
-		// Push data downstream. (to all peers of originator)
-		if (liquid.activePulse.originator === liquid.clientPage) {
-			liquid.pushDataDownstreamToPeers(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
-		}
-
-		// Push data upstream
-		if (liquid.hasUpstreamSource && liquid.activePulse.originator !== 'upstream') {
-			// Find data that needs to be pushed upstream
-			var requiredObjects = {};
-			function addRequiredCascade(object, requiredObjects) {
-				if (object._upstreamId == null && typeof(requiredObjects[object.id]) === 'undefined') {
-					requiredObjects[object.id] = object;
-					object.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {
-						addRequiredCascade(relatedObject);
-					});
-				}
-			}
-
-			// liquid.activePulse.events.forEach(function(event) {
-			// 	if (event.action == 'addingRelation') {
-            //
-			// 		}
-			// 	}
-			// });
-		}
-
-		// Push data to persistent storage
-		liquid.pushDataToDatabase();
-		// if (object._persistentId != null) {
-		// 	neo4j.createRelationTo(object._persistentId, relatedObject._persistentId, definition.qualifiedName);
-		// 	neo4j.setPropertyValue(object._persistentId, propertyDefinition.name, newValue);
-		// }
-
+		// Propagate changes, up down and sideways.
+		liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
+		liquid.pushDataUpstream();
+		liquid.pushDataToPersistentStorage();
 
 		liquid.activePulse = null;
 	};
 
+	
+	liquid.pushDataUpstream = function(){};
+	liquid.pushDataToPersistentStorage = function(){};
 
 	liquid.addToPulse = function(event) {
 		if (liquid.activePulse === null) {
@@ -281,6 +256,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 	
 	liquid.normalizeProperty = function(property, details) {
+		property.type = "property";
 		// Security
 		if (typeof(details) !== 'undefined' && (typeof(details.readOnly) !== 'undefined' || typeof(details.readAndWrite) !== 'undefined')) {
 			property.securityInfo = true;
@@ -315,6 +291,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	// };
 	
 	liquid.normalizeRelation = function(definition, details) {
+		property.type = "relation";
 		// definition.isLoaded = false;
 		// Interpret undefined as false
 		if(typeof(definition.isSet) == 'undefined') definition.isSet = false;
@@ -491,7 +468,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
 		liquid.pauseRepeaters(function() {
 			liquid.recordersDirty(instance.observers);
-			liquid.addToPulse({action: 'settingRelation', object: object, definition: definition, instance: instance, value: value, previousValue: previousValue});
+			liquid.addToPulse({redundant: true,  action: 'settingRelation', object: object, definition: definition, instance: instance, value: value, previousValue: previousValue});
 			liquid.notifyDeletingRelation(object, definition, instance, previousValue);
 			liquid.notifyAddingRelation(object, definition, instance, value);
 		});
@@ -499,28 +476,28 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({action: 'addingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.addToPulse({redundant: false, action: 'addingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyAddReverseRelation = function(object, definition, instance, relatedObject) {
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({action: 'addingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.addToPulse({redundant: true, action: 'addingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({action: 'deletingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.addToPulse({redundant: false, action: 'deletingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyDeletingReverseRelation = function(object, definition, instance, relatedObject) {
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({action: 'deletingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.addToPulse({redundant: true, action: 'deletingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 	
 	liquid.notifyRelationReordered = function(object, definition, instance, relationData) {
 		// console.log("notifySettingProperty: " + object.__() + "." + propertyDefinition.name + " = " + newValue);
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({action: 'relationReordered', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.addToPulse({redundant: true, action: 'relationReordered', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	
@@ -535,7 +512,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.notifySettingProperty = function(object, definition, instance, newValue, oldValue) {
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: newValue, oldValue: oldValue});
+		liquid.addToPulse({redundant: false, action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: newValue, oldValue: oldValue});
 	};
 
 
@@ -1307,26 +1284,41 @@ var addCommonLiquidFunctionality = function(liquid) {
 		var serialized = [];
 		for (id in selection) {
 			var object = liquid.idObjectMap[id];
-			serialized.push(liquid.serializeObject(object));
+			serialized.push(liquid.serializeObject(object, false));
 		}
 		return serialized;
 	};
 
 	
-	
-	liquid.serializeObject = function(object) {
+	liquid.serializeObject = function(object, forUpstream = false) {
 		function serializedReference(object) {
 			if (object !== null) {
-				return object.className + ":" + object._id; 
+				if (forUpstream) {
+					if (object._upstreamId !== null) {
+						return object.className + ":id:" + object._upstreamId;
+					} else {
+						return object.className + ":downstream:" + object._id;
+					}
+				} else {
+					return object.className + ":" + object._id;
+				}
 			} else {
 				return null;
 			}
-		}
+		};
 		
 		serialized = {};
 		serialized._ = object.__();
 		serialized.className = object.className;
-		serialized.id = object._id;
+		if (forUpstream) {
+			if (object._upstreamId !== null) {
+				serialized.id = object._upstreamId;
+			} else {
+				serialized.downstreamId = object._id;
+			}
+		} else {
+			serialized.id = object._id;
+		}
 		for (relationQualifiedName in object._relationDefinitions) {
 			var definition = object._relationDefinitions[relationQualifiedName];
 			if (!definition.isReverseRelation) {

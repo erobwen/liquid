@@ -55,6 +55,15 @@ liquid.getIndex = function(className) {
 	//console.log(queryResult);
 }
 
+/*********************************************************************************************************
+ *  Persisntency
+ *
+ *
+ *
+ *
+ *
+ *******************************************************************************************************/
+
 /**--------------------------------------------------------------
 *                Persistent object finding 
 *----------------------------------------------------------------*/
@@ -79,6 +88,10 @@ liquid.findPersistentEntities = function(properties) {
 /**--------------------------------------------------------------
  *                Object persisting
  *----------------------------------------------------------------*/
+// if (object._persistentId != null) {
+// 	neo4j.createRelationTo(object._persistentId, relatedObject._persistentId, definition.qualifiedName);
+// 	neo4j.setPropertyValue(object._persistentId, propertyDefinition.name, newValue);
+// }
 
 liquid.persist = function(object) {
 	if (object._persistentId === null) {
@@ -324,6 +337,14 @@ liquid.loadSetRelation = function(object, definition, instance) {
 };
 
 
+/*********************************************************************************************************
+ *  Downstream
+ *
+ *
+ *
+ *
+ *
+ *******************************************************************************************************/
 
 /**--------------------------------------------------------------
 *                 Connection management
@@ -420,6 +441,26 @@ liquid.dataRequest = function(hardToGuessPageId, operation) {
 
 	return result;
 }
+
+
+/**----------------------------------------------------------------
+ *                       Push data downstream
+ *-----------------------------------------------------------------/
+
+ liquid.pushDataDownstream = function() {
+
+};
+ if (liquid.activePulse.originator === liquid.clientPage) {
+
+
+/**-------------------------------------------------------------
+ *         Unserialize from downstream
+ ---------------------------------------------------------------*/
+
+
+
+
+
 
 
 
