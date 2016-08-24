@@ -338,7 +338,7 @@ liquid.loadSetRelation = function(object, definition, instance) {
 
 
 /*********************************************************************************************************
- *  Downstream
+ *  Push/Serve/Receive from/to Downstream
  *
  *
  *
@@ -445,20 +445,147 @@ liquid.dataRequest = function(hardToGuessPageId, operation) {
 
 /**----------------------------------------------------------------
  *                       Push data downstream
- *-----------------------------------------------------------------/
+ *-----------------------------------------------------------------*/
 
  liquid.pushDataDownstream = function() {
 
 };
- if (liquid.activePulse.originator === liquid.clientPage) {
+// if (liquid.activePulse.originator === liquid.clientPage) {
 
 
 /**-------------------------------------------------------------
- *         Unserialize from downstream
+ *                 Receive from downstream
  ---------------------------------------------------------------*/
 
+function receivePulseFromDownstream(originator, pulseData) {
+	liquid.pulse(originator, function() {
+		unserializeDownstreamPulse(pulseData);
+	});
+}
 
 
+// Form for events:
+//  {action: addingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
+//  {action: deletingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
+//  {action: addingRelation, objectDownstreamId:45, relationName: 'Foobar', relatedObjectDownstreamId:45 }
+//  {action: settingProperty, objectDownstreamId:45, propertyName: 'Foobar', propertyValue: 'Some string perhaps'}
+
+function unserializeDownstreamPulse(pulseData) {
+	var downstreamIdToSerializedObjectMap = pulseData.downstreamIdToSerializedObjectMap;
+	var downstreamIdToObjectMap = {};
+	
+	function unserializeDownstreamReference(reference) {
+		if (reference === null) {
+			return null;
+		}
+		var fragments = reference.split(":");
+		var className = fragments[0];
+		var type = fragments[1];
+		var id = parseInt(fragments[2]);
+		if (type === 'downstreamId') {
+			return ensureObjectUnserialized(null, id);
+		} else {
+			return liquid.getEntity(id);
+		}
+	}
+	
+	function ensureRelatedObjectsUnserialized(event) {
+		function undefinedAsNull(value) {
+			if (value === 'undefined') {
+				return null;
+			}
+			return value;
+		}
+
+		ensureObjectUnserialized(undefinedAsNull(event.relatedObjectId), undefinedAsNull(event.relatedObjectDownstreamId));
+	}
+
+	function ensureObjectUnserialized(id, downstreamId) {
+		if(id == null) {
+			if (downstreamIdToObjectMap[downstreamId] === 'undefined') {
+				var serializedObject = downstreamIdToSerializedObjectMap[downstreamId];
+				return unserializeDownstreamObjectRecursivley(serializedObject);
+			} else {
+				return downstreamIdToObjectMap[downstreamId];
+			}
+		} else {
+			return liquid.getEntity(id);
+		}
+	}
+	
+	function unserializeDownstreamObjectRecursivley(serializedObject) {
+		var newObject = liquid.createClassInstance(serializedObject.className);
+
+		newObject.forAllOutgoingRelations(function(definition, instance) {
+			var data = serializedObject[definition.name];
+			if (definition.isSet) {
+				data = data.map(unserializeDownstreamReference);
+			} else {
+				data = unserializeDownstreamReference(data);
+			}
+			// liquid.withoutPushingToServer(function() { // TODO: without pushing to the originator page!
+			newObject[definition.setterName](data);
+			// });
+		});
+
+		for (propertyName in newObject._propertyDefinitions) {
+			definition = newObject._propertyDefinitions[propertyName];
+			var data = serializedObject[definition.name];
+			liquid.withoutPushingToServer(function() {
+				newObject[definition.setterName](data);
+			});
+		}
+		newObject._ = newObject.__();
+		downstreamIdToObjectMap[serializedObject.downstreamId] = newObject;
+		
+		return newObject;
+	}
+	
+	pulseData.serializedEvents.forEach(function(event) {
+		if (typeof(event.objectId) !== 'undefined' || typeof(downstreamIdToObjectMap[event.downstreamObjectId])) { // Filter out events that should not be visible to server TODO: Make client not send them?
+
+			var object = typeof(event.objectId) !== 'undefined' ?  liquid.getEntity(action.objectId) : downstreamIdToObjectMap[event.downstreamObjectId];
+
+			if (event.action === 'settingRelation' ||
+				event.action === 'addingRelation' ||
+				event.action === 'deletingRelation') {
+
+				// This removes and replaces downstream id:s in the event!
+
+				var relatedObject = ensureRelatedObjectsUnserialized(event, downstreamIdToSerializedObjectMap, downstreamIdToObjectMap);
+
+				if (event.action === 'addingRelation') {
+					var adderName = object._relationDefinitions[event.relationQualifiedName].adderName;
+					object[adderName](relatedObject);
+				} else if (event.action === 'deletingRelation'){
+					var removerName = object._relationDefinitions[event.relationQualifiedName].removerName;
+					object[removerName](relatedObject);
+				}
+			} else if (event.action === "settingProperty") {
+				var setterName = object._propertyDefinitions[event.propertyName].setterName;
+				object[setterName](action.newValue);
+			}
+		}
+	});
+}
+
+
+//
+// function ensureEmptyObjectExists(upstreamId, className) {
+// 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
+// 		var newObject = liquid.createClassInstance(className);
+// 		newObject._upstreamId = upstreamId;
+// 		newObject.noDataLoaded = true;
+// 		liquid.upstreamIdObjectMap[upstreamId] = newObject;
+// 		newObject._ = newObject.__();
+// 	}
+// 	return liquid.upstreamIdObjectMap[upstreamId];
+// }
+// var pulse = {
+// 	serializedEvents : serializedEvents,
+// 	serializedObjects : []
+// };
+// liquid.upstreamSocket.emit("downstreamPulse", liquid.hardToGuessPageId, pulse);
 
 
 

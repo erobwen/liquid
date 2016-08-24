@@ -73,31 +73,33 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.pulse = function(originator, action) { // Changes origin: "downstream", "upstream", "user".
 		if (liquid.activePulse !== null) { 
 			throw "Pulses cannot overlap in time!"; 
-		} else {
-			// Setup pulse data			
-			liquid.activePulse = {
-				originator : originator, // 'upstream', 'user' or a Page object
-				events : [],
-				add : function(event) {
-					if (liquid.isBlockingSideEffects()) {
-						if (typeof(liquid.activeSideEffectBlocker().createdObjects[event.object.id]) === 'undefined' ) {
-							console.low("Blocked sideffect");
-							console.low(event);
-							return;
-						}
-					}
-					event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
-					event.isDirectEvent = event.repeater === null;
-					events.push(event);
-				}
-			};
 		}
+
+		// Setup pulse data
+		liquid.activePulse = {
+			originator : originator, // 'upstream', 'user' or a Page object
+			events : [],
+			add : function(event) {
+				if (liquid.isBlockingSideEffects()) {
+					if (typeof(liquid.activeSideEffectBlocker().createdObjects[event.object.id]) === 'undefined' ) {
+						console.low("Blocked sideffect");
+						console.low(event);
+						return;
+					}
+				}
+				event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
+				event.isDirectEvent = event.repeater === null;
+				events.push(event);
+			}
+		};
 
 		// Pulse action that adds original events
 		action();    // some repeater events might be here too, interleved with original events!!!
 
-		// Refresh user interface typically
-		liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() });
+		liquid.blockSideEffects(function() {
+			// Refresh user interface typically
+			liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() }); // No events or repeaters can trigger here (except for local data inside call).
+		});
 
 		// Propagate changes, up down and sideways.
 		liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
@@ -108,6 +110,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 	
+	liquid.pushDataDownstream = function(){};
 	liquid.pushDataUpstream = function(){};
 	liquid.pushDataToPersistentStorage = function(){};
 
@@ -1297,7 +1300,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					if (object._upstreamId !== null) {
 						return object.className + ":id:" + object._upstreamId;
 					} else {
-						return object.className + ":downstream:" + object._id;
+						return object.className + ":downstreamId:" + object._id;
 					}
 				} else {
 					return object.className + ":" + object._id;
