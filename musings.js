@@ -16,7 +16,7 @@ var addSubscription = function(page, object) { //selector
 			// Filter out non vieweable objects
 			var data = {newObjects: serializedDifference, initiatingChange: liquid.getPendingChanges(page)};
 			page.socket.emitt('sendSubscriptionData', serializedDifference);
-		}
+		})
 	}
 }
 

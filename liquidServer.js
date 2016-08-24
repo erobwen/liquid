@@ -46,15 +46,6 @@ liquid.createSession = function(connection) {
 }
 
 
-/**--------------------------------------------------------------
-*                 Indexes
-*----------------------------------------------------------------*/
-
-liquid.getIndex = function(className) {
-	var ids = neo4j.findEntitiesIds({className : className});
-	//console.log(queryResult);
-}
-
 /*********************************************************************************************************
  *  Persisntency
  *
@@ -71,7 +62,7 @@ liquid.getIndex = function(className) {
 
 liquid.findPersistentEntity = function(properties) {
 	return liquid.findPersistentEntities(properties)[0];
-}
+};
 
 liquid.findPersistentEntities = function(properties) {
 	// console.log("findEntities:");
@@ -83,15 +74,12 @@ liquid.findPersistentEntities = function(properties) {
 		result.push(liquid.getPersistentEntity(persistentId));
 	}); 
 	return result;
-}
+};
+
 
 /**--------------------------------------------------------------
  *                Object persisting
  *----------------------------------------------------------------*/
-// if (object._persistentId != null) {
-// 	neo4j.createRelationTo(object._persistentId, relatedObject._persistentId, definition.qualifiedName);
-// 	neo4j.setPropertyValue(object._persistentId, propertyDefinition.name, newValue);
-// }
 
 liquid.persist = function(object) {
 	if (object._persistentId === null) {
@@ -169,16 +157,17 @@ liquid.unpersistIfOrphined = function() {
 
 
 /**--------------------------------------------------------------
+ *                       Indexes
+ *----------------------------------------------------------------*/
+
+liquid.getIndex = function(className) {
+	var ids = neo4j.findEntitiesIds({className : className});
+	//console.log(queryResult);
+}
+
+/**--------------------------------------------------------------
 *                Object creation 
 *----------------------------------------------------------------*/
-
-// liquid.setAllPropertiesToDefault = function(object) {
-// 	for (propertyName in object._propertyDefinitions) {
-// 		var definition = object._propertyDefinitions[propertyName];
-// 		var defaultValue = definition.defaultValue;
-// 		object[definition.setterName](defaultValue);
-// 	}
-// }
 
 liquid.createPersistent = function(className, initData) {
 	var object = liquid.create(className, initData);
@@ -199,7 +188,6 @@ liquid.createPersistent = function(className, initData) {
 *                 Node retreival from id
 *----------------------------------------------------------------*/
 
-
 /**
 * Get object
 */
@@ -213,7 +201,7 @@ liquid.getPersistentEntity = function(persistentId) {
 	} else {
 		return liquid.loadNodeFromId(persistentId);
 	}
-}
+};
 
 
 /**
@@ -243,7 +231,7 @@ liquid.loadNodeFromId = function(persistentId) {
 
 	liquid.persistentIdObjectMap[object._persistentId] = object;
 	return object;
-}
+};
 
 
 /**--------------------------------------------------------------
@@ -353,16 +341,6 @@ liquid.loadSetRelation = function(object, definition, instance) {
 liquid.pagesMap = {};  
 liquid.sessionsMap = {};
 
-liquid.createPageObject = function(hardToGuessPageId, session) {
-	var page = createPersistent('LiquidPage', { hardToGuessPageId: hardToGuessPageId, Session : session });
-	page._socket = null;
-	return page;
-};
-
-liquid.createSessionObject = function(hardToGuessSessionId) {
-	return createPersistent('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
-};
-
 liquid.generateUniqueKey = function(keysMap) {
 	var newKey = null;
 	while(newKey == null) {
@@ -372,7 +350,7 @@ liquid.generateUniqueKey = function(keysMap) {
 		}
 	}
 	return newKey;
-} 
+};
 
 liquid.pageRequest = function(req, res, operation) {
 	var result;
@@ -380,23 +358,26 @@ liquid.pageRequest = function(req, res, operation) {
 		// Setup session object (that we know is the same object identity on each page request)
 		var hardToGuessSessionId = req.session.id;
 		if (typeof(liquid.sessionsMap[hardToGuessSessionId]) === 'undefined') {
-			liquid.sessionsMap[hardToGuessSessionId] = liquid.createSessionObject(hardToGuessSessionId);
+			liquid.sessionsMap[hardToGuessSessionId] = createPersistent('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
 		}
 		var session = liquid.sessionsMap[hardToGuessSessionId];
 
 		// Setup page object
 		var hardToGuessPageId = liquid.generateUniqueKey(liquid.pagesMap);
-		var page = liquid.createPageObject(hardToGuessPageId, session);
-		liquid.clientPage = page;
+		var page = createPersistent('LiquidPage', { hardToGuessPageId: hardToGuessPageId, Session : session });
 		liquid.pagesMap[hardToGuessPageId] = page;
+		page._socket = null;
 
+		// User
 		var user = session.getUser(); // Can be null!
 
 		// Measure query time and pageRequest time
 		neo4j.resetStatistics();
-		liquid.requestingPage = page;
-		result = operation(user, session, page);
-		liquid.requestingPage = null;
+
+		// A liquid pulse with page as originator (meaning, events will not be sent back to page unecessary) 
+		liquid.pulse(page, function() {
+			result = operation(user, session, page);
+		});
 		
 		// Display measures. 
 		var statistics = neo4j.getStatistics();
@@ -406,22 +387,22 @@ liquid.pageRequest = function(req, res, operation) {
 	}).run();
 
 	return result;
-}
+};
 
 liquid.dataRequest = function(hardToGuessPageId, operation) {
 	console.log("dataRequest: " + hardToGuessPageId);
-	// console.log(liquid.pagesMap);
 	var result;
-	var page = liquid.pagesMap[hardToGuessPageId];
-	liquid.clientPage = page;
-	// console.log(page);
+
 	Fiber(function() {  // consider, remove fiber when not using rest api?
 		// Measure query time and pageRequest time
 		neo4j.resetStatistics();
-		liquid.requestingPage = page;
-		result = operation(page.getActiveUser(), page.getSession(), page);
-		liquid.requestingPage = null;
-		
+
+		// A liquid pulse with page as originator (meaning, events will not be sent back to page unecessary)
+		var page = liquid.pagesMap[hardToGuessPageId];
+		liquid.pulse(page, function() {
+			result = operation(page.getActiveUser(), page.getSession(), page);
+		});
+
 		// Display measures. 
 		var statistics = neo4j.getStatistics();
 		console.log("Data Request time: " + statistics.pageRequestTime + " milliseconds.");
@@ -430,14 +411,14 @@ liquid.dataRequest = function(hardToGuessPageId, operation) {
 	}).run();
 
 	return result;
-}
+};
 
 
 /**----------------------------------------------------------------
  *                       Push data downstream
  *-----------------------------------------------------------------*/
 
- liquid.pushDataDownstream = function() {
+liquid.pushDataDownstream = function() {
 
 };
 // if (liquid.activePulse.originator === liquid.clientPage) {

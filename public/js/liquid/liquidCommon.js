@@ -71,13 +71,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.activePulse = null;
 	liquid.pulse = function(originator, action) { // Changes origin: "downstream", "upstream", "user".
+		// var originator = liquid.clientPage !== null ? liquid.clientPage : 'local'; // 'upstream'
 		if (liquid.activePulse !== null) { 
 			throw "Pulses cannot overlap in time!"; 
 		}
 
 		// Setup pulse data
 		liquid.activePulse = {
-			originator : originator, // 'upstream', 'user' or a Page object
+			originator : originator, // 'upstream', 'local' or a Page object
 			events : [],
 			add : function(event) {
 				if (liquid.isBlockingSideEffects()) {
@@ -114,10 +115,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.pushDataUpstream = function(){};
 	liquid.pushDataToPersistentStorage = function(){};
 
-	liquid.addToPulse = function(event) {
+	liquid.startOrAddToPulse = function(event) {
 		if (liquid.activePulse === null) {
-			var originator = liquid.clientPage !== null ? liquid.clientPage : liquid.page; // Liquid page, means this page.
-			liquid.pulse(originator, function() {
+			liquid.pulse('local', function() { // We assume it is a local pulse if not explicitly started. 
 				liquid.activePulse.add(event);
 			});// Here the pulse is finished.
 			return;
@@ -471,7 +471,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
 		liquid.pauseRepeaters(function() {
 			liquid.recordersDirty(instance.observers);
-			liquid.addToPulse({redundant: true,  action: 'settingRelation', object: object, definition: definition, instance: instance, value: value, previousValue: previousValue});
+			liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: object, definition: definition, instance: instance, value: value, previousValue: previousValue});
 			liquid.notifyDeletingRelation(object, definition, instance, previousValue);
 			liquid.notifyAddingRelation(object, definition, instance, value);
 		});
@@ -479,28 +479,28 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({redundant: false, action: 'addingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.startOrAddToPulse({redundant: false, action: 'addingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyAddReverseRelation = function(object, definition, instance, relatedObject) {
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({redundant: true, action: 'addingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.startOrAddToPulse({redundant: true, action: 'addingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({redundant: false, action: 'deletingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.startOrAddToPulse({redundant: false, action: 'deletingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	liquid.notifyDeletingReverseRelation = function(object, definition, instance, relatedObject) {
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({redundant: true, action: 'deletingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.startOrAddToPulse({redundant: true, action: 'deletingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 	
 	liquid.notifyRelationReordered = function(object, definition, instance, relationData) {
 		// console.log("notifySettingProperty: " + object.__() + "." + propertyDefinition.name + " = " + newValue);
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({redundant: true, action: 'relationReordered', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.startOrAddToPulse({redundant: true, action: 'relationReordered', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
 	};
 
 	
@@ -515,7 +515,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.notifySettingProperty = function(object, definition, instance, newValue, oldValue) {
 		liquid.recordersDirty(instance.observers);
-		liquid.addToPulse({redundant: false, action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: newValue, oldValue: oldValue});
+		liquid.startOrAddToPulse({redundant: false, action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: newValue, oldValue: oldValue});
 	};
 
 

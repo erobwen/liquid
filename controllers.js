@@ -1,6 +1,22 @@
 var liquidController = require('./liquidController.js');
 
 module.exports = {
+	main : function(req, res) {
+		liquidPageRequest(req, res, function(user, session, page) {
+			var data = {
+				hardToGuessPageId : page.getHardToGuessPageId(),
+				serialized : liquid.serializeSelection(selection),
+
+				userUpstreamId: somePerson._id,
+				sessionUpstreamId: session._id,
+				pageUpstreamId: page._id,
+			};
+			res.render('layout',{
+				data: JSON.stringify(data)
+			});
+		});
+	},
+
 	init : function (req, res) {
 		liquidPageRequest(req, res, function(user, session, page) {
 			console.log("Request page 'init'");
@@ -66,7 +82,8 @@ module.exports = {
 			console.log(politics.getSubCategories());
 			res.send("Test finished");
 		});
-	},	
+	},
+
 	view : function (req, res) {
 		console.log("Request page 'view'");
 		// console.log(sails);

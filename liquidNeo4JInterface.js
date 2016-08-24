@@ -164,7 +164,7 @@ if (useRestAPI) {
 				
 			// Make query while still remembering current connection (if interrupted by another connection)
 			var fiber = Fiber.current;
-			var currentPage = liquid.clientPage;
+			var currentPulse = liquid.activePulse; // TODO: consider if we can interleave pulses in this way???
 			if (trace) {
 				console.log("Before query:" + parametrizedCypher);
 			}
@@ -181,7 +181,7 @@ if (useRestAPI) {
 				}
 			});
 			returnValue = Fiber.yield();
-			liquid.clientPage = currentPage;
+			liquid.activePulse = currentPulse;
 		});
 		
 		// Return value if any
