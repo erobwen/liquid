@@ -7,48 +7,48 @@ module.exports = {
 			liquid.clearDatabase();
 		
 			// User
-			var user = createPersistentEntity('User', {name: "Some Person", email: "some.person@gmail.com" });
+			var user = createPersistent('User', {name: "Some Person", email: "some.person@gmail.com" });
 			
 			
 			// Create categories
-			var favourite = createPersistentEntity('Category', {name: 'Favourite', description: '', user: user});
+			var favourite = createPersistent('Category', {name: 'Favourite', description: '', user: user});
 			
-			var funny = createPersistentEntity('Category', {name: 'Funny', description: '', user: user});		
+			var funny = createPersistent('Category', {name: 'Funny', description: '', user: user});		
 			
-			var politics = createPersistentEntity('Category', {name: 'Politics', description: '', user: user});
+			var politics = createPersistent('Category', {name: 'Politics', description: '', user: user});
 
-			var georgism = createPersistentEntity('Category', {name: 'Georgism', description: '', user: user});
+			var georgism = createPersistent('Category', {name: 'Georgism', description: '', user: user});
 			politics.addSubCategory(georgism);
 			
-			var myPolitics = createPersistentEntity('Category', {name: 'MyPoliticalCommitments', description: '', user: user});
+			var myPolitics = createPersistent('Category', {name: 'MyPoliticalCommitments', description: '', user: user});
 			politics.addSubCategory(myPolitics);
 			
-			var directDemocracy = createPersistentEntity('Category', {name: 'Direct Democracy', description: '', user: user});
+			var directDemocracy = createPersistent('Category', {name: 'Direct Democracy', description: '', user: user});
 			politics.addSubCategory(directDemocracy);
 			
-			var liquidDemocracy = createPersistentEntity('Category', {name: 'Liquid Democracy', description: '', user: user});
+			var liquidDemocracy = createPersistent('Category', {name: 'Liquid Democracy', description: '', user: user});
 			directDemocracy.addSubCategory(liquidDemocracy);
 			
-			var direktdemokraterna = createPersistentEntity('Category', {name: 'Direktdemokraterna', description: '', user: user});
+			var direktdemokraterna = createPersistent('Category', {name: 'Direktdemokraterna', description: '', user: user});
 			liquidDemocracy.addSubCategory(direktdemokraterna);
 			myPolitics.addSubCategory(direktdemokraterna);
 			
 			// Create References
 			var created = 0;
 			while (created++ < 3) {
-				var reference1 = createPersistentEntity('Reference', {url : 'http://foo.com/' + created, user: user, category:georgism});
+				var reference1 = createPersistent('Reference', {url : 'http://foo.com/' + created, user: user, category:georgism});
 			}
 			// created = 0;
 			// while (created++ < 10) {
-				// var reference2 = createPersistentEntity('Reference', {url : 'http://fie.com/' + created, user: user, categories:[georgism, liquidDemocracy]});
+				// var reference2 = createPersistent('Reference', {url : 'http://fie.com/' + created, user: user, categories:[georgism, liquidDemocracy]});
 			// }
 			// created = 0;
 			// while (created++ < 10) {
-				// var reference3 = createPersistentEntity('Reference', {url : 'http://fum.com/' + created, user: user, category: direktdemokraterna});
+				// var reference3 = createPersistent('Reference', {url : 'http://fum.com/' + created, user: user, category: direktdemokraterna});
 			// }
 			// created = 0;
 			// while (created++ < 10) {
-				// var reference4 = createPersistentEntity('Reference', {url : 'http://foobarkazong.com/'  + created, user: user, category: direktdemokraterna});
+				// var reference4 = createPersistent('Reference', {url : 'http://foobarkazong.com/'  + created, user: user, category: direktdemokraterna});
 			// }
 			res.send("Finished");
 			// console.log("====================");

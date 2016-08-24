@@ -6,9 +6,9 @@ module.exports = {
 
         var somePerson = liquid.findEntity({className: 'User'});
 
-        var favourite = createPersistentEntity('Category', {name: 'Favourite', description: '', user: user});
+        var favourite = createPersistent('Category', {name: 'Favourite', description: '', user: user});
         favourite.persist();
-        // createPersistentEntity('PersistentSelection', {object: favourite, selection: "object"});
+        // createPersistent('PersistentSelection', {object: favourite, selection: "object"});
 
         // favourite.persist();
 

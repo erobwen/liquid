@@ -180,7 +180,7 @@ liquid.unpersistIfOrphined = function() {
 // 	}
 // }
 
-liquid.createPersistentEntity = function(className, initData) {
+liquid.createPersistent = function(className, initData) {
 	var object = liquid.create(className, initData);
 
 	// Save to database
@@ -354,13 +354,13 @@ liquid.pagesMap = {};
 liquid.sessionsMap = {};
 
 liquid.createPageObject = function(hardToGuessPageId, session) {
-	var page = createPersistentEntity('LiquidPage', { hardToGuessPageId: hardToGuessPageId, Session : session });
+	var page = createPersistent('LiquidPage', { hardToGuessPageId: hardToGuessPageId, Session : session });
 	page._socket = null;
 	return page;
 };
 
 liquid.createSessionObject = function(hardToGuessSessionId) {
-	return createPersistentEntity('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
+	return createPersistent('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
 };
 
 liquid.generateUniqueKey = function(keysMap) {
@@ -377,26 +377,16 @@ liquid.generateUniqueKey = function(keysMap) {
 liquid.pageRequest = function(req, res, operation) {
 	var result;
 	Fiber(function() {  // consider, remove fiber when not using rest api?
-		// console.log(req.session);
-		// var connection = res.socket
-		// global.currentLiquidConnection = connection;
-		// global.currentSession = liquid.createSession(connection);
-		// console.log(currentLiquidConnection);
-		// console.log(currentLiquidConnection.sessionid);
-		// liquidSocket.emit('welcome', {message: "Hi i'm Laurent and i write shitty articles on my blog"});
-
 		// Setup session object (that we know is the same object identity on each page request)
 		var hardToGuessSessionId = req.session.id;
 		if (typeof(liquid.sessionsMap[hardToGuessSessionId]) === 'undefined') {
 			liquid.sessionsMap[hardToGuessSessionId] = liquid.createSessionObject(hardToGuessSessionId);
 		}
 		var session = liquid.sessionsMap[hardToGuessSessionId];
-		// MATCH (n {className:'LiquidSession'}) DELETE n
 
 		// Setup page object
 		var hardToGuessPageId = liquid.generateUniqueKey(liquid.pagesMap);
 		var page = liquid.createPageObject(hardToGuessPageId, session);
-		// MATCH (n {className:'LiquidPage'}) DELETE n
 		liquid.clientPage = page;
 		liquid.pagesMap[hardToGuessPageId] = page;
 
@@ -602,7 +592,7 @@ module.exports.liquidPageRequest = liquid.pageRequest;
 module.exports.liquidDataRequest = liquid.dataRequest;
 
 module.exports.create = liquid.create;
-module.exports.createPersistentEntity = liquid.createPersistentEntity;
+module.exports.createPersistent = liquid.createPersistent;
 
 module.exports.getEntity = liquid.getEntity;
 module.exports.getPersistentEntity = liquid.getPersistentEntity;
