@@ -1186,12 +1186,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 						liquid.loadSetRelation(this, definition, instance);
 					}
 					// TODO: Assert not already in array!
-					liquid.addIncomingRelation(added, definition.qualifiedName, this);
+					if (!inArray(added, instance.data)) {
+						liquid.addIncomingRelation(added, definition.qualifiedName, this);
 
-					instance.data.push(added); //TODO: Create copy of array here?
-					liquid.sortRelationOnElementChange(definition, instance);
+						instance.data.push(added); //TODO: Create copy of array here?
+						liquid.sortRelationOnElementChange(definition, instance);
 
-					liquid.notifyAddingRelation(this, definition, instance, added);
+						liquid.notifyAddingRelation(this, definition, instance, added);
+					}
 				} else {
 					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 				}
@@ -1205,15 +1207,17 @@ var addCommonLiquidFunctionality = function(liquid) {
 					if (typeof(instance.data) === 'undefined') {
 						liquid.loadSetRelation(this, definition, instance);
 					}
-					liquid.deleteIncomingRelation(removed, definition.qualifiedName, this);
-					// console.log(instance.data.length);
-					// console.log(removed);
-					// console.log(instance.data);
-					removeFromArray(removed, instance.data); //TODO: Create copy of array here?
-					// console.log(instance.data.length);
+					if (inArray(removed, instance.data)) {
+						liquid.deleteIncomingRelation(removed, definition.qualifiedName, this);
+						// console.log(instance.data.length);
+						// console.log(removed);
+						// console.log(instance.data);
+						removeFromArray(removed, instance.data); //TODO: Create copy of array here?
+						// console.log(instance.data.length);
 
-					liquid.notifyDeletingRelation(this, definition, instance, removed);
-					// console.groupEnd();
+						liquid.notifyDeletingRelation(this, definition, instance, removed);
+						// console.groupEnd();
+					}
 				} else {
 					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 				}

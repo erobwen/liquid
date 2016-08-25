@@ -399,7 +399,8 @@ liquid.getSubscriptionUpdate = function(page) {
 			result.events = [];
 			liquid.activePulse.events.forEach(function (event) {
 				if (addedAndRemovedIds.static[event.object._id]) {
-					result.events.push(event);
+					// TODO: Filter out events that goes back to the sender? Or will they just be ignored? 
+					result.events.push(serializeEventForDownstream(event));
 				}
 			});
 
@@ -422,8 +423,37 @@ liquid.getSubscriptionUpdate = function(page) {
 	});
 	page.getSubscriptions().forEach(function(subscription) {});
 	return result;
+
+	/**
+	 * result.serializedObjects
+	 * result.unsubscribedUpstreamIds
+	 * result.idToUpstreamId
+	 * result.events
+	 */
 };
 
+// Form for events:
+//  {action: addingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
+//  {action: deletingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
+function serializeEventForDownstream(event) {
+	var serialized  = {
+		action: event.action
+	};
+	serialized.objectId = event.object._id;
+
+	if (event.definition.type === 'relation') {
+		serialized.relationName = event.definition.qualifiedName;
+
+		if (typeof(event.relatedObject) !== 'undefined') {
+			serialized.relatedObjectId = event.relatedObject._id;
+		}
+	} else {
+		serialized.propertyName = event.definition.name;
+		serialized.value = event.value;
+	}
+
+	return serialized;
+}
 
 
 liquid.pushDataDownstream = function() {
