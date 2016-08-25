@@ -8,8 +8,10 @@ var addLiquidEntity = function(liquid) {
                 object.addProperty('hardToGuessSessionId', '');
     
                 // Relations
-                object.addRelation('Page', 'toMany', {order: function(a, b) { return -1; }});
                 object.addRelation('User', 'toOne', {order: function(a, b) { return -1; }});
+
+                // Relations
+                object.addReverseRelationTo('LiquidPage_Session', 'Page', 'toMany', {order: function(a, b) { return -1; }}); //readOnly: [], readAndWrite:['administrator'],
             },
     
             addMethods : function (object) {
@@ -39,12 +41,19 @@ var addLiquidEntity = function(liquid) {
             addPropertiesAndRelations : function(object) {
                 // Properties
                 object.addProperty('hardToGuessPageId', '');
-    
+                
                 // Relations
-                object.addReverseRelationTo('LiquidSession_Page', 'Session', 'toOne', {order: function(a, b) { return -1; }}); //readOnly: [], readAndWrite:['administrator'],
+                object.addRelation('Session', 'toOne');
+                object.addRelation('Service', 'toOne');
             },
     
             addMethods : function(object) {
+                
+                object.overrideMethod('init', function(parent, initData) {
+                    parent(initData);
+                    this._idToObjectFootprintMap = {};
+                });                
+                
                 object.addMethod('encryptPassword', function(liquidPassword) {
                     return liquidPassword + " [encrypted]";
                 });
@@ -59,9 +68,66 @@ var addLiquidEntity = function(liquid) {
                 });
     
                 object.addMethod('login', function(loginName, liquidPassword) {
-                    return this.getPage().login(loginName, liquidPassword);
                 }, 'administrator');
-    
+            }
+        });
+
+        liquid.registerClass({
+            name: 'LiquidPageService', _extends: 'Entity',
+
+            addPropertiesAndRelations : function(object) {
+                // Relations
+                object.addReverseRelation('LiquidPage_Service', 'Page', 'toOne');
+            },
+
+            addMethods : function(object) {
+                object.addMethod('encryptPassword', function(liquidPassword) {
+                    return liquidPassword + " [encrypted]";
+                });
+
+                object.addMethod('getActiveUser', function(liquidPassword) {
+                    if (this.getSession() != null) {
+                        // console.log(this.getSession());
+                        // console.log(this.getSession().getUser);
+                        return this.getSession().getUser();
+                    }
+                    return null;
+                });
+
+                object.addMethod('login', function(loginName, liquidPassword) {
+                    // Use SHA and similar here!
+                    this.callOnServer('loginOnServer', loginName, liquidPassword);  
+                });
+
+                object.addMethod('loginOnServer', function(loginName, liquidPassword) {
+                    var user = liquid.findPersistentEntity({name: loginName});
+                    // Verify password
+                    this.getPage().setUser(user);
+                });
+            }
+        });
+            
+        liquid.registerClass({
+            name: 'Subscription',  _extends: 'Entity',
+
+            addPropertiesAndRelations : function(object) {
+                // Properties
+                object.overrideMethod('init', function(parent, initData) {
+                    // parent(initData); // Should not be needed, has no data visible inside liquid.
+                    this._selectorSuffix = initData.selector;
+                    this._targetObjectUpstreamId = initData.objectId;
+                });
+
+                // Relations
+                object.addReverseRelation('LiquidPage_Subscriptions','Page', 'toOne');
+                // object.addRelation('TargetObject','toOne');
+            },
+
+            addMethods : function(object) {
+                object.overrideMethod('init', function(parent, initData) {
+                    parent(initData);
+                    this._idToObjectFootprintMap = {};
+                });
             }
         });
     
@@ -80,7 +146,19 @@ var addLiquidEntity = function(liquid) {
     
             addMethods : function (object) {}
         });
-    
+
+
+        /**
+         * Experimental, a class that 
+         */
+        
+        // liquid.registerClass({
+        //     name: 'ServiceEntity',
+        //     addPropertiesAndRelations : function (object) {},
+        //
+        //     addMethods : function (object) {}
+        // });
+        
         liquid.registerClass({
             name: 'Entity',
             addPropertiesAndRelations : function (object) {

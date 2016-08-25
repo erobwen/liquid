@@ -70,44 +70,55 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 *----------------------------------------------------------------*/
 
 	liquid.activePulse = null;
-	liquid.pulse = function(originator, action) { // Changes origin: "downstream", "upstream", "user".
-		// var originator = liquid.clientPage !== null ? liquid.clientPage : 'local'; // 'upstream'
-		if (liquid.activePulse !== null) { 
-			throw "Pulses cannot overlap in time!"; 
-		}
-
-		// Setup pulse data
-		liquid.activePulse = {
-			originator : originator, // 'upstream', 'local' or a Page object
-			events : [],
-			add : function(event) {
-				if (liquid.isBlockingSideEffects()) {
-					if (typeof(liquid.activeSideEffectBlocker().createdObjects[event.object.id]) === 'undefined' ) {
-						console.low("Blocked sideffect");
-						console.low(event);
-						return;
-					}
-				}
-				event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
-				event.isDirectEvent = event.repeater === null;
-				events.push(event);
+	liquid.pulse = function(originator, action) { // Changes origin: "downstream", "upstream", "local" (direct ui modifications), "httpRequest"
+		Fiber(function() {
+			// var originator = liquid.clientPage !== null ? liquid.clientPage : 'local'; // 'upstream'
+			if (liquid.activePulse !== null) { 
+				throw "Pulses cannot overlap in time!"; 
 			}
-		};
+	
+			// Setup pulse data
+			liquid.activePulse = {
+				originator : originator, // 'upstream', 'local' or a Page object
+				events : [],
+				add : function(event) {
+					if (liquid.isBlockingSideEffects()) {
+						if (typeof(liquid.activeSideEffectBlocker().createdObjects[event.object.id]) === 'undefined' ) {
+							console.low("Blocked sideffect");
+							console.low(event);
+							return;
+						}
+					}
+					event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
+					event.isDirectEvent = event.repeater === null;
+					events.push(event);
+				}
+			};
 
-		// Pulse action that adds original events
-		action();    // some repeater events might be here too, interleved with original events!!!
+			// Measure query time and pageRequest time
+			// neo4j.resetStatistics();
 
-		liquid.blockSideEffects(function() {
-			// Refresh user interface typically
-			liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() }); // No events or repeaters can trigger here (except for local data inside call).
+			// Pulse action that adds original events
+			action();    // some repeater events might be here too, interleved with original events!!!
+
+			// Display measures.
+			// var statistics = neo4j.getStatistics();
+			// console.log("Page Request time: " + statistics.pageRequestTime + " milliseconds.");
+			// console.log("Page Request data queries: " + statistics.dataQueries);
+			// console.log("Page Request data query time: " + statistics.dataQueryTime + " milliseconds.");
+
+			liquid.blockSideEffects(function() { // TODO: Block writings to server.
+				// Refresh user interface typically
+				liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() }); // No events or repeaters can trigger here (except for local data inside call).
+			});
+	
+			// Propagate changes, up down and sideways.
+			liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
+			liquid.pushDataUpstream();
+			liquid.pushDataToPersistentStorage();
+	
+			liquid.activePulse = null;
 		});
-
-		// Propagate changes, up down and sideways.
-		liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
-		liquid.pushDataUpstream();
-		liquid.pushDataToPersistentStorage();
-
-		liquid.activePulse = null;
 	};
 
 	

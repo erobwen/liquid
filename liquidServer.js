@@ -47,7 +47,7 @@ liquid.createSession = function(connection) {
 
 
 /*********************************************************************************************************
- *  Persisntency
+ *  Persistency
  *
  *
  *
@@ -341,86 +341,47 @@ liquid.loadSetRelation = function(object, definition, instance) {
 liquid.pagesMap = {};  
 liquid.sessionsMap = {};
 
-liquid.generateUniqueKey = function(keysMap) {
-	var newKey = null;
-	while(newKey == null) {
-		var newKey = Number.MAX_SAFE_INTEGER * Math.random();
-		if (typeof(keysMap[newKey]) !== 'undefined') {			
-			newKey = null;
-		}
-	}
-	return newKey;
-};
 
-liquid.pageRequest = function(req, res, operation) {
-	var result;
-	Fiber(function() {  // consider, remove fiber when not using rest api?
-		// Setup session object (that we know is the same object identity on each page request)
-		var hardToGuessSessionId = req.session.id;
-		if (typeof(liquid.sessionsMap[hardToGuessSessionId]) === 'undefined') {
-			liquid.sessionsMap[hardToGuessSessionId] = createPersistent('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
-		}
-		var session = liquid.sessionsMap[hardToGuessSessionId];
 
-		// Setup page object
-		var hardToGuessPageId = liquid.generateUniqueKey(liquid.pagesMap);
-		var page = createPersistent('LiquidPage', { hardToGuessPageId: hardToGuessPageId, Session : session });
-		liquid.pagesMap[hardToGuessPageId] = page;
-		page._socket = null;
-
-		// User
-		var user = session.getUser(); // Can be null!
-
-		// Measure query time and pageRequest time
-		neo4j.resetStatistics();
-
-		// A liquid pulse with page as originator (meaning, events will not be sent back to page unecessary) 
-		liquid.pulse(page, function() {
-			result = operation(user, session, page);
-		});
-		
-		// Display measures. 
-		var statistics = neo4j.getStatistics();
-		console.log("Page Request time: " + statistics.pageRequestTime + " milliseconds.");
-		console.log("Page Request data queries: " + statistics.dataQueries);
-		console.log("Page Request data query time: " + statistics.dataQueryTime + " milliseconds.");
-	}).run();
-
-	return result;
-};
-
-liquid.dataRequest = function(hardToGuessPageId, operation) {
-	console.log("dataRequest: " + hardToGuessPageId);
-	var result;
-
-	Fiber(function() {  // consider, remove fiber when not using rest api?
-		// Measure query time and pageRequest time
-		neo4j.resetStatistics();
-
-		// A liquid pulse with page as originator (meaning, events will not be sent back to page unecessary)
-		var page = liquid.pagesMap[hardToGuessPageId];
-		liquid.pulse(page, function() {
-			result = operation(page.getActiveUser(), page.getSession(), page);
-		});
-
-		// Display measures. 
-		var statistics = neo4j.getStatistics();
-		console.log("Data Request time: " + statistics.pageRequestTime + " milliseconds.");
-		console.log("Data Request data queries: " + statistics.dataQueries);
-		console.log("Data Request data query time: " + statistics.dataQueryTime + " milliseconds.");
-	}).run();
-
-	return result;
-};
 
 
 /**----------------------------------------------------------------
  *                       Push data downstream
  *-----------------------------------------------------------------*/
 
-liquid.pushDataDownstream = function() {
-
+liquid.dirtyPageSubscritiptions = [];
+liquid.getSubscriptionDeltaInfo = function(page) {
+	var result;
+	
+	uponChangeDo(function() {
+		page.getSubscriptions().forEach(function(subscription) {
+			var targetId = subscription._targetObjectUpstreamId;
+			var selectorSuffix = subscription._selectorSuffix;
+			var object = liquid.getEntity(targetId);
+			var selection = {};
+			// as page.
+			object['select' + selectorSuffix](selection);
+			result = getMapDifference(page._previousSelectoin, selectoin);
+			
+			//add event info 
+		});
+		result = null;
+	}, function() {
+		liquid.dirtyPageSubscriptions.push(page);
+	});
+	page.getSubscriptions().forEach(function(subscription) {});
+	return result;
 };
+
+
+
+liquid.pushDataDownstream = function() {
+	liquid.dirtyPageSubscritiptions.forEach(function() {
+		deltaInfo = liquid.getSubscriptionDeltaInfo(page);
+		page._socket.emit('pushChanges', deltaInfo);
+	});
+};
+
 // if (liquid.activePulse.originator === liquid.clientPage) {
 
 
@@ -428,11 +389,6 @@ liquid.pushDataDownstream = function() {
  *                 Receive from downstream
  ---------------------------------------------------------------*/
 
-function receivePulseFromDownstream(originator, pulseData) {
-	liquid.pulse(originator, function() {
-		unserializeDownstreamPulse(pulseData);
-	});
-}
 
 
 // Form for events:

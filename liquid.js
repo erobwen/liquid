@@ -78,55 +78,32 @@ liquidSocket.on('connection', function (socket) {
 	
 	socket.on('registerPageId', function(hardToGuessPageId) {
 		// console.log("Register page connection");
-		// console.log(socket); // null
 		// console.log(hardToGuessPageId);
-		// console.log(liquid.pagesMap);
 		if (typeof(hardToGuessPageId) !== 'undefined' && hardToGuessPageId !== null && typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
 			liquid.pagesMap[hardToGuessPageId]._socket = socket;
 			// console.log("Made an association between socket and hardToGuessPageId");
 		}
 	});
-	
-	socket.on('batchSave', function(hardToGuessPageId, saverId, changeList){
-		// console.log('batchSave');
-		// console.log(hardToGuessPageId);
-		// console.log(saverId);
-		// console.log(changeList);
-		liquid.dataRequest(hardToGuessPageId, function(user, session, page) {
-			changeList.forEach(function(change) {
-				var object = liquid.getEntity(change.objectId);
-				if (change.type === 'settingRelation' ||
-					change.type === 'addingRelation' ||
-					change.type === 'deletingRelation') {
-					var relatedObject = liquid.getEntity(change.relatedObjectId);
 
-					if (change.type === 'settingRelation') {
-						var setterName = object._relationDefinitions[change.relationQualifiedName].setterName;
-						object[setterName](relatedObject);
-					} else if (change.type === 'addingRelation') {
-						var adderName = object._relationDefinitions[change.relationQualifiedName].adderName;
-						object[adderName](relatedObject);
-					} else if (change.type === 'deletingRelation'){
-						var removerName = object._relationDefinitions[change.relationQualifiedName].removerName;
-						object[removerName](relatedObject);	
-					}
-				} else if (change.type === "settingProperty") {
-					var setterName = object._propertyDefinitions[change.propertyName].setterName;
-					object[setterName](change.newValue);
-				}
+	socket.on('pushPulse', function(hardToGuessPageId, pulseData) {
+		if (typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
+			var page = liquid.pagesMap[hardToGuessPageId];
+			liquid.pulse(page, function() {
+				unserializeDownstreamPulse(pulseData);
 			});
-		});
-		// socket.emit("var saverId = arguments.saverId;")
+		} else {
+			socket.emit('disconnectedDueToInactivityOrServerFault'); // TODO: Consider create new page?
+		}
 	});
 
-    socket.on('disconnect', function(a) {
+    socket.on('disconnect', function(hardToGuessPageId) {
 		// hardToGuessPageId
 		// var page = liquid.pagesMap[hardToGuessPageId];
 		// delete liquid.pagesMap[hardToGuessPageId];
 		// page.setSession(null);
 		// // TODO: unpersist page
         console.log('Disconnected'); 
-        console.log(a);
+        console.log(hardToGuessPageId);
     });
 });
 
