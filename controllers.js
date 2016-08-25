@@ -45,7 +45,7 @@ module.exports = {
 			var data = {
 				serialized : liquid.serializeSelection(selection),
 				pageUpstreamId : page._id,
-				subscriptionInfo : liquid.getSubscriptionDeltaInfo(page)
+				subscriptionInfo : liquid.getSubscriptionUpdate(page)
 			};
 			res.render('layout',{
 				data: JSON.stringify(data)

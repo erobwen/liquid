@@ -116,7 +116,8 @@ var addLiquidEntity = function(liquid) {
                     // parent(initData); // Should not be needed, has no data visible inside liquid.
                     this._selectorSuffix = undefinedAsNull(initData.selector);
                     this._targetObjectUpstreamId = undefinedAsNull(initData.objectId);
-                    this._previousSelection
+                    this._previousSelection = {};
+                    this._idToDownstreamIdMap = null;  // This is set in pulses where this page pushes data upstream.
                 });
 
                 // Relations

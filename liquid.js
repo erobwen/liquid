@@ -85,7 +85,7 @@ liquidSocket.on('connection', function (socket) {
 		}
 	});
 
-	socket.on('pushPulse', function(hardToGuessPageId, pulseData) {
+	socket.on('pushDownstreamPulse', function(hardToGuessPageId, pulseData) {
 		if (typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
 			var page = liquid.pagesMap[hardToGuessPageId];
 			liquid.pulse(page, function() {

@@ -10,59 +10,20 @@ socket.on('connect', function(){
 	socket.emit("registerPageId", liquid.hardToGuessPageId);
 });
 
-socket.on('settingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
-	console.log("socket: settingRelation (" + objectId + ")." + relationQualifiedName + " = " + "(" + relatedObjectId + ")");
-	// TODO: Assert object in idObjectMap?
-	liquid.pulse('upstream', function() {
-		liquid.activeSaver = null;
-		var object = liquid.getEntity(objectId);
-		var relatedObject = liquid.getEntity(relatedObjectId);
-		var setterName = object._relationDefinitions[relationQualifiedName].setterName;
-		object[setterName](relatedObject);
-		liquid.activeSaver = liquid.defaultSaver;
-	});
-})
-
-socket.on('addingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
-	console.log("socket: addingRelation (" + objectId + ")." + relationQualifiedName + ".add(" + "(" + relatedObjectId + "))");
-	liquid.pulse('upstream', function() {
-		liquid.activeSaver = null;
-		var object = liquid.getUpstreamEntity(objectId);
-		var relatedObject = liquid.getUpstreamEntity(relatedObjectId);
-		var adderName = object._relationDefinitions[relationQualifiedName].adderName;
-		object[adderName](relatedObject);
-		liquid.activeSaver = liquid.defaultSaver;
-	});
-})
-
-socket.on('deletingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
-	console.log("socket: deletingRelation (" + objectId + ")." + relationQualifiedName + ".delete(" + "(" + relatedObjectId + "))");
-	liquid.pulse('upstream', function() {
-		liquid.activeSaver = null;
-		var object = liquid.getUpstreamEntity(objectId);
-		var relatedObject = liquid.getUpstreamEntity(relatedObjectId);
-		var removerName = object._relationDefinitions[relationQualifiedName].removerName;
-		object[removerName](relatedObject);
-		liquid.activeSaver = liquid.defaultSaver;
-	});
-})
-
-socket.on('settingProperty', function(objectId, propertyName, newValue) {
-	console.log("socket: settingProperty (" + objectId + ")." + propertyName + " = " + newValue);
-	liquid.pulse('upstream', function() {
-		liquid.activeSaver = null;
-		var object = liquid.getUpstreamEntity(objectId);
-		var setterName = object._propertyDefinitions[propertyName].setterName;
-		object[setterName](newValue);
-		liquid.activeSaver = liquid.defaultSaver;
-	});
-})
 
 socket.on('disconnect', function(){
 	console.log("Disconnected");
 });
 
-socket.on('batchSaveReturn', function(){
+
+socket.on('upstreamIdAssignmentNotification', function() {
+
+});
+
+
+
+
+socket.on('pushSubscriptionChanges', function(){
 	// liquid.saverMap.
 	// saver.consolidateIds(temporaryEntityIdToEntityIdMap);
 			// console.groupEnd();
@@ -115,3 +76,53 @@ liquid.socket = socket;
   // And we send something else !
   // Socket.emit('hey', {message: "I really don't care."});
 // });
+
+
+
+// socket.on('settingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
+// 	console.log("socket: settingRelation (" + objectId + ")." + relationQualifiedName + " = " + "(" + relatedObjectId + ")");
+// 	// TODO: Assert object in idObjectMap?
+// 	liquid.pulse('upstream', function() {
+// 		liquid.activeSaver = null;
+// 		var object = liquid.getEntity(objectId);
+// 		var relatedObject = liquid.getEntity(relatedObjectId);
+// 		var setterName = object._relationDefinitions[relationQualifiedName].setterName;
+// 		object[setterName](relatedObject);
+// 		liquid.activeSaver = liquid.defaultSaver;
+// 	});
+// })
+//
+// socket.on('addingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
+// 	console.log("socket: addingRelation (" + objectId + ")." + relationQualifiedName + ".add(" + "(" + relatedObjectId + "))");
+// 	liquid.pulse('upstream', function() {
+// 		liquid.activeSaver = null;
+// 		var object = liquid.getUpstreamEntity(objectId);
+// 		var relatedObject = liquid.getUpstreamEntity(relatedObjectId);
+// 		var adderName = object._relationDefinitions[relationQualifiedName].adderName;
+// 		object[adderName](relatedObject);
+// 		liquid.activeSaver = liquid.defaultSaver;
+// 	});
+// })
+//
+// socket.on('deletingRelation', function(objectId, relationQualifiedName, relatedObjectId) {
+// 	console.log("socket: deletingRelation (" + objectId + ")." + relationQualifiedName + ".delete(" + "(" + relatedObjectId + "))");
+// 	liquid.pulse('upstream', function() {
+// 		liquid.activeSaver = null;
+// 		var object = liquid.getUpstreamEntity(objectId);
+// 		var relatedObject = liquid.getUpstreamEntity(relatedObjectId);
+// 		var removerName = object._relationDefinitions[relationQualifiedName].removerName;
+// 		object[removerName](relatedObject);
+// 		liquid.activeSaver = liquid.defaultSaver;
+// 	});
+// })
+//
+// socket.on('settingProperty', function(objectId, propertyName, newValue) {
+// 	console.log("socket: settingProperty (" + objectId + ")." + propertyName + " = " + newValue);
+// 	liquid.pulse('upstream', function() {
+// 		liquid.activeSaver = null;
+// 		var object = liquid.getUpstreamEntity(objectId);
+// 		var setterName = object._propertyDefinitions[propertyName].setterName;
+// 		object[setterName](newValue);
+// 		liquid.activeSaver = liquid.defaultSaver;
+// 	});
+// })

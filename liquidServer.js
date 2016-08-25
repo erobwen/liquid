@@ -377,7 +377,7 @@ function getMapDifference(firstSet, secondSet) {
 
 
 liquid.dirtyPageSubscritiptions = [];
-liquid.getSubscriptionDeltaInfo = function(page) {
+liquid.getSubscriptionUpdate = function(page) {
 	var result = {};
 	
 	uponChangeDo(function() {
@@ -402,6 +402,20 @@ liquid.getSubscriptionDeltaInfo = function(page) {
 					result.events.push(event);
 				}
 			});
+
+			// Add id mapping information
+			result.idToUpstreamId = {};
+			result.idsOfInstantlyHidden = [];
+			if (page._idToDownstreamIdMap !== null) {
+				for(id in page._idToDownstreamIdMap) {
+					if (typeof(selection[id]) !== 'undefined') {
+						result.idToUpstreamId[page._idToDownstreamIdMap[id]] = id;
+					} else {
+						result.idsOfInstantlyHidden[page._idToDownstreamIdMap[id]]; // These objects were sent to the server, but did not become subscribed,
+					}
+				}
+				page._idToDownstreamIdMap = null;
+			}
 		});
 	}, function() {
 		liquid.dirtyPageSubscriptions.push(page);
@@ -414,8 +428,8 @@ liquid.getSubscriptionDeltaInfo = function(page) {
 
 liquid.pushDataDownstream = function() {
 	liquid.dirtyPageSubscritiptions.forEach(function() {
-		deltaInfo = liquid.getSubscriptionDeltaInfo(page);
-		page._socket.emit('pushChanges', deltaInfo);
+		update = liquid.getSubscriptionUpdate(page);
+		page._socket.emit('pushSubscriptionChanges', update);
 	});
 };
 
@@ -523,6 +537,12 @@ function unserializeDownstreamPulse(pulseData) {
 				object[setterName](action.newValue);
 			}
 		}
+
+		var idToDownstreamIdMap = {};
+		for (downstreamId in downstreamIdToObjectMap) {
+			idToDownstreamIdMap[downstreamIdToObjectMap[downstreamId]._id] = downstreamId;
+		}
+		liquid.activePulse.originator._idToDownstreamIdMap = idToDownstreamIdMap;
 	});
 }
 
