@@ -22,44 +22,43 @@ socket.on('upstreamIdAssignmentNotification', function() {
 
 
 
+/**
+ * result.serializedObjects
+ * [{
+	 * 	 id: 34
+	 * 	 className: 'Dog'
+	 *	 HumanOwner: 'Human:23'
+	 *	 property: "A string"
+	 * }]
+ * result.unsubscribedUpstreamIds
+ * result.idToUpstreamId
+ * result.events  [{action: addingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }]
+ */
 
-socket.on('pushSubscriptionChanges', function(){
-	// liquid.saverMap.
-	// saver.consolidateIds(temporaryEntityIdToEntityIdMap);
-			// console.groupEnd();
-									
-						// console.log("Successfully saved!");
-						// globalAngularScope.$apply(function() {	
-							// saver.savingChanges = false;
-							// if (saver.changelist.length === 0) {
-								// saver.allChangesSaved = true;
-							// }
-							// saver.postSaveEvents.forEach(function(event) { 
-								// console.groupCollapsed("Running post save event");
-								// try {
-									// event(); 
-								// } catch(error) {
-									// console.log("Error in post save event");
-									// console.log(error);
-								// }
-								// console.groupEnd();
-							// });
-							// console.log(saver);
-						// });
-						
-						
-					// } catch(error) {
-						// console.log(error);
-						// $scope.errorInAjaxCall();
-						// console.groupEnd();
-					// }
-				// },
-				// fail: function(text, textStatus) {  },
-				// type: "post",
-				// url:"/liquid/save"
-			// });
-			// alert("saving");
+socket.on('pushSubscriptionChanges', function(changes){
+	liquid.pulse('upstream', function() {
+		// Consolidate ids:
+		for (id in result.idToUpstreamId) {
+			liquid.getEntity(id)._upstreamId = result.idToUpstreamId[id];
+		}
+		
+		unserializeFromUpstream(result.serializedObjects);
+		
+		changes.events.forEach(function(event) {
+			if (event.action === 'addingRelation') {
+				var object = liquid.getUpstreamEntity(event.objectId);
+				var relatedObject = liquid.getUpstreamEntity(event.relatedObjectId);
+				var adderName = object._relationDefinitions[event.relationName].adderName;
+				object[adderName](relatedObject);
+			} else if (event.action === 'deletingRelation') {
 
+			} else if (event.action === 'settingProperty') {
+
+			}
+		});
+
+		// TODO: kill objects result.unsubscribedUpstreamIds
+	});
 });
   
 liquid.socket = socket;

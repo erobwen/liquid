@@ -409,7 +409,7 @@ liquid.getSubscriptionUpdate = function(page) {
 			result.idsOfInstantlyHidden = [];
 			if (page._idToDownstreamIdMap !== null) {
 				for(id in page._idToDownstreamIdMap) {
-					if (typeof(selection[id]) !== 'undefined') {
+					if (typeof(addedAndRemovedIds.added[id]) !== 'undefined') {
 						result.idToUpstreamId[page._idToDownstreamIdMap[id]] = id;
 					} else {
 						result.idsOfInstantlyHidden[page._idToDownstreamIdMap[id]]; // These objects were sent to the server, but did not become subscribed,
