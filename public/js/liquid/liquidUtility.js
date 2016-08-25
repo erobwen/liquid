@@ -1,10 +1,16 @@
 /*------------------------------
 *           Utility
 *-------------------------------*/
+var undefinedAsNull = function(value) {
+    if (value === 'undefined') {
+        return null;
+    }
+    return value;
+};
 
 var isArray = function(entity) {
 	return Array.isArray(entity);
-}
+};
 
 // var inArray = function(item, array) {
 	// array.forEach(function(arrayItem) {
@@ -17,26 +23,26 @@ var isArray = function(entity) {
 
 var argumentsToArray = function(arguments) {
 	return Array.prototype.slice.call(arguments);
-}
+};
 
 var copyArray = function(array) {
 	return array.slice();
-}
+};
 
 var clearArray = function(array) {
 	return array.lenght = 0;
-}
+};
 
 var replaceArrayContents = function(source, target) {
     clearArray(target);
     source.forEach(function(element) {
         target.push(element);
     })
-}
+};
 
 var lastOfArray = function(array) {
 	return array[array.length - 1];
-}
+};
 
 var arrayToMap = function(array) {
 	var result = {};
@@ -46,7 +52,7 @@ var arrayToMap = function(array) {
 		});
 	}
 	return result;
-}
+};
 
 // var argumentsToArray = function(argumentsObject) {
 	// var result = [];
@@ -280,6 +286,7 @@ var nameToVariable = function(string) {
 }
 
 if (typeof(module) !== 'undefined') {
+	module.exports.undefinedAsNull = undefinedAsNull;
 	module.exports.isArray = isArray;
 	// module.exports.inArray = inArray;
 	module.exports.argumentsToArray = argumentsToArray;

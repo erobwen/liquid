@@ -349,9 +349,36 @@ liquid.sessionsMap = {};
  *                       Push data downstream
  *-----------------------------------------------------------------*/
 
+function getMapDifference(firstSet, secondSet) {
+	var added = {};
+	var removed = {};
+	var static = {};
+	for(id in firstSet) {
+		if(typeof(secondSet[id]) === 'undefined') {
+			removed[id] = true;	
+		} else {
+			static[id] = true;
+		}
+	} 
+	
+	for(id in secondSet) {
+		if(typeof(secondSet[id]) === 'undefined') {
+			added[id] = true;
+		}
+	}
+
+	for (id in secondSet)
+	return {
+		added : added,
+		removed : removed,
+		static : static
+	}
+}
+
+
 liquid.dirtyPageSubscritiptions = [];
 liquid.getSubscriptionDeltaInfo = function(page) {
-	var result;
+	var result = {};
 	
 	uponChangeDo(function() {
 		page.getSubscriptions().forEach(function(subscription) {
@@ -361,11 +388,21 @@ liquid.getSubscriptionDeltaInfo = function(page) {
 			var selection = {};
 			// as page.
 			object['select' + selectorSuffix](selection);
-			result = getMapDifference(page._previousSelectoin, selectoin);
+			var addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
+			page._previousSelection = selection;
+
+			// Serialize
+			result.serializedObjects = liquid.serializeSelection(addedAndRemovedIds.added);
+			result.unsubscribedUpstreamIds = addedAndRemoved.removed;
 			
-			//add event info 
+			//add event info
+			result.events = [];
+			liquid.activePulse.events.forEach(function (event) {
+				if (addedAndRemovedIds.static[event.object._id]) {
+					result.events.push(event);
+				}
+			});
 		});
-		result = null;
 	}, function() {
 		liquid.dirtyPageSubscriptions.push(page);
 	});
@@ -417,13 +454,6 @@ function unserializeDownstreamPulse(pulseData) {
 	}
 	
 	function ensureRelatedObjectsUnserialized(event) {
-		function undefinedAsNull(value) {
-			if (value === 'undefined') {
-				return null;
-			}
-			return value;
-		}
-
 		ensureObjectUnserialized(undefinedAsNull(event.relatedObjectId), undefinedAsNull(event.relatedObjectDownstreamId));
 	}
 

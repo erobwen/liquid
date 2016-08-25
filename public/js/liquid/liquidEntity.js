@@ -114,8 +114,9 @@ var addLiquidEntity = function(liquid) {
                 // Properties
                 object.overrideMethod('init', function(parent, initData) {
                     // parent(initData); // Should not be needed, has no data visible inside liquid.
-                    this._selectorSuffix = initData.selector;
-                    this._targetObjectUpstreamId = initData.objectId;
+                    this._selectorSuffix = undefinedAsNull(initData.selector);
+                    this._targetObjectUpstreamId = undefinedAsNull(initData.objectId);
+                    this._previousSelection
                 });
 
                 // Relations
