@@ -1267,7 +1267,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				difference.removed.forEach(function(removed) {
 					this[definition.removerName](removed);
 				}.bind(this));
-			}
+			};
 			
 			// Init adder (just relays to incoming relation, no notification and no actual manipulation)
 			object[definition.adderName] = function(added) {
@@ -1310,7 +1310,16 @@ var addCommonLiquidFunctionality = function(liquid) {
 		return serialized;
 	};
 
-	
+	/**
+	 * Example output:
+	 * 
+	 * {
+	 * 	 id: 34
+	 * 	 className: 'Dog'
+	 *	 HumanOwner: 'Human:23'
+	 *	 property: "A string"	
+	 * }
+     */
 	liquid.serializeObject = function(object, forUpstream = false) {
 		function serializedReference(object) {
 			if (object !== null) {
@@ -1344,9 +1353,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 			var definition = object._relationDefinitions[relationQualifiedName];
 			if (!definition.isReverseRelation) {
 				if (definition.isSet) {
-					serialized[definition.name] = object[definition.getterName]().map(serializedReference);
+					serialized[relationQualifiedName] = object[definition.getterName]().map(serializedReference);
 				} else {
-					serialized[definition.name] = serializedReference(object[definition.getterName]());
+					serialized[relationQualifiedName] = serializedReference(object[definition.getterName]());
 				}
 			}
 		}

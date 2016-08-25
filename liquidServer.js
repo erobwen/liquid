@@ -426,9 +426,15 @@ liquid.getSubscriptionUpdate = function(page) {
 
 	/**
 	 * result.serializedObjects
+	 * [{
+	 * 	 id: 34
+	 * 	 className: 'Dog'
+	 *	 HumanOwner: 'Human:23'
+	 *	 property: "A string"
+	 * }]
 	 * result.unsubscribedUpstreamIds
 	 * result.idToUpstreamId
-	 * result.events
+	 * result.events  [{action: addingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }]
 	 */
 };
 
