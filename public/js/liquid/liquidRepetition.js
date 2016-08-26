@@ -15,7 +15,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	liquid.activeRecorders = [];
 
 	var recorderId = 0;
-	liquid.uponChangeDo = function() { // description(optional), doFirst, doAfterChange
+	liquid.uponChangeDo = function() { // description(optional), doFirst, doAfterChange. doAfterChange cannot modify model, if needed, use a repeater instead. (for guaranteed consistency)
 		// Arguments
 		var doFirst;
 		var doAfterChange;
@@ -84,7 +84,9 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		if (observationBlocked == 0) {
 			while (dirtyRecorders.length > 0) {
 				var recorder = dirtyRecorders.shift()
-				recorder.uponChangeAction();
+				blockSideEffects(function() {
+					recorder.uponChangeAction();
+				});
 			}
 		}
 	};
@@ -107,7 +109,9 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		if (observationBlocked > 0) {
 			dirtyRecorders.push(recorder);
 		} else {
-			recorder.uponChangeAction();
+			blockSideEffects(function() {
+				recorder.uponChangeAction();
+			});
 		}
 
 		if (traceRepetition) {
