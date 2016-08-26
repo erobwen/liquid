@@ -74,13 +74,27 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		}
 	};
 
+	var dirtyRecorders = [];
+
+	var observationBlocked = 0;
+	liquid.blockObservation = function(callback) {
+		observationBlocked++;
+		callback();
+		observationBlocked--;
+		if (observationBlocked == 0) {
+			while (dirtyRecorders.length > 0) {
+				var recorder = dirtyRecorders.shift()
+				recorder.uponChangeAction();
+			}
+		}
+	};
+
+
 	// Recorders is a map from id => recorder
 	liquid.recordersDirty = function(recorders) {
-		liquid.pauseRepeaters(function() {
-			for (id in recorders) {
-				liquid.recorderDirty(recorders[id]);
-			}
-		});
+		for (id in recorders) {
+			liquid.recorderDirty(recorders[id]);
+		}
 	};
 
 
@@ -89,13 +103,10 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			console.log("Recorder noticed change: " + recorder.id + "." + recorder.description);
 		}
 
-		if (pausingRepeaters == 0) {
-			liquid.pauseRepeaters(function() {
-				liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
-				recorder.uponChangeAction();
-			});
+		liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
+		if (observationBlocked > 0) {
+			dirtyRecorders.push(recorder);
 		} else {
-			liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
 			recorder.uponChangeAction();
 		}
 
@@ -136,13 +147,6 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		return lastOfArray(liquid.activeRepeaters);
 	};
 
-	var pausingRepeaters = 0;
-	liquid.pauseRepeaters = function(action) {
-		pausingRepeaters++;
-		action();
-		pausingRepeaters--;
-		liquid.refreshAllDirtyRepeaters();
-	};
 
 	// Debugging
 	var dirtyRepeaters = [];
@@ -209,7 +213,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		}
 		liquid.removeSubRepeaters(repeater);
 		dirtyRepeaters.push(repeater);
-		liquid.tryToRefreshAllDirtyRepeaters();
+		liquid.refreshAllDirtyRepeaters();
 	};
 
 	liquid.removeSubRepeaters = function(repeater) {
@@ -236,11 +240,6 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		removeFromArray(repeater, allRepeaters);
 	};
 
-	liquid.tryToRefreshAllDirtyRepeaters = function() {
-		if (pausingRepeaters=== 0) {
-			liquid.refreshAllDirtyRepeaters();
-		}
-	};
 
 	var refreshingAllDirtyRepeaters = false;
 	liquid.refreshAllDirtyRepeaters = function() {
