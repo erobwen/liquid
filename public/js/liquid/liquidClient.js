@@ -148,7 +148,8 @@ liquid.pushDataUpstream = function() {
 			serializedEvents : serializedEvents,
 			downstreamIdToSerializedObjectMap : downstreamIdToSerializedObjectMap
 		};
-		liquid.upstreamSocket.emit("pushDownstreamPulse", liquid.hardToGuessPageId, pulse); //42 is unused saver id
+		
+		liquid.pushDownstreamPulseToServer(pulse);
 	}
 };
 

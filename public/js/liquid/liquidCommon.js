@@ -181,7 +181,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 	liquid.notifySettingRelation = function(object, definition, instance, value, previousValue) {
-		liquid.pauseRepeaters(function() {
+		liquid.pauseRepeaters(function() {  // TODO: Can this be done without a pulse?
 			// liquid.recordersDirty(instance.observers);
 			// liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: object, definition: definition, instance: instance, value: value, previousValue: previousValue});
 			liquid.notifyDeletingRelation(object, definition, instance, previousValue);
@@ -190,8 +190,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 	liquid.notifyAddingRelation = function(object, definition, instance, relatedObject){
-		liquid.recordersDirty(instance.observers);
 		liquid.startOrAddToPulse({redundant: false, action: 'addingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.recordersDirty(instance.observers);
 	};
 
 	liquid.notifyAddReverseRelation = function(object, definition, instance, relatedObject) {
@@ -200,8 +200,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 	liquid.notifyDeletingRelation = function(object, definition, instance, relatedObject) {
-		liquid.recordersDirty(instance.observers);
 		liquid.startOrAddToPulse({redundant: false, action: 'deletingRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject});
+		liquid.recordersDirty(instance.observers);
 	};
 
 	liquid.notifyDeletingReverseRelation = function(object, definition, instance, relatedObject) {
@@ -226,8 +226,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 	liquid.notifySettingProperty = function(object, definition, instance, newValue, oldValue) {
-		liquid.recordersDirty(instance.observers);
 		liquid.startOrAddToPulse({redundant: false, action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: newValue, oldValue: oldValue});
+		liquid.recordersDirty(instance.observers);
 	};
 
 
@@ -819,6 +819,44 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// liquid.setupCopying(object);	
 	};
 
+	liquid.addPulseChangeDetection = function(object) {
+		object['getDefinition'] = function(relationOrPropertyName) {
+			for(qualifiedName in this._relationDefinitions) {
+				var definition = this._relationDefinitions[qualifiedName];
+				if (definition.name === relationOrPropertyName) {
+					return definition;
+				}
+			}
+			for(qualifiedName in this._propertyDefinitions) {
+				var definition = this._propertyDefinitions[qualifiedName];
+				if (definition.name === relationOrPropertyName) {
+					return definition;
+				}
+			}
+			throw "Cannot find definition " + relationOrPropertyName + " of " + object._;
+		};
+		
+		object['changedThisPulse'] = function(relationOrPropertyName) {
+			var definition = this.getDefinition(relationOrPropertyName);
+			liquid.activePulse.events.forEach(function() {
+				if (event.object === object && event.definition == definition) {
+					return true;
+				}
+			});
+			return false;
+		};
+
+		object['changedThisPulseDirectly'] = function(relationOrPropertyName) {
+			var definition = this.getDefinition(relationOrPropertyName);
+			liquid.activePulse.events.forEach(function() {
+				if (event.object === object && event.definition == definition && event.repeater === null) {
+					return true;
+				}
+			});
+			return false;
+		};
+	};
+	
 	liquid.addGenericRelationBrowsing = function(object) {
 		object['forAllRelations'] = function(callback) {
 			for (relationQualifiedName in this._relationDefinitions) {
@@ -1070,10 +1108,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 						// Set new relation.
 						var instance = this._relationInstances[definition.qualifiedName];
 						instance.data = newValue;
+
+						liquid.notifySettingRelation(this, definition, instance, newValue, previousValue);
+
 						if (newValue !== null) {
 							liquid.addIncomingRelation(newValue, definition.qualifiedName, this);
 						}
-						liquid.notifySettingRelation(this, definition, instance, newValue, previousValue);
 					} else {
 						console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 					}
@@ -1187,12 +1227,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 					}
 					// TODO: Assert not already in array!
 					if (!inArray(added, instance.data)) {
+						liquid.notifyAddingRelation(this, definition, instance, added);
+
 						liquid.addIncomingRelation(added, definition.qualifiedName, this);
 
 						instance.data.push(added); //TODO: Create copy of array here?
 						liquid.sortRelationOnElementChange(definition, instance);
-
-						liquid.notifyAddingRelation(this, definition, instance, added);
 					}
 				} else {
 					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
@@ -1208,14 +1248,16 @@ var addCommonLiquidFunctionality = function(liquid) {
 						liquid.loadSetRelation(this, definition, instance);
 					}
 					if (inArray(removed, instance.data)) {
+						removeFromArray(removed, instance.data); //TODO: Create copy of array here?
+
+						liquid.notifyDeletingRelation(this, definition, instance, removed);
+
 						liquid.deleteIncomingRelation(removed, definition.qualifiedName, this);
 						// console.log(instance.data.length);
 						// console.log(removed);
 						// console.log(instance.data);
-						removeFromArray(removed, instance.data); //TODO: Create copy of array here?
 						// console.log(instance.data.length);
 
-						liquid.notifyDeletingRelation(this, definition, instance, removed);
 						// console.groupEnd();
 					}
 				} else {

@@ -391,6 +391,9 @@ liquid.getSubscriptionUpdate = function(page) {
 			var addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._previousSelection = selection;
 
+			//TODO: filter out events originating from self using page._idToDownstreamIdMap
+			// And use event.repeater to know what events are created by repeater. Those should always be re sent.
+
 			// Serialize
 			result.serializedObjects = liquid.serializeSelection(addedAndRemovedIds.added);
 			result.unsubscribedUpstreamIds = addedAndRemoved.removed;
@@ -522,6 +525,7 @@ function unserializeDownstreamPulse(pulseData) {
 	
 	function unserializeDownstreamObjectRecursivley(serializedObject) {
 		var newObject = liquid.createClassInstance(serializedObject.className);
+		downstreamIdToObjectMap[serializedObject.downstreamId] = newObject; // Set this early, so recursive unserializes can point to this object, avoiding infinite loop.
 
 		newObject.forAllOutgoingRelations(function(definition, instance) {
 			var data = serializedObject[definition.name];
@@ -543,8 +547,7 @@ function unserializeDownstreamPulse(pulseData) {
 			});
 		}
 		newObject._ = newObject.__();
-		downstreamIdToObjectMap[serializedObject.downstreamId] = newObject;
-		
+
 		return newObject;
 	}
 	

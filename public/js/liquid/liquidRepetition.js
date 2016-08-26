@@ -583,13 +583,19 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	liquid.activeSideEffectBlockers = [];
 
 	liquid.isBlockingSideEffects = function() {
-		return liquid.activeSideEffectBlockers.length > 0;
+		return liquid.activeSideEffectBlockers.length > 0 && liquid.activeSideEffectBlocker() !== 'unlocked';
 	};
 
 	liquid.activeSideEffectBlocker = function() {
 		return lastOfArray(liquid.activeSideEffectBlockers);
 	};
 
+	liquid.unlockSideEffects = function(callback, repeater) {  // Should only be used by repeater!
+		liquid.activeSideEffectBlockers.push('unlocked');
+		callback();
+		liquid.activeSideEffectBlockers.pop();
+	};
+	
 	liquid.blockSideEffects = function(callback) {
 		liquid.activeSideEffectBlockers.push({
 			createdObjects: {}  // id ->    It is ok to modify objects that have been created in this call, so we need to keep track of them 
