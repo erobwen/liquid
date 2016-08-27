@@ -203,9 +203,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				if (traceRepetition) {
 					console.log("Repeater's recorder notified change: " + repeater.id + "." + repeater.description);
 				}
-				if (!repeater.removed) {
-					liquid.repeaterDirty(repeater);
-				}
+				liquid.unlockSideEffects(function() {
+					if (!repeater.removed) {
+						liquid.repeaterDirty(repeater);
+					}
+				});
 			}
 		);
 		liquid.activeRepeaters.pop();

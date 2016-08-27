@@ -1054,7 +1054,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 					} else {
 						return true;
 					}
-				}
 				} else {
 					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 				}
