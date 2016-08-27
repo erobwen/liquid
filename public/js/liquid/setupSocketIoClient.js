@@ -40,27 +40,29 @@ socket.on('pushSubscriptionChanges', function(changes){
 		}
 		
 		unserializeFromUpstream(result.serializedObjects);
-		
-		changes.events.forEach(function(event) {
-			if (event.action === 'addingRelation') {
-				var object = liquid.getUpstreamEntity(event.objectId);
-				var relatedObject = liquid.getUpstreamEntity(event.relatedObjectId);
-				var adderName = object._relationDefinitions[event.relationName].adderName;
-				object[adderName](relatedObject);
-			} else if (event.action === 'deletingRelation') {
-				liquid.activeSaver = null;
-				var object = liquid.getUpstreamEntity(event.objectId);
-				var relatedObject = liquid.getUpstreamEntity(event.relatedObjectId);
-				var removerName = object._relationDefinitions[event.relationName].removerName;
-				object[removerName](relatedObject);
-				liquid.activeSaver = liquid.defaultSaver;
-			} else if (event.action === 'settingProperty') {
-				liquid.activeSaver = null;
-				var object = liquid.getUpstreamEntity(objectId);
-				var setterName = object._propertyDefinitions[event.propertyName].setterName;
-				object[setterName](newValue);
-				liquid.activeSaver = liquid.defaultSaver;
-			}
+
+		liquid.blockObservation(function() {
+			changes.events.forEach(function(event) {
+				if (event.action === 'addingRelation') {
+					var object = liquid.getUpstreamEntity(event.objectId);
+					var relatedObject = liquid.getUpstreamEntity(event.relatedObjectId);
+					var adderName = object._relationDefinitions[event.relationName].adderName;
+					object[adderName](relatedObject);
+				} else if (event.action === 'deletingRelation') {
+					liquid.activeSaver = null;
+					var object = liquid.getUpstreamEntity(event.objectId);
+					var relatedObject = liquid.getUpstreamEntity(event.relatedObjectId);
+					var removerName = object._relationDefinitions[event.relationName].removerName;
+					object[removerName](relatedObject);
+					liquid.activeSaver = liquid.defaultSaver;
+				} else if (event.action === 'settingProperty') {
+					liquid.activeSaver = null;
+					var object = liquid.getUpstreamEntity(objectId);
+					var setterName = object._propertyDefinitions[event.propertyName].setterName;
+					object[setterName](newValue);
+					liquid.activeSaver = liquid.defaultSaver;
+				}
+			});
 		});
 		// TODO: kill objects result.unsubscribedUpstreamIds, even remove from persistent memory if found, 
 		// and create an "originators copy" of the data for safekeeping. 

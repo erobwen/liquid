@@ -551,37 +551,39 @@ function unserializeDownstreamPulse(pulseData) {
 		return newObject;
 	}
 	
-	pulseData.serializedEvents.forEach(function(event) {
-		if (typeof(event.objectId) !== 'undefined' || typeof(downstreamIdToObjectMap[event.downstreamObjectId])) { // Filter out events that should not be visible to server TODO: Make client not send them?
-
-			var object = typeof(event.objectId) !== 'undefined' ?  liquid.getEntity(action.objectId) : downstreamIdToObjectMap[event.downstreamObjectId];
-
-			if (event.action === 'settingRelation' ||
-				event.action === 'addingRelation' ||
-				event.action === 'deletingRelation') {
-
-				// This removes and replaces downstream id:s in the event!
-
-				var relatedObject = ensureRelatedObjectsUnserialized(event, downstreamIdToSerializedObjectMap, downstreamIdToObjectMap);
-
-				if (event.action === 'addingRelation') {
-					var adderName = object._relationDefinitions[event.relationQualifiedName].adderName;
-					object[adderName](relatedObject);
-				} else if (event.action === 'deletingRelation'){
-					var removerName = object._relationDefinitions[event.relationQualifiedName].removerName;
-					object[removerName](relatedObject);
+	liquid.blockObservation(function() {
+		pulseData.serializedEvents.forEach(function(event) {
+			if (typeof(event.objectId) !== 'undefined' || typeof(downstreamIdToObjectMap[event.downstreamObjectId])) { // Filter out events that should not be visible to server TODO: Make client not send them?
+	
+				var object = typeof(event.objectId) !== 'undefined' ?  liquid.getEntity(action.objectId) : downstreamIdToObjectMap[event.downstreamObjectId];
+	
+				if (event.action === 'settingRelation' ||
+					event.action === 'addingRelation' ||
+					event.action === 'deletingRelation') {
+	
+					// This removes and replaces downstream id:s in the event!
+	
+					var relatedObject = ensureRelatedObjectsUnserialized(event, downstreamIdToSerializedObjectMap, downstreamIdToObjectMap);
+	
+					if (event.action === 'addingRelation') {
+						var adderName = object._relationDefinitions[event.relationQualifiedName].adderName;
+						object[adderName](relatedObject);
+					} else if (event.action === 'deletingRelation'){
+						var removerName = object._relationDefinitions[event.relationQualifiedName].removerName;
+						object[removerName](relatedObject);
+					}
+				} else if (event.action === "settingProperty") {
+					var setterName = object._propertyDefinitions[event.propertyName].setterName;
+					object[setterName](action.newValue);
 				}
-			} else if (event.action === "settingProperty") {
-				var setterName = object._propertyDefinitions[event.propertyName].setterName;
-				object[setterName](action.newValue);
 			}
-		}
-
-		var idToDownstreamIdMap = {};
-		for (downstreamId in downstreamIdToObjectMap) {
-			idToDownstreamIdMap[downstreamIdToObjectMap[downstreamId]._id] = downstreamId;
-		}
-		liquid.activePulse.originator._idToDownstreamIdMap = idToDownstreamIdMap;
+	
+			var idToDownstreamIdMap = {};
+			for (downstreamId in downstreamIdToObjectMap) {
+				idToDownstreamIdMap[downstreamIdToObjectMap[downstreamId]._id] = downstreamId;
+			}
+			liquid.activePulse.originator._idToDownstreamIdMap = idToDownstreamIdMap;
+		});
 	});
 }
 
