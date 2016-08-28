@@ -391,19 +391,17 @@ liquid.getSubscriptionUpdate = function(page) {
 			var addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._previousSelection = selection;
 
-			//TODO: filter out events originating from self using page._idToDownstreamIdMap
-			// And use event.repeater to know what events are created by repeater. Those should always be re sent.
-
 			// Serialize
 			result.serializedObjects = liquid.serializeSelection(addedAndRemovedIds.added);
 			result.unsubscribedUpstreamIds = addedAndRemoved.removed;
 			
-			//add event info
+			//add event info originating from repeaters.
 			result.events = [];
 			liquid.activePulse.events.forEach(function (event) {
-				if (addedAndRemovedIds.static[event.object._id]) {
-					// TODO: Filter out events that goes back to the sender? Or will they just be ignored? 
-					result.events.push(serializeEventForDownstream(event));
+				if (!(event.originator === page || event.repeater === null)) { // Do not send back events to originator!
+					if (addedAndRemovedIds.static[event.object._id]) {
+						result.events.push(serializeEventForDownstream(event));
+					}
 				}
 			});
 
@@ -424,7 +422,6 @@ liquid.getSubscriptionUpdate = function(page) {
 	}, function() {
 		liquid.dirtyPageSubscriptions.push(page);
 	});
-	page.getSubscriptions().forEach(function(subscription) {});
 	return result;
 
 	/**

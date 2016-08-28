@@ -761,7 +761,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object['changedThisPulse'] = function(relationOrPropertyName) {
 			var definition = this.getDefinition(relationOrPropertyName);
 			liquid.activePulse.events.forEach(function() {
-				if (event.object === object && event.definition == definition) {
+				if (event.object === object && event.definition === definition) {
 					return true;
 				}
 			});
@@ -771,7 +771,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object['changedThisPulseDirectly'] = function(relationOrPropertyName) {
 			var definition = this.getDefinition(relationOrPropertyName);
 			liquid.activePulse.events.forEach(function() {
-				if (event.object === object && event.definition == definition && event.repeater === null) {
+				if (event.object === object && event.definition === definition && event.repeater === null) {
 					return true;
 				}
 			});
