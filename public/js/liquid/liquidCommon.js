@@ -969,8 +969,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// Init getter
 		if(!definition.isReverseRelation) {
 
-			// TODO: Member considerations, ensure no observation is set up on setting a variable?
-
 			// Member: Outgoing single getter
 			object[definition.getterName] = function() {
 				if (allowRead(this, liquid.page)) {

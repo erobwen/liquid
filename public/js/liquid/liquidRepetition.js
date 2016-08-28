@@ -200,10 +200,10 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		repeater.returnValue = liquid.uponChangeDo(
 			repeater.action,
 			function() {
-				if (traceRepetition) {
-					console.log("Repeater's recorder notified change: " + repeater.id + "." + repeater.description);
-				}
 				liquid.unlockSideEffects(function() {
+					if (traceRepetition) {
+						console.log("Repeater's recorder notified change: " + repeater.id + "." + repeater.description);
+					}
 					if (!repeater.removed) {
 						liquid.repeaterDirty(repeater);
 					}
