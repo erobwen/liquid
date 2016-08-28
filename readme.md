@@ -12,7 +12,7 @@ Liquid uses Node.js Neo4J, React, Express and Socket.io.
 
 Liquid is a **full stack web-development framework** that will make it possible to create high quality web-services/pages to a significantly reduced cost. The purpose of liquid is to do a few VERY important things very well, they are:
 
-1. **Full stack Javascript environment**, which integrates the client, server & database, and allows shared code between server and client.
+1. **Full stack Javascript environment**, which integrates the client, server & database, and allows shared code between server and client. (see http://isomorphic.net/)
 2. **Continous data structure synchronization**(a) between server/client and peer clients to automatically keep everything in synchronization.
 3. **State of the art reactive programming**, with advanced change propagation using **dependency recording**. Allowing you to write code with pure business logic instead of code that updates derived data.
 4. **Real OOP for models** with polymorphism, model extension and inheritance etc. for efficient programming and code reuse.
