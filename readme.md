@@ -1,3 +1,13 @@
+![Alt text](/liquid_logotype.png?raw=true "Optional Title")
+
+Full stack web-development framework.
+
+# Dependencies
+
+Liquid uses Node.js Neo4J, React, Express and Socket.io.
+
+![Alt text](/liquid_dependencies.png?raw=true "Optional Title")
+
 # Rationale
 
 Liquid is a **full stack web-development framework** that will make it possible to create high quality web-services/pages to a significantly reduced cost. The purpose of liquid is to do a few VERY important things very well, they are:
