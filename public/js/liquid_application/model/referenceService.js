@@ -81,7 +81,7 @@ registerClass({
 		});
 		
 		object.overrideMethod('__', function(parent) {
-			var unloadedOrName = this.noDataLoaded ? "[no data]" : this.getName();
+			var unloadedOrName = this._noDataLoaded ? "[no data]" : this.getName();
 			return "(" + this.className + "." + this._idString() + ":" + unloadedOrName + ")";
 		});
 		
@@ -196,25 +196,25 @@ registerClass({
 				
 		// Relations
 		object.addReverseRelationTo('Category_Reference', 'Category', 'toMany');
-		object.addReverseRelationTo('User_AddedReference', 'AddedBy', 'toOne');
+		object.addReverseRelationTo('User_AddedReference', 'Owner', 'toOne');
 	},
 	
 	addMethods : function (object) {
 		// console.log("Adding methods in Reference");
 		object.overrideMethod('init', function(parent, initialData) {
-			console.log("=== Initialize in Reference ===");
+			// console.log("=== Initialize in Reference ===");
 			parent(initialData);
 			if (defined(initialData.user)) {
-				this.setAddedBy(initialData.user);
+				this.setOwner(initialData.user);
 			}
 			if (defined(initialData.categories)) {
-				console.log(this);
+				// console.log(this);
 				this.setCategories(initialData.categories);
 			}
-			console.log(initialData);
-			console.log(defined(initialData.category));
+			// console.log(initialData);
+			// console.log(defined(initialData.category));
 			if (defined(initialData.category)) {
-				console.log(this);
+				// console.log(this);
 				this.setCategories([initialData.category]);
 			}
 		});

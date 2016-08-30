@@ -609,7 +609,7 @@ function unserializeDownstreamPulse(pulseData) {
 // 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 // 		var newObject = liquid.createClassInstance(className);
 // 		newObject._upstreamId = upstreamId;
-// 		newObject.noDataLoaded = true;
+// 		newObject._noDataLoaded = true;
 // 		liquid.upstreamIdObjectMap[upstreamId] = newObject;
 // 		newObject._ = newObject.__();
 // 	}

@@ -1,13 +1,5 @@
-var liquidController = require('./liquidController.js');
 
-
-var liquidControllers = {
-	index: 'LiquidPage',
-	test: 'TestPage'
-};
-
-
-function createController(className) {
+function createControllerFromClassName(className) {
 	return function(req, res) {
 		liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
 			// Setup session object (that we know is the same object identity on each page request)
@@ -26,12 +18,36 @@ function createController(className) {
 	}
 }
 
+function createControllerFromFunction(controllerFunction) {
+	return function(req, res) {
+		liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
+			// Setup session object (that we know is the same object identity on each page request)
+			var page = controllerFunction(req)
+			page.selectAll(selection);
+
+			var data = {
+				serialized : liquid.serializeSelection(selection),
+				pageUpstreamId : page._id,
+				subscriptionInfo : liquid.getSubscriptionUpdate(page)
+			};
+			res.render('layout',{
+				data: JSON.stringify(data)
+			});
+		});
+	}
+}
+
 function createControllers(liquidControllers) {
 	var controllers = {};
 	for (url in liquidControllers) {
-		var pageClassName = liquidControllers[url];
-		controllers[url] = createController(pageClassName);
+		var controllerDefinition = liquidControllers[url];
+		if (typeof(controllerDefinition) === 'string') {
+			controllers[url] = createControllerFromClassName(controllerDefinition);
+		} else {
+			controllers[url] = createControllerFromFunction(controllerDefinition);
+		}
 	}
+	return controllers;
 }
 
 function generateUniqueKey(keysMap) {
@@ -69,10 +85,10 @@ function createOrGetPage(pageClassName, req) {
 
 
 
-module.exports = createControllers(liquidControllers);
-module.exports = {
-	index : createController('LiquidPage')
-};
+module.exports = createControllers(liquid.liquidControllers);
+if (typeof(module.exports['index']) === 'undefined') {
+	module.exports['index'] = createControllerFromClassName('LiquidPage');
+}
 
 
 
@@ -222,9 +238,9 @@ module.exports = {
 
 // console.log("HERE!!!");
 // console.log(liquidController);
-for (definitionName in liquidController) {
+for (definitionName in liquid.liquidController) {
 	// console.log(definitionName);
-	var liquidControllerFunction = liquidController[definitionName];
+	var liquidControllerFunction = liquid.liquidController[definitionName];
 	module.exports[definitionName] = function (req, res) {
 		var result = liquidPageRequest(req, res, liquidControllerFunction);
 		if (isString(result)) {

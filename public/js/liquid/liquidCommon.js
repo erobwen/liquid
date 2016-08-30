@@ -493,6 +493,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 * @param className
      */
 	liquid.create = function(className) { // optional: object initData  optional: string/integer projectionId
+		console.log("create: " + className);
 		// Get parameters		
 		var projectionId = null;
 		var initData = {};
@@ -529,7 +530,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			object._projectionId = projectionId;
 			projection.temporaryProjectionIdToObjectMap[projectionId] = object;
 		}
-		
+
 		// Init
 		object.init(initData);
 
@@ -611,8 +612,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object._propertyInstances = clone(prototypeObject._propertyInstances);   // propertyName -> property		
 
 		// Client only
-		object.noDataLoaded = false;  // Means, if any more information that entity id and class name has been loaded. Only used on client? 
-		object.loadedSelections = {};  // Details the extent of loading. Only used on client? 
+		object._noDataLoaded = false;  // Means, if any more information that entity id and class name has been loaded. Only used on client? 
 
 		// Server only
 		object._observingPages = {};
@@ -632,11 +632,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object._propertyInstances = {};  // propertyName -> property		
 
 		// Client only
-		object.noDataLoaded = false;  // Means, if any more information that entity id and class name has been loaded. Only used on client? 
-		object.loadedSelections = {};  // Details the extent of loading. Only used on client? 
+		object._noDataLoaded = false;  // Means, if any more information that entity id and class name has been loaded. Only used on client? 
 
 		// Server only
-		object._observingPages = {};
 		object._incomingRelationsComplete = {}; // Server only
 	};
 		

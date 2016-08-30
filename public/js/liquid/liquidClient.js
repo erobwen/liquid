@@ -173,7 +173,7 @@ function ensureEmptyObjectExists(upstreamId, className) {
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 		var newObject = liquid.createClassInstance(className);
 		newObject._upstreamId = upstreamId;
-		newObject.noDataLoaded = true;
+		newObject._noDataLoaded = true;
 		liquid.upstreamIdObjectMap[upstreamId] = newObject;
 		newObject._ = newObject.__();
 	}
@@ -189,7 +189,7 @@ function unserializeUpstreamObject(serializedObject) {
 	}
 	var targetObject = liquid.upstreamIdObjectMap[upstreamId];
 	// console.log(targetObject);
-	if (targetObject.noDataLoaded) {
+	if (targetObject._noDataLoaded) {
 		targetObject.forAllOutgoingRelations(function(definition, instance) {
 			var data = serializedObject[definition.name];
 			if (definition.isSet) {
@@ -208,7 +208,7 @@ function unserializeUpstreamObject(serializedObject) {
 				targetObject[definition.setterName](data);
 			});
 		}
-		targetObject.noDataLoaded = false;
+		targetObject._noDataLoaded = false;
 		targetObject._ = targetObject.__();
 	} else {
 		console.log("Loaded data that was already loaded!!!");
