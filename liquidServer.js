@@ -34,6 +34,15 @@ liquid.clearPagesAndSessions = function() {
 	neo4j.query("MATCH (n {className:'LiquidPage'}) DETACH DELETE n");
 };
 
+
+/**--------------------------------------------------------------
+ *                 Synchronize
+ *----------------------------------------------------------------*/
+
+liquid.synchronize = function(callback) {
+	Fiber(callback);
+};
+
 /**--------------------------------------------------------------
 *                 Sessions
 *----------------------------------------------------------------*/
@@ -239,89 +248,99 @@ liquid.loadNodeFromId = function(persistentId) {
 *----------------------------------------------------------------*/
 
 liquid.loadSingleRelation = function(object, definition, instance) {
-	console.log("loadSingleRelation: " + object.__() + " -- [" + definition.name + "] --> ?");
-	instance.data = null;
-	var relationIds = neo4j.getRelationIds(object._persistentId, definition.qualifiedName);
-	// console.log(relationIds);
-	if (relationIds.length == 1) {
-		var relatedObject = liquid.getPersistentEntity(relationIds[0]);
-		instance.data = relatedObject;
-		instance.isLoaded = true;
-	} else if (relationIds.length > 1) {
-		instance.isLoaded = false;
-		throw new Exception("Getting a single relation, that has more than one relation defined in the database.");
+	if (object._persistentId !== null) {
+		console.log("loadSingleRelation: " + object.__() + " -- [" + definition.name + "] --> ?");
+		instance.data = null;
+		var relationIds = neo4j.getRelationIds(object._persistentId, definition.qualifiedName);
+		// console.log(relationIds);
+		if (relationIds.length == 1) {
+			var relatedObject = liquid.getPersistentEntity(relationIds[0]);
+			instance.data = relatedObject;
+			instance.isLoaded = true;
+		} else if (relationIds.length > 1) {
+			instance.isLoaded = false;
+			throw new Exception("Getting a single relation, that has more than one relation defined in the database.");
+		}
+		//liquid.logData(instance.data);
+		return instance.data;
 	}
-	//liquid.logData(instance.data);
-	return instance.data;
 };
 
 
 liquid.ensureIncomingRelationsLoaded = function(object) {
-	console.log("ensureIncomingRelationsLoaded: " + object.__() + " <--  ?");
-	if (typeof(object._allIncomingRelationsLoaded) === 'undefined') {
-		// console.log("run liquid version of ensureIncomingRelationLoaded");
-		var incomingRelationAndIds = neo4j.getAllIncomingRelationsAndIds(object._persistentId); // This now contains potentially too many ids.
-		// console.log("Load incoming relations id");
-		// console.log(incomingRelationIds);
-		if (incomingRelationIds.length > 0) {
-			incomingRelationIds.forEach(function(relationAndId) {
-				var incomingRelationQualifiedName = relationAndId.relationName;
-				var incomingId = relationAndId.id;
+	if (object._persistentId !== null) {
+		console.log("ensureIncomingRelationsLoaded: " + object.__() + " <--  ?");
+		if (typeof(object._allIncomingRelationsLoaded) === 'undefined') {
+			// console.log("run liquid version of ensureIncomingRelationLoaded");
+			var incomingRelationAndIds = neo4j.getAllIncomingRelationsAndIds(object._persistentId); // This now contains potentially too many ids.
+			// console.log("Load incoming relations id");
+			// console.log(incomingRelationIds);
+			if (incomingRelationIds.length > 0) {
+				incomingRelationIds.forEach(function(relationAndId) {
+					var incomingRelationQualifiedName = relationAndId.relationName;
+					var incomingId = relationAndId.id;
 
-				var relatedObject = liquid.getPersistentEntity(incomingId);
+					var relatedObject = liquid.getPersistentEntity(incomingId);
 
-				// Call getter on the incoming relations to load them TODO: remove observer registration in this call!?
-				var definition = relatedObject.getRelationDefinitionFromQualifiedName(incomingRelationQualifiedName);
-				relatedObject[definition.getterName]();
-			});
+					// Call getter on the incoming relations to load them TODO: remove observer registration in this call!?
+					var definition = relatedObject.getRelationDefinitionFromQualifiedName(incomingRelationQualifiedName);
+					relatedObject[definition.getterName]();
+				});
+			}
 		}
+		object._allIncomingRelationsLoaded = true;
+		object.forAllReverseRelations(function(definition, instance) {
+			object._incomingRelationsComplete[definition.incomingRelationQualifiedName] = true; // Make a note all incoming relations loaded
+		});
 	}
-	object._allIncomingRelationsLoaded = true;
-	object.forAllReverseRelations(function(definition, instance) {
-		object.incomingRelationsComplete[definition.incomingRelationQualifiedName] = true; // Make a note all incoming relations loaded
-	});
 };
 
 
 liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualifiedName) {
 	console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationQualifiedName + "] -- ?");
-	if (typeof(object.incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
-		// console.log("run liquid version of ensureIncomingRelationLoaded");
-		var incomingRelationIds = neo4j.getReverseRelationIds(object._persistentId, incomingRelationQualifiedName); // This now contains potentially too many ids.
-		// console.log("Load incoming relations id");
-		// console.log(incomingRelationIds);
-		if (incomingRelationIds.length > 0) {
-			incomingRelationIds.forEach(function(incomingId) {
-				var relatedObject = liquid.getPersistentEntity(incomingId);
-				// Call getter on the incoming relations
-				var definition = relatedObject.getRelationDefinitionFromQualifiedName(incomingRelationQualifiedName);
-				relatedObject[definition.getterName]();
-			});
+	if (object._persistentId !== null) {
+		if (typeof(object._incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
+			// console.log("run liquid version of ensureIncomingRelationLoaded");
+			var incomingRelationIds = neo4j.getReverseRelationIds(object._persistentId, incomingRelationQualifiedName); // This now contains potentially too many ids.
+			// console.log("Load incoming relations id");
+			// console.log(incomingRelationIds);
+			if (incomingRelationIds.length > 0) {
+				incomingRelationIds.forEach(function(incomingId) {
+					var relatedObject = liquid.getPersistentEntity(incomingId);
+					// Call getter on the incoming relations
+					var definition = relatedObject.getRelationDefinitionFromQualifiedName(incomingRelationQualifiedName);
+					relatedObject[definition.getterName]();
+				});
+			}
 		}
+		object._incomingRelationsComplete[incomingRelationQualifiedName] = true;
 	}
-	object.incomingRelationsComplete[incomingRelationQualifiedName] = true;
 };
 
 	
 liquid.loadSetRelation = function(object, definition, instance) {
-	// Load relation
-	console.log("loadSetRelation: " + object.__() + " --[" + definition.name + "]--> ?");
-	var set = [];
-	var relationIds = neo4j.getRelationIds(object._persistentId, definition.qualifiedName);
-	// console.log(relationIds);
-	relationIds.forEach(function(objectId) {
-		set.push(liquid.getPersistentEntity(objectId));
-	});
-	// console.log(set);
-	set.forEach(function(relatedObject) {
-		liquid.addIncomingRelation(relatedObject, definition.qualifiedName, object);
-	});
-	instance.data = set;
-	instance.isLoaded = true;
+	if (object._persistentId !== null) {
+		// Load relation
+		console.log("loadSetRelation: " + object.__() + " --[" + definition.name + "]--> ?");
+		var set = [];
+		var relationIds = neo4j.getRelationIds(object._persistentId, definition.qualifiedName);
+		// console.log(relationIds);
+		relationIds.forEach(function(objectId) {
+			set.push(liquid.getPersistentEntity(objectId));
+		});
+		// console.log(set);
+		set.forEach(function(relatedObject) {
+			liquid.addIncomingRelation(relatedObject, definition.qualifiedName, object);
+		});
+		instance.data = set;
+		instance.isLoaded = true;
 
-	// Setup sorting
-	liquid.setupRelationSorting(object, definition, instance);
-	// liquid.logData(instance.data);
+		// Setup sorting
+		liquid.setupRelationSorting(object, definition, instance);
+		// liquid.logData(instance.data);
+	} else {
+		instance.data = [];
+	}
 };
 
 

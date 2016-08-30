@@ -20,15 +20,18 @@ var colors = require('colors');
  *    Initialize liquid
  * ---------------------- */
 
+// Liquid server and model libraries.
 include('./liquidServer.js');
+includeFolderOnce('./public/js/liquid_application/model');
 
-require('./public/js/liquid_application/referenceService.js');
-
+// Link classes etc.
 var fibers = require('fibers');
 fibers(function() {
 	liquid.initialize();
 }).run();
 
+// Custom setup server script
+include('./public/js/liquid_application/setupServer.js');
 
 
 /* ----------------------------

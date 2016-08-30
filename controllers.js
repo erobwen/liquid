@@ -1,6 +1,39 @@
 var liquidController = require('./liquidController.js');
 
 
+var liquidControllers = {
+	index: 'LiquidPage',
+	test: 'TestPage'
+};
+
+
+function createController(className) {
+	return function(req, res) {
+		liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
+			// Setup session object (that we know is the same object identity on each page request)
+			var page = createOrGetPage(className, req);
+			page.selectAll(selection);
+
+			var data = {
+				serialized : liquid.serializeSelection(selection),
+				pageUpstreamId : page._id,
+				subscriptionInfo : liquid.getSubscriptionUpdate(page)
+			};
+			res.render('layout',{
+				data: JSON.stringify(data)
+			});
+		});
+	}
+}
+
+function createControllers(liquidControllers) {
+	var controllers = {};
+	for (url in liquidControllers) {
+		var pageClassName = liquidControllers[url];
+		controllers[url] = createController(pageClassName);
+	}
+}
+
 function generateUniqueKey(keysMap) {
 	var newKey = null;
 	while(newKey == null) {
@@ -23,7 +56,7 @@ function createOrGetSessionObject(req) {
 
 
 
-function createOrGetPageObject(pageClassName, req) {
+function createOrGetPage(pageClassName, req) {
 	var session = createOrGetSessionObject(req);
 
 	// Setup page object
@@ -35,23 +68,10 @@ function createOrGetPageObject(pageClassName, req) {
 }
 
 
+
+module.exports = createControllers(liquidControllers);
 module.exports = {
-	index : function(req, res) {
-		liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
-			// Setup session object (that we know is the same object identity on each page request)
-			var page = createOrGetPage('LiquidPage', req);
-			page.selectAll(selection);
-			
-			var data = {
-				serialized : liquid.serializeSelection(selection),
-				pageUpstreamId : page._id,
-				subscriptionInfo : liquid.getSubscriptionUpdate(page)
-			};
-			res.render('layout',{
-				data: JSON.stringify(data)
-			});
-		});
-	}
+	index : createController('LiquidPage')
 };
 
 

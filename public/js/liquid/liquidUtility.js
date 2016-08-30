@@ -12,14 +12,14 @@ var isArray = function(entity) {
 	return Array.isArray(entity);
 };
 
-// var inArray = function(item, array) {
-	// array.forEach(function(arrayItem) {
-		// if (item === arrayItem) {
-			// return true;
-		// }
-	// });
-	// return false;
-// }
+var inArray = function(item, array) {
+	array.forEach(function(arrayItem) {
+		if (item === arrayItem) {
+			return true;
+		}
+	});
+	return false;
+}
 
 var argumentsToArray = function(arguments) {
 	return Array.prototype.slice.call(arguments);
@@ -288,7 +288,7 @@ var nameToVariable = function(string) {
 if (typeof(module) !== 'undefined') {
 	module.exports.undefinedAsNull = undefinedAsNull;
 	module.exports.isArray = isArray;
-	// module.exports.inArray = inArray;
+	module.exports.inArray = inArray;
 	module.exports.argumentsToArray = argumentsToArray;
 	module.exports.copyArray = copyArray;
 	module.exports.clearArray = clearArray;

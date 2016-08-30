@@ -45,6 +45,7 @@ var addLiquidEntity = function(liquid) {
                 // Relations
                 object.addRelation('Session', 'toOne');
                 object.addRelation('Service', 'toOne');
+                object.addRelation('Subscription', 'toMany');
             },
     
             addMethods : function(object) {
@@ -77,7 +78,7 @@ var addLiquidEntity = function(liquid) {
 
             addPropertiesAndRelations : function(object) {
                 // Relations
-                object.addReverseRelation('LiquidPage_Service', 'Page', 'toOne');
+                object.addReverseRelationTo('LiquidPage_Service', 'Page', 'toOne');
             },
 
             addMethods : function(object) {
@@ -111,24 +112,20 @@ var addLiquidEntity = function(liquid) {
             name: 'Subscription',  _extends: 'Entity',
 
             addPropertiesAndRelations : function(object) {
-                // Properties
-                object.overrideMethod('init', function(parent, initData) {
-                    // parent(initData); // Should not be needed, has no data visible inside liquid.
-                    this._selectorSuffix = undefinedAsNull(initData.selector);
-                    this._targetObjectUpstreamId = undefinedAsNull(initData.objectId);
-                    this._previousSelection = {};
-                    this._idToDownstreamIdMap = null;  // This is set in pulses where this page pushes data upstream.
-                });
-
                 // Relations
-                object.addReverseRelation('LiquidPage_Subscriptions','Page', 'toOne');
+                object.addReverseRelationTo('LiquidPage_Subscriptions','Page', 'toOne');
                 // object.addRelation('TargetObject','toOne');
             },
 
             addMethods : function(object) {
+
+                // Properties
                 object.overrideMethod('init', function(parent, initData) {
-                    parent(initData);
-                    this._idToObjectFootprintMap = {};
+                    // parent(initData); // Should not be needed, has no data visible inside liquid.
+                    this._selectorSuffix = undefinedAsNull(initData.selector);
+                    this._targetObjectUpstreamId = undefinedAsNull(initData.object._id);
+                    this._previousSelection = {};
+                    this._idToDownstreamIdMap = null;  // This is set in pulses where this page pushes data upstream.
                 });
             }
         });

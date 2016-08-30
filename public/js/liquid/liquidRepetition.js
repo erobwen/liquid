@@ -438,7 +438,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						liquid.activeProjections.pop();
 
 						// Build a final projectionId to object map that contains all objects present in the final projection.
-						var projectionIdToObjectMap : {};
+						var projectionIdToObjectMap = {};
 						for (projectionId in projection.temporaryProjectionIdToObjectMap) {
 							if (typeof(projection.establishedProjectionIdToObjectMap[projectionId]) !== 'undefined') {
 								// An established object exists, merge state.
