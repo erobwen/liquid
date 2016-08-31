@@ -1,4 +1,5 @@
 require('./include');
+var Fiber = require('fibers');
 
 /* ------------------
  *    Splashscreen
@@ -25,8 +26,7 @@ include('./liquidServer.js');
 includeFolderOnce('./public/js/liquid_application/model');
 
 // Link classes etc.
-var fibers = require('fibers');
-fibers(function() {
+Fiber(function() {
 	liquid.initialize();
 }).run();
 
@@ -49,9 +49,11 @@ liquidHttpServer.use(cookieParser());
 liquidHttpServer.use(session({secret: '12345QWER67890TY'}));
 
 var controllers = require('./expressControllers.js');
+// console.log(controllers);
 for (controllerName in controllers) {
-	liquidHttpServer.get('/' + controllerName, controllers[controllerName]);	
+	liquidHttpServer.get('/' + controllerName, controllers[controllerName]);
 }
+liquidHttpServer.get('/fie', function(req, res) {res.send("Found me!");});
 
 liquidHttpServer.use(express.static('public')); // TODO: use grunt to compile to different directory
 
@@ -76,37 +78,42 @@ var fs = require('fs');
 var liquidSocket = socketIo.sockets;
  
 liquidSocket.on('connection', function (socket) {
- 
-    console.log('Connected a socket!');
+	console.log('Connected a socket!');
 	
 	socket.on('registerPageId', function(hardToGuessPageId) {
-		// console.log("Register page connection");
-		// console.log(hardToGuessPageId);
-		if (typeof(hardToGuessPageId) !== 'undefined' && hardToGuessPageId !== null && typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
-			liquid.pagesMap[hardToGuessPageId]._socket = socket;
-			// console.log("Made an association between socket and hardToGuessPageId");
-		}
+		Fiber(function() {
+			// console.log("Register page connection");
+			// console.log(hardToGuessPageId);
+			if (typeof(hardToGuessPageId) !== 'undefined' && hardToGuessPageId !== null && typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
+				liquid.pagesMap[hardToGuessPageId]._socket = socket;
+				// console.log("Made an association between socket and hardToGuessPageId");
+			}
+		}).run();
 	});
 
 	socket.on('pushDownstreamPulse', function(hardToGuessPageId, pulseData) {
-		if (typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
-			var page = liquid.pagesMap[hardToGuessPageId];
-			liquid.pulse(page, function() {
-				unserializeDownstreamPulse(pulseData);
-			});
-		} else {
-			socket.emit('disconnectedDueToInactivityOrServerFault'); // TODO: Consider create new page?
-		}
+		Fiber(function() {
+			if (typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
+				var page = liquid.pagesMap[hardToGuessPageId];
+				liquid.pulse(page, function() {
+					unserializeDownstreamPulse(pulseData);
+				});
+			} else {
+				socket.emit('disconnectedDueToInactivityOrServerFault'); // TODO: Consider create new page?
+			}
+		}).run();
 	});
 
-    socket.on('disconnect', function(hardToGuessPageId) {
-		// hardToGuessPageId
-		// var page = liquid.pagesMap[hardToGuessPageId];
-		// delete liquid.pagesMap[hardToGuessPageId];
-		// page.setSession(null);
-		// // TODO: unpersist page
-        console.log('Disconnected'); 
-        console.log(hardToGuessPageId);
-    });
+	socket.on('disconnect', function(hardToGuessPageId) {
+		Fiber(function() {
+			// hardToGuessPageId
+			// var page = liquid.pagesMap[hardToGuessPageId];
+			// delete liquid.pagesMap[hardToGuessPageId];
+			// page.setSession(null);
+			// // TODO: unpersist page
+			console.log('Disconnected'); 
+			console.log(hardToGuessPageId);
+		}).run();
+	});
 });
 

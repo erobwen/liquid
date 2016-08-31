@@ -67,20 +67,20 @@ function createTestPage(req) {
 
 
 
-module.exports = {
-    test : function (user, session, page) {
-        console.log("Request page 'init'");
-        liquid.clearDatabase();
-
-        var somePerson = liquid.findEntity({className: 'User'});
-
-        var favourite = createPersistent('Category', {name: 'Favourite', description: '', user: user});
-        favourite.persist();
-        // createPersistent('PersistentSelection', {object: favourite, selection: "object"});
-
-        // favourite.persist();
-
-        // page.subscribeTo(favourite);
-        // return {}
-    }
-};
+// module.exports = {
+//     test : function (user, session, page) {
+//         console.log("Request page 'init'");
+//         liquid.clearDatabase();
+//
+//         var somePerson = liquid.findEntity({className: 'User'});
+//
+//         var favourite = createPersistent('Category', {name: 'Favourite', description: '', user: user});
+//         favourite.persist();
+//         // createPersistent('PersistentSelection', {object: favourite, selection: "object"});
+//
+//         // favourite.persist();
+//
+//         // page.subscribeTo(favourite);
+//         // return {}
+//     }
+// };

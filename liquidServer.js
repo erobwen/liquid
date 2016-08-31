@@ -1,5 +1,3 @@
-var Fiber = require('fibers');
-
 var liquidCommon = require('./public/js/liquid/liquidCommon.js');
 var liquidEntity = require('./public/js/liquid/liquidEntity.js');
 var liquidSelection = require('./public/js/liquid/liquidSelection.js');
@@ -22,7 +20,7 @@ var commonInitialize = liquid.initialize;
 liquid.initialize = function() {
 	neo4j.initialize();
 	commonInitialize();
-	liquid.clearPagesAndSessions();
+	// liquid.clearPagesAndSessions();
 };
 
 liquid.clearDatabase = function() {
@@ -35,13 +33,6 @@ liquid.clearPagesAndSessions = function() {
 };
 
 
-/**--------------------------------------------------------------
- *                 Synchronize
- *----------------------------------------------------------------*/
-
-liquid.synchronize = function(callback) {
-	Fiber(callback);
-};
 
 /**--------------------------------------------------------------
 *                 Sessions
@@ -263,6 +254,8 @@ liquid.loadSingleRelation = function(object, definition, instance) {
 		}
 		//liquid.logData(instance.data);
 		return instance.data;
+	} else {
+		return null;
 	}
 };
 
@@ -399,7 +392,7 @@ liquid.dirtyPageSubscritiptions = [];
 liquid.getSubscriptionUpdate = function(page) {
 	var result = {};
 	
-	uponChangeDo(function() {
+	liquid.uponChangeDo(function() {
 		page.getSubscriptions().forEach(function(subscription) {
 			var targetId = subscription._targetObjectUpstreamId;
 			var selectorSuffix = subscription._selectorSuffix;

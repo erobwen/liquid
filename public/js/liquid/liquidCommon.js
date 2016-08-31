@@ -69,67 +69,60 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 *                 Liquid Pulse 
 	 *----------------------------------------------------------------*/
 
-	liquid.synchronize = function(callback) {
-		callback();
-	};
-
-	
 	// Form for events:
 // 	{redundant: true, action: 'addingReverseRelation', object: object, definition: definition, instance: instance, relatedObject: relatedObject}
 
 	liquid.activePulse = null;
 	liquid.pulse = function(originator, action) { // Changes origin: "downstream", "upstream", "local" (direct ui modifications), "httpRequest"
-		liquid.synchronize(function() {
-			// var originator = liquid.clientPage !== null ? liquid.clientPage : 'local'; // 'upstream'
-			if (liquid.activePulse !== null) { 
-				throw "Pulses cannot overlap in time!"; 
-			}
-	
-			// Setup pulse data
-			liquid.activePulse = {
-				originator : originator, // 'upstream', 'local' or a Page object
-				events : [],
-				add : function(event) {
-					if (event.instance !== null) {
-						liquid.recordersDirty(event.instance.observers);
-					}
-					if (liquid.isBlockingSideEffects()) {
-						if (typeof(liquid.activeSideEffectBlocker().createdObjects[event.object.id]) === 'undefined' ) {
-							console.low("Blocked sideffect");
-							console.low(event);
-							return;
-						}
-					}
-					event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
-					event.isDirectEvent = event.repeater === null;
-					events.push(event);
+		// var originator = liquid.clientPage !== null ? liquid.clientPage : 'local'; // 'upstream'
+		if (liquid.activePulse !== null) { 
+			throw "Pulses cannot overlap in time!"; 
+		}
+
+		// Setup pulse data
+		liquid.activePulse = {
+			originator : originator, // 'upstream', 'local' or a Page object
+			events : [],
+			add : function(event) {
+				if (event.instance !== null) {
+					liquid.recordersDirty(event.instance.observers);
 				}
-			};
+				if (liquid.isBlockingSideEffects()) {
+					if (typeof(liquid.activeSideEffectBlocker().createdObjects[event.object.id]) === 'undefined' ) {
+						console.low("Blocked sideffect");
+						console.low(event);
+						return;
+					}
+				}
+				event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
+				event.isDirectEvent = event.repeater === null;
+				this.events.push(event);
+			}
+		};
 
-			// Measure query time and pageRequest time
-			// neo4j.resetStatistics();
+		// Measure query time and pageRequest time
+		// neo4j.resetStatistics();
 
-			// Pulse action that adds original events
-			action();    // some repeater events might be here too, interleved with original events!!!
+		// Pulse action that adds original events
+		action();    // some repeater events might be here too, interleved with original events!!!
 
-			// Display measures.
-			// var statistics = neo4j.getStatistics();
-			// console.log("Page Request time: " + statistics.pageRequestTime + " milliseconds.");
-			// console.log("Page Request data queries: " + statistics.dataQueries);
-			// console.log("Page Request data query time: " + statistics.dataQueryTime + " milliseconds.");
+		// Display measures.
+		// var statistics = neo4j.getStatistics();
+		// console.log("Page Request time: " + statistics.pageRequestTime + " milliseconds.");
+		// console.log("Page Request data queries: " + statistics.dataQueries);
+		// console.log("Page Request data query time: " + statistics.dataQueryTime + " milliseconds.");
 
-			liquid.blockSideEffects(function() { // TODO: Block writings to server.
-				// Refresh user interface typically
-				liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() }); // No events or repeaters can trigger here (except for local data inside call).
-			});
-	
-			// Propagate changes, up down and sideways.
-			liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
-			liquid.pushDataUpstream();
-			liquid.pushDataToPersistentStorage();
-	
-			liquid.activePulse = null;
+		liquid.blockSideEffects(function() { // TODO: Block writings to server.
+			// Refresh user interface typically
+			liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() }); // No events or repeaters can trigger here (except for local data inside call).
 		});
+
+		// Propagate changes, up down and sideways.
+		liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
+		liquid.pushDataUpstream();
+		liquid.pushDataToPersistentStorage();
+
+		liquid.activePulse = null;
 	};
 
 	
@@ -814,12 +807,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 				var definition = this._relationDefinitions[relationQualifiedName];
 				if (!definition.isReverseRelation) {
 					var instance = this._relationInstances[relationQualifiedName];
-					if (definition.isSet) {
-						instance.data.forEach(function(relatedObject) {
-							callback(definition, instance, relatedObject);
-						});
-					} else {
-						callback(instance.data);
+					if (typeof(instance.data) !== 'undefined') {
+						if (definition.isSet) {
+							instance.data.forEach(function(relatedObject) {
+								callback(definition, instance, relatedObject);
+							});
+						} else if (instance.data !== null) {
+							callback(definition, instance, instance.data);
+						}
 					}
 				}
 			}
@@ -1056,7 +1051,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 					var previousValue = this[definition.getterName]();
 					if (previousValue != newValue) {
 						liquid.blockObservation(function() {
-							liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: object, definition: definition, instance: null, value: newValue, previousValue: previousValue});
+							var instance = this._relationInstances[definition.qualifiedName];
+							liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: object, definition: definition, instance: instance, value: newValue, previousValue: previousValue});
 							liquid.startOrAddToPulse({redundant: false,  action: 'addingRelation', object: object, definition: definition, instance: instance, relatedObject: newValue});
 							liquid.startOrAddToPulse({redundant: false,  action: 'deletingRelation', object: object, definition: definition, instance: instance, relatedObject: previousValue});
 

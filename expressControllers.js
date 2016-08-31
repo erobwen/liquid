@@ -1,39 +1,52 @@
+var Fiber = require('fibers');
 
 function createControllerFromClassName(className) {
+	// console.log("createControllerFromClassName");
 	return function(req, res) {
-		liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
-			// Setup session object (that we know is the same object identity on each page request)
-			var page = createOrGetPage(className, req);
-			page.selectAll(selection);
-
-			var data = {
-				serialized : liquid.serializeSelection(selection),
-				pageUpstreamId : page._id,
-				subscriptionInfo : liquid.getSubscriptionUpdate(page)
-			};
-			res.render('layout',{
-				data: JSON.stringify(data)
+		// console.log("in controller created by class");
+		Fiber(function() {
+			liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
+				// Setup session object (that we know is the same object identity on each page request)
+				// console.log("in controller created by class");
+				var page = createOrGetPage(className, req);
+				var selection = {};
+				page.selectAll(selection);
+	
+				var data = {
+					serialized : liquid.serializeSelection(selection),
+					pageUpstreamId : page._id,
+					subscriptionInfo : liquid.getSubscriptionUpdate(page)
+				};
+				res.render('layout',{
+					data: JSON.stringify(data)
+				});
 			});
-		});
+		}).run();
 	}
 }
 
 function createControllerFromFunction(controllerFunction) {
+	// console.log("createControllerFromFunction");
 	return function(req, res) {
-		liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
-			// Setup session object (that we know is the same object identity on each page request)
-			var page = controllerFunction(req)
-			page.selectAll(selection);
-
-			var data = {
-				serialized : liquid.serializeSelection(selection),
-				pageUpstreamId : page._id,
-				subscriptionInfo : liquid.getSubscriptionUpdate(page)
-			};
-			res.render('layout',{
-				data: JSON.stringify(data)
+		// console.log("in controller created by func");
+		Fiber(function() {
+			liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
+				// console.log("in controller created by func");
+				// Setup session object (that we know is the same object identity on each page request)
+				var page = controllerFunction(req)
+				var selection = {};
+				page.selectAll(selection);
+	
+				var data = {
+					serialized : liquid.serializeSelection(selection),
+					pageUpstreamId : page._id,
+					subscriptionInfo : liquid.getSubscriptionUpdate(page)
+				};
+				res.render('layout',{
+					data: JSON.stringify(data)
+				});
 			});
-		});
+		}).run();
 	}
 }
 
@@ -42,11 +55,15 @@ function createControllers(liquidControllers) {
 	for (url in liquidControllers) {
 		var controllerDefinition = liquidControllers[url];
 		if (typeof(controllerDefinition) === 'string') {
+			// console.log("Create controller: " + url + " -> " + controllerDefinition);
 			controllers[url] = createControllerFromClassName(controllerDefinition);
 		} else {
+			// console.log("Create controller: " + url + " -> [function]");
 			controllers[url] = createControllerFromFunction(controllerDefinition);
 		}
 	}
+	// console.log(controllers);
+	controllers['foo'] = function(req, res) {  res.send('made it'); };
 	return controllers;
 }
 
