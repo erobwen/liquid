@@ -118,7 +118,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		});
 
 		// Propagate changes, up down and sideways.
-		liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selectoin has changed.
+		liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selection has changed.
 		liquid.pushDataUpstream();
 		liquid.pushDataToPersistentStorage();
 
@@ -884,9 +884,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// Member: Property getter
 		object[definition.getterName] = function() {
 			// console.log("Get property: " + object._ + "." + definition.getterName + "()");
-			if (typeof(this._propertyInstances[definition.name].data) !== 'undefined') {
+			if (typeof(this._propertyInstances[definition.name]) !== 'undefined') {
 				var instance = this._propertyInstances[definition.name];
-				liquid.setupObservation(object, instance);
+				liquid.setupObservation(this, instance);
 				return instance.data;
 			} else {
 				// return clone(definition.defaultValue);
@@ -897,6 +897,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// Member: Property setter
 		object[definition.setterName] = function(value) {
 			// console.log("Set property: " + object._ + "." + definition.setterName + "(" + value + ")");
+			if (typeof(this._propertyInstances[definition.name])) {
+				if (value !== definition.defaultValue) {
+					this._propertyInstances[definition.name] = { observers: {}, data: value }
+				}
+			} &&  {
+			}
 			var instance = this._propertyInstances[definition.name];
 			var oldValue = instance.data;
 			if (value != oldValue) {
@@ -1046,7 +1052,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 			// Member: Outgoing single setter
 			object[definition.setterName] = function(newValue) {
-				console.log("Set single relation: " + object.__() + "." + definition.name + " = " + newValue.__());
+				console.log("Set single relation: " + object.__() + "." + definition.name + " = " + nullOr__(newValue));
 				if (allowWrite(this, liquid.page)) {
 					var previousValue = this[definition.getterName]();
 					if (previousValue != newValue) {
@@ -1405,6 +1411,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					serialized[relationQualifiedName] = object[definition.getterName]().map(serializedReference);
 				} else {
 					serialized[relationQualifiedName] = serializedReference(object[definition.getterName]());
+					console.log(serialized[relationQualifiedName]);
 				}
 			}
 		}

@@ -374,12 +374,11 @@ function getMapDifference(firstSet, secondSet) {
 	} 
 	
 	for(id in secondSet) {
-		if(typeof(secondSet[id]) === 'undefined') {
+		if(typeof(firstSet[id]) === 'undefined') {
 			added[id] = true;
 		}
 	}
 
-	for (id in secondSet)
 	return {
 		added : added,
 		removed : removed,
@@ -393,47 +392,51 @@ liquid.getSubscriptionUpdate = function(page) {
 	var result = {};
 	
 	liquid.uponChangeDo(function() {
+		var selection = {};
 		page.getSubscriptions().forEach(function(subscription) {
 			var targetId = subscription._targetObjectUpstreamId;
-			var selectorSuffix = subscription._selectorSuffix;
+			var selectorSuffix = capitaliseFirstLetter(subscription._selectorSuffix);
 			var object = liquid.getEntity(targetId);
-			var selection = {};
 			// as page.
-			object['select' + selectorSuffix](selection);
-			var addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
-			page._previousSelection = selection;
+			var selectorFunctionName = 'select' + selectorSuffix;
+			// console.log(selectorFunctionName);
+			object[selectorFunctionName](selection);
+		});
+		// console.log(selection);
+		var addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
+		page._previousSelection = selection;
 
-			// Serialize
-			result.serializedObjects = liquid.serializeSelection(addedAndRemovedIds.added);
-			result.unsubscribedUpstreamIds = addedAndRemoved.removed;
-			
-			//add event info originating from repeaters.
-			result.events = [];
-			liquid.activePulse.events.forEach(function (event) {
-				if (!(event.originator === page || event.repeater === null)) { // Do not send back events to originator!
-					if (addedAndRemovedIds.static[event.object._id]) {
-						result.events.push(serializeEventForDownstream(event));
-					}
-				}
-			});
+		// Serialize
+		result.serializedObjects = liquid.serializeSelection(addedAndRemovedIds.added);
+		result.unsubscribedUpstreamIds = addedAndRemovedIds.removed;
 
-			// Add id mapping information
-			result.idToUpstreamId = {};
-			result.idsOfInstantlyHidden = [];
-			if (page._idToDownstreamIdMap !== null) {
-				for(id in page._idToDownstreamIdMap) {
-					if (typeof(addedAndRemovedIds.added[id]) !== 'undefined') {
-						result.idToUpstreamId[page._idToDownstreamIdMap[id]] = id;
-					} else {
-						result.idsOfInstantlyHidden[page._idToDownstreamIdMap[id]]; // These objects were sent to the server, but did not become subscribed,
-					}
+		//add event info originating from repeaters.
+		result.events = [];
+		liquid.activePulse.events.forEach(function (event) {
+			if (!(event.originator === page || event.repeater === null)) { // Do not send back events to originator!
+				if (addedAndRemovedIds.static[event.object._id]) {
+					result.events.push(serializeEventForDownstream(event));
 				}
-				page._idToDownstreamIdMap = null;
 			}
 		});
+
+		// Add id mapping information
+		result.idToUpstreamId = {};
+		result.idsOfInstantlyHidden = [];
+		if (page._idToDownstreamIdMap !== null) {
+			for(id in page._idToDownstreamIdMap) {
+				if (typeof(addedAndRemovedIds.added[id]) !== 'undefined') {
+					result.idToUpstreamId[page._idToDownstreamIdMap[id]] = id;
+				} else {
+					result.idsOfInstantlyHidden[page._idToDownstreamIdMap[id]]; // These objects were sent to the server, but did not become subscribed,
+				}
+			}
+			page._idToDownstreamIdMap = null;
+		}
 	}, function() {
 		liquid.dirtyPageSubscriptions.push(page);
 	});
+	console.log(result);
 	return result;
 
 	/**
@@ -543,17 +546,13 @@ function unserializeDownstreamPulse(pulseData) {
 			} else {
 				data = unserializeDownstreamReference(data);
 			}
-			// liquid.withoutPushingToServer(function() { // TODO: without pushing to the originator page!
 			newObject[definition.setterName](data);
-			// });
 		});
 
 		for (propertyName in newObject._propertyDefinitions) {
 			definition = newObject._propertyDefinitions[propertyName];
 			var data = serializedObject[definition.name];
-			liquid.withoutPushingToServer(function() {
-				newObject[definition.setterName](data);
-			});
+			newObject[definition.setterName](data);
 		}
 		newObject._ = newObject.__();
 

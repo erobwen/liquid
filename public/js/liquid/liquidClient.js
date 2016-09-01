@@ -56,18 +56,6 @@ liquid.findLocalEntities = function(properties) {
  *              Push data upstream
  *----------------------------------------------------------------*/
 
-function changesOriginateFromServer() {
-	return changesOriginateFromServerNesting > 0;
-}
-
-var changesOriginateFromServerNesting = 0;
-
-
-liquid.withoutPushingToServer = function(action) {
-	changesOriginateFromServerNesting++
-	action();
-	changesOriginateFromServerNesting--
-};
 
 // Form for events:
 //  {action: addingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
@@ -148,8 +136,10 @@ liquid.pushDataUpstream = function() {
 			serializedEvents : serializedEvents,
 			downstreamIdToSerializedObjectMap : downstreamIdToSerializedObjectMap
 		};
-		
-		liquid.pushDownstreamPulseToServer(pulse);
+
+		if (typeof(liquid.pushDownstreamPulseToServer) !== 'undefined') {
+			liquid.pushDownstreamPulseToServer(pulse);
+		}
 	}
 };
 
@@ -181,8 +171,8 @@ function ensureEmptyObjectExists(upstreamId, className) {
 }
 
 function unserializeUpstreamObject(serializedObject) {
-	// console.log("unserializeObject");
-	// console.log(serializedObject);
+	console.log("unserializeObject: " + serializedObject.className);
+	console.log(serializedObject);
 	var upstreamId = serializedObject.id;
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 		ensureEmptyObjectExists(upstreamId, serializedObject.className);
@@ -191,22 +181,23 @@ function unserializeUpstreamObject(serializedObject) {
 	// console.log(targetObject);
 	if (targetObject._noDataLoaded) {
 		targetObject.forAllOutgoingRelations(function(definition, instance) {
-			var data = serializedObject[definition.name];
-			if (definition.isSet) {
-				data = data.map(unserializeUpstreamReference);
-			} else {
-				data = unserializeUpstreamReference(data);
-			}
-			liquid.withoutPushingToServer(function() {
+
+			if (typeof(serializedObject[definition.qualifiedName]) !== 'undefined') {
+				var data = serializedObject[definition.qualifiedName];
+				if (definition.isSet) {
+					data = data.map(unserializeUpstreamReference);
+				} else {
+					data = unserializeUpstreamReference(data);
+				}
 				targetObject[definition.setterName](data);
-			});
+			}
 		});
 		for (propertyName in targetObject._propertyDefinitions) {
 			definition = targetObject._propertyDefinitions[propertyName];
-			var data = serializedObject[definition.name];
-			liquid.withoutPushingToServer(function() {
+			if (typeof(serializedObject[definition.name]) !== 'undefined') {
+				var data = serializedObject[definition.name];
 				targetObject[definition.setterName](data);
-			});
+			}
 		}
 		targetObject._noDataLoaded = false;
 		targetObject._ = targetObject.__();
@@ -273,7 +264,7 @@ function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is und
  *----------------------------------------------------------------*/
 
 
-console.log("Liquid Object:");
+console.log("");console.log("=== Liquid Object: ===");
 console.log(liquid);
 
 

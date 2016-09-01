@@ -11,12 +11,18 @@
     "express": "^4.13.4",
     "express-session": "^1.13.0",
     "fibers": "^1.0.12",
-    "java": "^0.6.1",
-    "node-gyp": "^3.3.1",
     "seraph": "^0.14.2",
     "socket.io": "^1.4.5"
   },
-  "devDependencies": {},
+  "removedDependencies" : {
+    "java": "^0.6.1",
+    "node-gyp": "^3.3.1"
+  },
+  "devDependencies": {
+    "browser-sync": "^1.3.3",
+    "gulp": "^3.8.7",
+    "gulp-nodemon": "^1.0.4"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

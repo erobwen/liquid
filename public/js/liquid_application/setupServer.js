@@ -61,7 +61,7 @@ while (created++ < 3) {
 
 function createTestPage(req) {
     var page = create('LiquidPage');
-    page.addSubsription(create('Subscription', {object: user, selector:'all'}));
+    page.addSubscription(create('Subscription', {object: user, selector:'all'}));
     return page;
 }
 

@@ -1,6 +1,14 @@
 /*------------------------------
 *           Utility
 *-------------------------------*/
+var nullOr__ = function(liquidObject) {
+    if (liquidObject === null) {
+        return null;
+    } else {
+        return liquidObject.__();
+    }
+};
+
 var undefinedAsNull = function(value) {
     if (value === 'undefined') {
         return null;
@@ -286,6 +294,7 @@ var nameToVariable = function(string) {
 }
 
 if (typeof(module) !== 'undefined') {
+	module.exports.nullOr__ = nullOr__;
 	module.exports.undefinedAsNull = undefinedAsNull;
 	module.exports.isArray = isArray;
 	module.exports.inArray = inArray;

@@ -51,8 +51,8 @@ var addLiquidEntity = function(liquid) {
             addMethods : function(object) {
                 object.overrideMethod('init', function(parent, initData) {
                     parent(initData);
-                    this._idToObjectFootprintMap = {};
-                });                
+                    this._previousSelection = {};
+                });
                 
                 object.addMethod('encryptPassword', function(liquidPassword) {
                     return liquidPassword + " [encrypted]";

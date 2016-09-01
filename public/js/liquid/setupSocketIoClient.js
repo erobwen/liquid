@@ -6,8 +6,8 @@ liquid.upstreamSocket = socket;
 
 socket.on('connect', function(){
 	console.log("received CONNECT");
-	console.log(liquid.page.getHardToGuessPageId());
-	socket.emit("registerPageId", liquid.page.getHardToGuessPageId());
+	console.log(liquid.instancePage.getHardToGuessPageId());
+	socket.emit("registerPageId", liquid.instancePage.getHardToGuessPageId());
 });
 
 
