@@ -1,24 +1,24 @@
 
-var addSubscription = function(page, object) { //selector
-	respondToPossibleChange(
-		function() {
-			liquid.page = page; // Selection influenced by page.getUser();
-			var selection = {};
-			page.getSelectors().forEach(function(selector) {
-				object['select' + selector.getName()](selection); 
-			});
-			liquid.page = null;
-			return selection;
-		},
-		function(lastReturnValue, newReturnValue) {
-			var selectionDifference = selectionDifference(newReturnValue, lastReturnValue);
-			var serializedDifference = liquid.seriailzeSelection(selectionDifference);
-			// Filter out non vieweable objects
-			var data = {newObjects: serializedDifference, initiatingChange: liquid.getPendingChanges(page)};
-			page.socket.emitt('sendSubscriptionData', serializedDifference);
-		})
-	}
-}
+// var addSubscription = function(page, object) { //selector
+	// respondToPossibleChange(
+	// 	function() {
+	// 		liquid.page = page; // Selection influenced by page.getUser();
+	// 		var selection = {};
+	// 		page.getSelectors().forEach(function(selector) {
+	// 			object['select' + selector.getName()](selection);
+	// 		});
+	// 		liquid.page = null;
+	// 		return selection;
+		// },
+		// function(lastReturnValue, newReturnValue) {
+		// 	var selectionDifference = selectionDifference(newReturnValue, lastReturnValue);
+		// 	var serializedDifference = liquid.seriailzeSelection(selectionDifference);
+		// 	// Filter out non vieweable objects
+		// 	var data = {newObjects: serializedDifference, initiatingChange: liquid.getPendingChanges(page)};
+		// 	page.socket.emitt('sendSubscriptionData', serializedDifference);
+		// })
+// 	}
+// }
 
 var dataStructure = {
 	object: <page>,

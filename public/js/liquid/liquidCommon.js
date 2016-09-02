@@ -102,9 +102,10 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 		// Measure query time and pageRequest time
 		// neo4j.resetStatistics();
-
+		console.log("-- Pulse action start --");
 		// Pulse action that adds original events
 		action();    // some repeater events might be here too, interleved with original events!!!
+		console.log("-- Pulse action end --");
 
 		// Display measures.
 		// var statistics = neo4j.getStatistics();
@@ -901,7 +902,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 				if (value !== definition.defaultValue) {
 					this._propertyInstances[definition.name] = { observers: {}, data: value }
 				}
-			} &&  {
 			}
 			var instance = this._propertyInstances[definition.name];
 			var oldValue = instance.data;
@@ -1185,7 +1185,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				var difference = arrayDifference(newSet, instance.data);
 				if (difference.added.length > 0 || difference.removed.length > 0) {
 					liquid.blockObservation(function() {
-						liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: object, definition: definition, instance: null, value: newValue, previousValue: previousValue});
+						liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: object, definition: definition, instance: null, value: newSet, previousValue: null});
 						difference.added.forEach(function(added) {
 							this[definition.adderName](added);
 						}.bind(this));

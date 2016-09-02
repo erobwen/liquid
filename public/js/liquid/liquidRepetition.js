@@ -44,14 +44,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	};
 
 	liquid.setupObservation = function(object, propertyOrRelation) { // or repeater if observing its return value, object only needed for debugging.
-
-		var e = new Error('dummy');
-		var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
-			.replace(/^\s+at\s+/gm, '')
-			.replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
-			.split('\n');
-		console.log(stack);
-
+		// stackDump();
 		if (liquid.activeRecorders.length > 0) {
 			if (traceRepetition) {
 				console.log("setupObservation: " + object._ + "." + propertyOrRelation.name);

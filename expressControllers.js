@@ -1,28 +1,9 @@
 var Fiber = require('fibers');
 
 function createControllerFromClassName(className) {
-	// console.log("createControllerFromClassName");
-	return function(req, res) {
-		// console.log("in controller created by class");
-		Fiber(function() {
-			liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
-				// Setup session object (that we know is the same object identity on each page request)
-				// console.log("in controller created by class");
-				var page = createOrGetPage(className, req);
-				var selection = {};
-				page.selectAll(selection);
-	
-				var data = {
-					serialized : liquid.serializeSelection(selection),
-					pageUpstreamId : page._id,
-					subscriptionInfo : liquid.getSubscriptionUpdate(page)
-				};
-				res.render('layout',{
-					data: JSON.stringify(data)
-				});
-			});
-		}).run();
-	}
+	return createControllerFromFunction(function(req) {
+		return createOrGetPage(className, req);
+	});
 }
 
 function createControllerFromFunction(controllerFunction) {
@@ -107,6 +88,21 @@ if (typeof(module.exports['index']) === 'undefined') {
 	module.exports['index'] = createControllerFromClassName('LiquidPage');
 }
 
+
+// console.log("HERE!!!");
+// console.log(liquidController);
+// for (definitionName in liquid.liquidController) {
+// 	// console.log(definitionName);
+// 	var liquidControllerFunction = liquid.liquidController[definitionName];
+// 	module.exports[definitionName] = function (req, res) {
+// 		var result = liquidPageRequest(req, res, liquidControllerFunction);
+// 		if (isString(result)) {
+// 			res.send(result);
+// 		} else if (result !== null) {
+// 			res.render('layout', result);
+// 		}
+// 	}
+// }
 
 
 //http://krasimirtsonev.com/blog/article/deep-dive-into-client-side-routing-navigo-pushstate-hash
@@ -252,18 +248,3 @@ if (typeof(module.exports['index']) === 'undefined') {
 	// 		//res.send(message);
 	// 	});
 	// }
-
-// console.log("HERE!!!");
-// console.log(liquidController);
-for (definitionName in liquid.liquidController) {
-	// console.log(definitionName);
-	var liquidControllerFunction = liquid.liquidController[definitionName];
-	module.exports[definitionName] = function (req, res) {
-		var result = liquidPageRequest(req, res, liquidControllerFunction);
-		if (isString(result)) {
-			res.send(result);
-		} else if (result !== null) {
-			res.render('layout', result);
-		}
-	}
-}

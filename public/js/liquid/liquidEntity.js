@@ -51,7 +51,13 @@ var addLiquidEntity = function(liquid) {
             addMethods : function(object) {
                 object.overrideMethod('init', function(parent, initData) {
                     parent(initData);
-                    this._previousSelection = {};
+                    this._selection = {};
+                    this._dirtySubscriptions = true;
+                    // // TODO: Only on server
+                    // liquid.repeatOnChange(function() {
+                    //     this.getSubcriptions();
+                    //     liquid.dirtyPageSubscriptions[this._id] = true;
+                    // });
                 });
                 
                 object.addMethod('encryptPassword', function(liquidPassword) {

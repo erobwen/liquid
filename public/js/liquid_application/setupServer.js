@@ -1,49 +1,49 @@
+liquid.pulse('local', function() {
+    liquid.liquidControllers = {
+        'index': 'LiquidPage',
+        'test': createTestPage,
+        // 'test': create,
+        'someurl/:someargument' : 'PageWithArgument'
+    };
 
-liquid.liquidControllers = {
-    'index': 'LiquidPage',
-    'test': createTestPage,
-    // 'test': create,
-    'someurl/:someargument' : 'PageWithArgument'
-};
 
-
-/***
- * Setup some test data
- */
+    /***
+     * Setup some test data
+     */
 
 // !function addTestData() {
 // User
-var user = create('User', {name: "Some Person", email: "some.person@gmail.com" });
+    var user = create('User', {name: "Some Person", email: "some.person@gmail.com" });
 
 
 // Create categories
-var favourite = create('Category', {name: 'Favourite', description: '', owner: user});
+    var favourite = create('Category', {name: 'Favourite', description: '', owner: user});
 
-var funny = create('Category', {name: 'Funny', description: '', owner: user});
+    var funny = create('Category', {name: 'Funny', description: '', owner: user});
 
-var politics = create('Category', {name: 'Politics', description: '', owner: user});
+    var politics = create('Category', {name: 'Politics', description: '', owner: user});
 
-var georgism = create('Category', {name: 'Georgism', description: '', owner: user});
-politics.addSubCategory(georgism);
+    var georgism = create('Category', {name: 'Georgism', description: '', owner: user});
+    politics.addSubCategory(georgism);
 
-var myPolitics = create('Category', {name: 'MyPoliticalCommitments', description: '', owner: user});
-politics.addSubCategory(myPolitics);
+    var myPolitics = create('Category', {name: 'MyPoliticalCommitments', description: '', owner: user});
+    politics.addSubCategory(myPolitics);
 
-var directDemocracy = create('Category', {name: 'Direct Democracy', description: '', owner: user});
-politics.addSubCategory(directDemocracy);
+    var directDemocracy = create('Category', {name: 'Direct Democracy', description: '', owner: user});
+    politics.addSubCategory(directDemocracy);
 
-var liquidDemocracy = create('Category', {name: 'Liquid Democracy', description: '', owner: user});
-directDemocracy.addSubCategory(liquidDemocracy);
+    var liquidDemocracy = create('Category', {name: 'Liquid Democracy', description: '', owner: user});
+    directDemocracy.addSubCategory(liquidDemocracy);
 
-var direktdemokraterna = create('Category', {name: 'Direktdemokraterna', description: '', owner: user});
-liquidDemocracy.addSubCategory(direktdemokraterna);
-myPolitics.addSubCategory(direktdemokraterna);
+    var direktdemokraterna = create('Category', {name: 'Direktdemokraterna', description: '', owner: user});
+    liquidDemocracy.addSubCategory(direktdemokraterna);
+    myPolitics.addSubCategory(direktdemokraterna);
 
 // Create References
-var created = 0;
-while (created++ < 3) {
-    var reference1 = create('Reference', {url : 'http://foo.com/' + created, owner: user, categories: [georgism]});
-}
+    var created = 0;
+    while (created++ < 3) {
+        var reference1 = create('Reference', {url : 'http://foo.com/' + created, owner: user, categories: [georgism]});
+    }
 
 // created = 0;
 // while (created++ < 10) {
@@ -59,11 +59,11 @@ while (created++ < 3) {
 // }
 // }();
 
-function createTestPage(req) {
-    var page = create('LiquidPage');
-    page.addSubscription(create('Subscription', {object: user, selector:'all'}));
-    return page;
-}
+    function createTestPage(req) {
+        var page = create('LiquidPage');
+        page.addSubscription(create('Subscription', {object: user, selector:'all'}));
+        return page;
+    }
 
 
 
@@ -84,3 +84,4 @@ function createTestPage(req) {
 //         // return {}
 //     }
 // };
+});

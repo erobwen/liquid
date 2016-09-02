@@ -390,52 +390,66 @@ function getMapDifference(firstSet, secondSet) {
 liquid.dirtyPageSubscritiptions = [];
 liquid.getSubscriptionUpdate = function(page) {
 	var result = {};
-	
-	liquid.uponChangeDo(function() {
-		var selection = {};
-		page.getSubscriptions().forEach(function(subscription) {
-			var targetId = subscription._targetObjectUpstreamId;
-			var selectorSuffix = capitaliseFirstLetter(subscription._selectorSuffix);
-			var object = liquid.getEntity(targetId);
-			// as page.
-			var selectorFunctionName = 'select' + selectorSuffix;
-			// console.log(selectorFunctionName);
-			object[selectorFunctionName](selection);
+
+	var addedAndRemovedIds;
+	if (page._dirtySubscriptions) {
+		liquid.uponChangeDo(function() {
+			var selection = {};
+			page.getSubscriptions().forEach(function(subscription) {
+				var targetId = subscription._targetObjectUpstreamId;
+				var selectorSuffix = capitaliseFirstLetter(subscription._selectorSuffix);
+				var object = liquid.getEntity(targetId);
+				var selectorFunctionName = 'select' + selectorSuffix;
+
+				// Perform a selection with dependency recording!
+				object[selectorFunctionName](selection);
+			});
+			// console.log(selection);
+			page._previousSelection = page._selection;
+			page._selection = selection;
+			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
+			page._dirtySubscriptions  = false;
+		}, function() {
+			page._dirtySubscriptions  = true;
 		});
-		// console.log(selection);
-		var addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
-		page._previousSelection = selection;
-
-		// Serialize
-		result.serializedObjects = liquid.serializeSelection(addedAndRemovedIds.added);
-		result.unsubscribedUpstreamIds = addedAndRemovedIds.removed;
-
-		//add event info originating from repeaters.
-		result.events = [];
-		liquid.activePulse.events.forEach(function (event) {
-			if (!(event.originator === page || event.repeater === null)) { // Do not send back events to originator!
-				if (addedAndRemovedIds.static[event.object._id]) {
-					result.events.push(serializeEventForDownstream(event));
-				}
-			}
-		});
-
-		// Add id mapping information
-		result.idToUpstreamId = {};
-		result.idsOfInstantlyHidden = [];
-		if (page._idToDownstreamIdMap !== null) {
-			for(id in page._idToDownstreamIdMap) {
-				if (typeof(addedAndRemovedIds.added[id]) !== 'undefined') {
-					result.idToUpstreamId[page._idToDownstreamIdMap[id]] = id;
-				} else {
-					result.idsOfInstantlyHidden[page._idToDownstreamIdMap[id]]; // These objects were sent to the server, but did not become subscribed,
-				}
-			}
-			page._idToDownstreamIdMap = null;
+		addedAndRemovedIds = page._addedAndRemovedIds;
+	} else {
+		addedAndRemovedIds = {
+			added : {},
+			removed : {},
+			static : page._selection
 		}
-	}, function() {
-		liquid.dirtyPageSubscriptions.push(page);
+	}
+
+	// Serialize
+	result.addedSerialized = liquid.serializeSelection(addedAndRemovedIds.added);
+	result.unsubscribedUpstreamIds = addedAndRemovedIds.removed;
+
+	//add event info originating from repeaters.
+	result.events = [];
+	liquid.activePulse.events.forEach(function (event) {
+		if (!(event.originator === page || event.repeater === null)) { // Do not send back events to originator!
+			if (addedAndRemovedIds.static[event.object._id]) {
+				result.events.push(serializeEventForDownstream(event));
+			}
+		}
 	});
+
+	// Add id mapping information
+	result.idToUpstreamId = {};
+	result.idsOfInstantlyHidden = [];
+	if (page._idToDownstreamIdMap !== null) {
+		for(id in page._idToDownstreamIdMap) {
+			if (typeof(addedAndRemovedIds.added[id]) !== 'undefined') {
+				result.idToUpstreamId[page._idToDownstreamIdMap[id]] = id;
+			} else {
+				result.idsOfInstantlyHidden[page._idToDownstreamIdMap[id]]; // These objects were sent to the server, but did not become subscribed,
+			}
+		}
+		page._idToDownstreamIdMap = null;
+	}
+
+
 	console.log(result);
 	return result;
 

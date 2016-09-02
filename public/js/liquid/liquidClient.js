@@ -92,6 +92,8 @@ function serializeEventForUpstream(event) {
 }
 
 liquid.pushDataUpstream = function() {
+	console.log("Not yet!");
+	return;
 	if (typeof(liquid.upstreamSocket) !== undefined) {
 		// Find data that needs to be pushed upstream
 		var requiredObjects = {};
@@ -171,8 +173,8 @@ function ensureEmptyObjectExists(upstreamId, className) {
 }
 
 function unserializeUpstreamObject(serializedObject) {
-	console.log("unserializeObject: " + serializedObject.className);
-	console.log(serializedObject);
+	// console.log("unserializeObject: " + serializedObject.className);
+	// console.log(serializedObject);
 	var upstreamId = serializedObject.id;
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 		ensureEmptyObjectExists(upstreamId, serializedObject.className);
@@ -181,7 +183,7 @@ function unserializeUpstreamObject(serializedObject) {
 	// console.log(targetObject);
 	if (targetObject._noDataLoaded) {
 		targetObject.forAllOutgoingRelations(function(definition, instance) {
-
+			console.log("processingRelation: " + definition.name);
 			if (typeof(serializedObject[definition.qualifiedName]) !== 'undefined') {
 				var data = serializedObject[definition.qualifiedName];
 				if (definition.isSet) {
@@ -194,6 +196,7 @@ function unserializeUpstreamObject(serializedObject) {
 		});
 		for (propertyName in targetObject._propertyDefinitions) {
 			definition = targetObject._propertyDefinitions[propertyName];
+			console.log("processingProperty: " + definition.name)
 			if (typeof(serializedObject[definition.name]) !== 'undefined') {
 				var data = serializedObject[definition.name];
 				targetObject[definition.setterName](data);
@@ -209,6 +212,7 @@ function unserializeUpstreamObject(serializedObject) {
 
 function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is undefined it will be used to set saver for all unserialized objects.
 	arrayOfSerialized.forEach(function(serialized) {
+		console.log("unserializeFromUpstream: " + serialized.id);
 		unserializeUpstreamObject(serialized);
 	});
 }
