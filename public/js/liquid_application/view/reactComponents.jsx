@@ -26,7 +26,7 @@ window.LiquidApplication = React.createClass(liquidClassData({
 		return invalidateUponLiquidChange("UserView", this, function() {
 			return (
 				<div onClick={ function(event) { dropFocus(event);} }>
-					<UserView user = {data.user}/>
+					<UserView user = {page.getActiveUser()}/>
 				</div>
 			);
 		}.bind(this));

@@ -337,7 +337,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						var returnValue;
 						liquid.blockSideEffects(function() {
 							returnValue = this[methodName].apply(this, methodArguments);
-						});
+						}.bind(this));
 						return returnValue;
 					}.bind(this), 
 					function() {

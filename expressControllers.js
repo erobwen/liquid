@@ -60,15 +60,6 @@ function generateUniqueKey(keysMap) {
 }
 
 
-function createOrGetSessionObject(req) {
-	var hardToGuessSessionId = req.session.id;
-	if (typeof(liquid.sessionsMap[hardToGuessSessionId]) === 'undefined') {
-		liquid.sessionsMap[hardToGuessSessionId] = createPersistent('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
-	}
-	return liquid.sessionsMap[hardToGuessSessionId];
-}
-
-
 
 function createOrGetPage(pageClassName, req) {
 	var session = createOrGetSessionObject(req);

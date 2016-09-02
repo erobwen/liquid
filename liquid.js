@@ -30,6 +30,28 @@ Fiber(function() {
 	liquid.initialize();
 }).run();
 
+
+/**--------------------------------------------------------------
+ *                 Connection management
+ *----------------------------------------------------------------*/
+
+liquid.pagesMap = {};
+liquid.sessionsMap = {};
+
+liquid.createOrGetSessionObject = function(req) {
+	var hardToGuessSessionId = req.session.id;
+	if (typeof(liquid.sessionsMap[hardToGuessSessionId]) === 'undefined') {
+		// TODO: createPersistent instead
+		liquid.sessionsMap[hardToGuessSessionId] = create('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
+	}
+	return liquid.sessionsMap[hardToGuessSessionId];
+};
+
+
+/**--------------------------------------------------------------
+ *                 Custom setup script
+ *----------------------------------------------------------------*/
+
 // Custom setup server script
 include('./public/js/liquid_application/setupServer.js');
 
