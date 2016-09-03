@@ -43,21 +43,21 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		return returnValue;
 	};
 
-	liquid.setupObservation = function(object, propertyOrRelation) { // or repeater if observing its return value, object only needed for debugging.
-		// stackDump();
+	liquid.setupObservation = function(object, definition, instance) { // instance can be a cached method if observing its return value, object & definition only needed for debugging.
 		if (liquid.activeRecorders.length > 0) {
+			// stackDump();
 			if (traceRepetition) {
-				console.log("setupObservation: " + object._ + "." + propertyOrRelation.name);
+				console.log("setupObservation: " + object._ + "." + definition.name);
 			}
 			var activeRecorder = liquid.activeRecorders[liquid.activeRecorders.length - 1];
-			// console.log("Reading property " + object.__() + "." + propertyOrRelation + " with repeater " + activeRecorder.id);
+			// console.log("Reading property " + object.__() + "." + instance + " with repeater " + activeRecorder.id);
 
 			// Ensure observer structure in place (might be unecessary)
-			if (typeof(propertyOrRelation.observers) === 'undefined') {
+			if (typeof(instance.observers) === 'undefined') {
 				// console.log("setting up observers...");
-				propertyOrRelation.observers = {};
+				instance.observers = {};
 			}
-			var observerSet = propertyOrRelation.observers;
+			var observerSet = instance.observers;
 
 			// Add repeater on object beeing observed, if not already added before
 			var recorderId = activeRecorder.id;
@@ -69,8 +69,8 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			}
 			// console.group("Just set up observation");
 			// console.log(activeRecorder.description);
-			// console.log(Object.keys(propertyOrRelation.observers));
-			// console.log(propertyOrRelation);
+			// console.log(Object.keys(instance.observers));
+			// console.log(instance);
 			// console.groupEnd();
 		}
 	};
@@ -85,7 +85,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		if (observationBlocked == 0) {
 			while (dirtyRecorders.length > 0) {
 				var recorder = dirtyRecorders.shift()
-				blockSideEffects(function() {
+				liquid.blockSideEffects(function() {
 					recorder.uponChangeAction();
 				});
 			}
@@ -110,7 +110,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		if (observationBlocked > 0) {
 			dirtyRecorders.push(recorder);
 		} else {
-			blockSideEffects(function() {
+			liquid.blockSideEffects(function() {
 				recorder.uponChangeAction();
 			});
 		}
@@ -351,13 +351,13 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						liquid.recordersDirty(methodCache.observers);
 					}.bind(this));
 				methodCache.returnValue = returnValue;
-				liquid.setupObservation(this, methodCache);
+				liquid.setupObservation(this, {name: methodName}, methodCache);
 				return returnValue;
 			} else {
 				// Encountered these arguments before, reuse previous repeater
 				console.log("Cached method seen before ...");
 				var methodCache = methodCaches[argumentHash];
-				liquid.setupObservation(this, methodCache);
+				liquid.setupObservation(this, {name: methodName}, methodCache);
 				return methodCache.returnValue;
 			}
 		}
@@ -567,13 +567,13 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						}
 					}.bind(this));
 
-				liquid.setupObservation(this, projectionRepeater);
+				liquid.setupObservation(this, {name: methodName}, projectionRepeater);
 				return projection.establishedReturnValue;
 			} else {
 				// Encountered these arguments before, reuse previous repeater
 				console.log("Cached method seen before ...");
 				var projectionRepeater = projections[argumentHash];
-				liquid.setupObservation(this, projectionRepeater);
+				liquid.setupObservation(this, {name: methodName}, projectionRepeater);
 				return projectionRepeater.returnValue;
 			}
 		}
