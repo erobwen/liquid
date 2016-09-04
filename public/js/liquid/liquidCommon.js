@@ -897,7 +897,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property getter
 		object[definition.getterName] = function() {
-			// console.log("Get property: " + this._ + "." + definition.getterName + "()");
+			console.log("Get property: " + this._ + "." + definition.getterName + "()");
 			if (typeof(this._propertyInstances[definition.name]) !== 'undefined') {
 				var instance = this._propertyInstances[definition.name];
 				liquid.setupObservation(this, definition, instance);
@@ -910,7 +910,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property setter
 		object[definition.setterName] = function(value) {
-			// console.log("Set property: " + this._ + "." + definition.setterName + "(" + value + ")");
+			console.log("Set property: " + this._ + "." + definition.setterName + "(" + value + ")");
 			var instance = this._propertyInstances[definition.name];
 			var oldValue = instance.data;
 			if (value != oldValue) {

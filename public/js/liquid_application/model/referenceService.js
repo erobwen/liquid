@@ -48,7 +48,7 @@ registerClass({
 				if (category.getParents().length === 0) {
 					result.push(category);
 				}
-			})
+			});
 			// console.log("Result in repeater code");
 			// console.log(result);
 			return result;
@@ -81,7 +81,12 @@ registerClass({
 		});
 		
 		object.overrideMethod('__', function(parent) {
-			var unloadedOrName = this._noDataLoaded ? "[no data]" : this.getName();
+			// Old:
+			// var unloadedOrName = this._noDataLoaded ? "[no data]" : this.getName();
+			// return "(" + this.className + "." + this._idString() + ":" + unloadedOrName + ")";
+
+			// New: TODO: Create a without observation syntax?
+			var unloadedOrName = this._noDataLoaded ? "[no data]" : this._propertyInstances['name'].data;  // Without regestring as observer!
 			return "(" + this.className + "." + this._idString() + ":" + unloadedOrName + ")";
 		});
 		

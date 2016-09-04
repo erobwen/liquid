@@ -129,12 +129,19 @@ var liquidClassData = function(classData) {
 
 
 var invalidateUponLiquidChange = function(className, component, renderFunction) {
-	// console.group(className + ".render:");
+	console.group("***" + className + ".render: ***");
+	// stackDump();
+	console.log(componentsNeedOfForceUpdate);
 	component._ = "<" + className + " />";
-	return uponChangeDo("Component:" + className, renderFunction, function() {
+	return uponChangeDo("Component:" + className,
+	function() {
+		var element = renderFunction();
+		console.groupEnd();
+		return element;
+	},
+	function() {
 		console.log("Component:" + className + " in need of update");
 		componentsNeedOfForceUpdate.push(component);
 	});
-	// console.groupEnd();
 	// return repeater.returnValue; //getReturnValueWithoutObservation(); // To not bind the surrounding repeater to this one.
 }

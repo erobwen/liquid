@@ -33,6 +33,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			id : recorderId++,
 			description : description,
 			sources : [],
+			sourcesDetails: [],
 			uponChangeAction : doAfterChange
 		};
 
@@ -66,6 +67,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 				// Note dependency in repeater itself (for cleaning up)
 				activeRecorder.sources.push(observerSet);
+				activeRecorder.sourcesDetails.push(object._ + "." + definition.name); // Debugging
 			}
 			// console.group("Just set up observation");
 			// console.log(activeRecorder.description);
@@ -104,6 +106,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 	liquid.recorderDirty = function(recorder) {
 		if (traceRepetition) {
 			console.log("Recorder noticed change: " + recorder.id + "." + recorder.description);
+			console.group("Dependencies");
+			recorder.sourcesDetails.forEach(function(source) {
+				console.log(source);
+			});
+			console.groupEnd();
 		}
 
 		liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
@@ -306,6 +313,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			var methodName = argumentsArray.shift();
 			var methodArguments = argumentsArray;
 
+			stackDump();
 			console.log(this.__() + '.[cachedCall]' +  methodName);
 			
 			// Establish method caches

@@ -37,6 +37,7 @@ window.LiquidApplication = React.createClass(liquidClassData({
 var UserView = React.createClass(liquidClassData({
 	render: function() {
 		return invalidateUponLiquidChange("UserView", this, function() {
+			console.log("Render in user view. ");
 			var rootCategories = this.props.user.cachedCall('getRootCategories');
 			// var rootCategories = this.props.user.getOwnedCategories();
 			return (
