@@ -9,7 +9,7 @@ var stackDump = function() {
         .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
         .split('\n');
     console.log(stack);
-}
+};
 
 var nullOr__ = function(liquidObject) {
     if (liquidObject === null) {

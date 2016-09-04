@@ -77,5 +77,5 @@ socket.on('pushSubscriptionChanges', function(changes){
  */
 
 liquid.pushDownstreamPulseToServer = function(pulse) {
-	liquid.upstreamSocket.emit("pushDownstreamPulse", liquid.page.getHardToGuessPageId(), pulse);
+	liquid.upstreamSocket.emit("pushDownstreamPulse", liquid.instancePage.getHardToGuessPageId(), pulse);
 };

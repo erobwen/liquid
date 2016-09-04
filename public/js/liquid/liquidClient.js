@@ -92,8 +92,8 @@ function serializeEventForUpstream(event) {
 }
 
 liquid.pushDataUpstream = function() {
-	console.log("Not yet!");
-	return;
+	// console.log("Not yet!");
+	// return;
 	if (typeof(liquid.upstreamSocket) !== undefined) {
 		// Find data that needs to be pushed upstream
 		var requiredObjects = {};

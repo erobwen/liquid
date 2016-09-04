@@ -915,8 +915,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 			var oldValue = instance.data;
 			if (value != oldValue) {
 				if (allowWrite(this, liquid.page)) {
-					liquid.startOrAddToPulse({redundant: false, action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: value, oldValue: oldValue});
 					instance.data = value;
+					liquid.startOrAddToPulse({redundant: false, action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: value, oldValue: oldValue});
 				} else {
 					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 				}
@@ -1066,9 +1066,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 					if (previousValue != newValue) {
 						liquid.blockObservation(function() {
 							var instance = this._relationInstances[definition.qualifiedName];
-							liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: instance, value: newValue, previousValue: previousValue});
-							liquid.startOrAddToPulse({redundant: false,  action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: newValue});
-							liquid.startOrAddToPulse({redundant: false,  action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: previousValue});
 
 							// Delete previous relation.
 							if (previousValue !== null) {
@@ -1082,6 +1079,10 @@ var addCommonLiquidFunctionality = function(liquid) {
 							if (newValue !== null) {
 								liquid.addIncomingRelation(newValue, definition.qualifiedName, this);
 							}
+
+							liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: instance, value: newValue, previousValue: previousValue});
+							liquid.startOrAddToPulse({redundant: false,  action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: newValue});
+							liquid.startOrAddToPulse({redundant: false,  action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: previousValue});
 						}.bind(this));
 						return true;
 					} else {
@@ -1193,13 +1194,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 				var difference = arrayDifference(newSet, instance.data);
 				if (difference.added.length > 0 || difference.removed.length > 0) {
 					liquid.blockObservation(function() {
-						liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: null, value: newSet, previousValue: null});
 						difference.added.forEach(function(added) {
 							this[definition.adderName](added);
 						}.bind(this));
 						difference.removed.forEach(function(removed) {
 							this[definition.removerName](removed);
 						}.bind(this));
+						liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: null, value: newSet, previousValue: null});
 					}.bind(this));
 					return true;
 				} else {
@@ -1221,13 +1222,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 					if (!inArray(added, instance.data)) {
 						liquid.blockObservation(function() {
-							liquid.startOrAddToPulse({redundant: false, action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: added});
-							liquid.startOrAddToPulse({redundant: true, action: 'relationReordered', object: this, definition: definition, instance: instance, relatedObject: added});
 
 							liquid.addIncomingRelation(added, definition.qualifiedName, this);
 
 							instance.data.push(added); //TODO: Create copy of array here?
 							liquid.sortRelationOnElementChange(definition, instance);
+
+							liquid.startOrAddToPulse({redundant: false, action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: added});
+							liquid.startOrAddToPulse({redundant: true, action: 'relationReordered', object: this, definition: definition, instance: instance, relatedObject: added});
 						}.bind(this));
 						return true;
 					} else {
@@ -1252,11 +1254,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 				removed._tag = true;
 				if (inArray(removed, instance.data)) {
 					liquid.blockObservation(function() {
-						liquid.startOrAddToPulse({redundant: false, action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: removed});
-
 						removeFromArray(removed, instance.data); //TODO: Create copy of array here?
 
 						liquid.deleteIncomingRelation(removed, definition.qualifiedName, this);
+
+						liquid.startOrAddToPulse({redundant: false, action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: removed});
 						return true;
 					}.bind(this));
 				} else {
