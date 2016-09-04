@@ -31,12 +31,13 @@ var isArray = function(entity) {
 };
 
 var inArray = function(item, array) {
+    var result = false;
 	array.forEach(function(arrayItem) {
 		if (item === arrayItem) {
-			return true;
+			result = true;
 		}
 	});
-	return false;
+	return result;
 }
 
 var argumentsToArray = function(arguments) {

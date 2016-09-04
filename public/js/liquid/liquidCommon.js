@@ -1240,29 +1240,31 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 			// Member: Outgoing set remover
 			object[definition.removerName] = function(removed) {
+				// debugger;
 				console.log("Remove from set: " + this.__() + "." + definition.removerName + "(" + removed.__() + ")");
 
-				if (allowWrite(this, liquid.page)) {
-					// console.group(this.__() + "." + definition.removerName + "(" + removed.__() + ")");
-					var instance = this._relationInstances[definition.qualifiedName];
-					if (typeof(instance.data) === 'undefined') {
-						liquid.loadSetRelation(this, definition, instance);
-					}
-					if (inArray(removed, instance.data)) {
-						liquid.blockObservation(function() {
-							liquid.startOrAddToPulse({redundant: false, action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: removed});
-
-							removeFromArray(removed, instance.data); //TODO: Create copy of array here?
-
-							liquid.deleteIncomingRelation(removed, definition.qualifiedName, this);
-							return true;
-						}.bind(this));
-					} else {
-						return false;
-					}
-				} else {
-					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
+				// if (allowWrite(this, liquid.page)) {
+				// console.group(this.__() + "." + definition.removerName + "(" + removed.__() + ")");
+				var instance = this._relationInstances[definition.qualifiedName];
+				if (typeof(instance.data) === 'undefined') {
+					liquid.loadSetRelation(this, definition, instance);
 				}
+				removed._tag = true;
+				if (inArray(removed, instance.data)) {
+					liquid.blockObservation(function() {
+						liquid.startOrAddToPulse({redundant: false, action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: removed});
+
+						removeFromArray(removed, instance.data); //TODO: Create copy of array here?
+
+						liquid.deleteIncomingRelation(removed, definition.qualifiedName, this);
+						return true;
+					}.bind(this));
+				} else {
+					return false;
+				}
+				// } else {
+				// 	console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
+				// }
 			}
 		} else {
 			var incomingRelationQualifiedName = definition.incomingRelationQualifiedName;
@@ -1345,7 +1347,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 				var incomingDefinition = removed._relationDefinitions[incomingRelationQualifiedName];
 				var actuallyRemoved = false;
 				if (incomingDefinition.isSet) {
+					console.log("AAAAAAAAAAAAAAAA");
 					actuallyRemoved = removed[incomingDefinition.removerName](this);
+					console.log("BBBBBBBBBBBBBBBB");
 				} else {
 					actuallyRemoved = removed[incomingDefinition.setterName](null);
 				}
