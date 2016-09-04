@@ -31,12 +31,12 @@ registerClass({
 	
 	addMethods : function (object) {
 		object.addMethod('selectAllCategories', function(selection) {
-			liquid.mergeToSelection(this._id, true, selection);
+			liquid.addToSelection(selection, this);
 			// console.log(this.getOwnedCategories());
 			this.getOwnedCategories().forEach(function(category) {
 				// console.log("Selecting");
-				// liquid.mergeToSelection(category._id, true, selection);
-				liquid.mergeToSelection(category._id, true, selection);
+				// liquid.addToSelection(selection, this);
+				liquid.addToSelection(selection, category);
 				// console.log(selection);
 			});
 		});

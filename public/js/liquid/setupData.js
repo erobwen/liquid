@@ -3,10 +3,7 @@ console.log("");console.log("=== Data: ===");
 console.log(data);
 
 // Get serialized
-var serialized = data.serialized;
-// delete data.serialized;
 console.log("");console.log("=== Serialized: ===");
-console.log(serialized);
 console.log(data.subscriptionInfo.addedSerialized);
 
 // Unserialize
@@ -14,10 +11,8 @@ console.log("");console.log("=== Unserialize: ===");
 var start = new Date().getTime();
 liquid.pulse('upstream', function() {
 	console.log("serialize 0");
-	unserializeFromUpstream(serialized);
-	console.log("serialize 1");
 	unserializeFromUpstream(data.subscriptionInfo.addedSerialized);
-	console.log("serialize 2");
+	console.log("serialize 1");
 });
 var end = new Date().getTime();
 var time = (end - start);

@@ -53,17 +53,24 @@ var addLiquidEntity = function(liquid) {
                     parent(initData);
                     this._selection = {};
                     this._dirtySubscriptions = true;
-                    // // TODO: Only on server
-                    // liquid.repeatOnChange(function() {
-                    //     this.getSubcriptions();
-                    //     liquid.dirtyPageSubscriptions[this._id] = true;
-                    // });
+                    this._socket = null;
+
+                    var hardToGuessPageId = liquid.generatePageId();
+                    liquid.pagesMap[hardToGuessPageId] = this;
+                    this.setHardToGuessPageId(hardToGuessPageId);
+                    this.addSubscription(create('Subscription', {selector: 'Basics', object: this}));
                 });
                 
                 object.addMethod('encryptPassword', function(liquidPassword) {
                     return liquidPassword + " [encrypted]";
                 });
-    
+
+                object.addMethod('selectBasics', function(selection) {
+                    liquid.addToSelection(selection, this);
+                    liquid.addToSelection(selection, this.getSession());
+                    liquid.addToSelection(selection, this.getActiveUser());
+                });
+
                 object.addMethod('getActiveUser', function(liquidPassword) {
                     if (this.getSession() != null) {
                         // console.log(this.getSession());
@@ -229,8 +236,9 @@ var addLiquidEntity = function(liquid) {
                         // console.log("Selecting " + this.__());
                         selection[this._id] = true;
                         this.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {
+                            liquid.setupObservation(this, definition, instance);
                             relatedObject.selectAll(selection);
-                        });
+                        }.bind(this));
                     }
                 };
             },

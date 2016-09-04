@@ -2,7 +2,7 @@ var Fiber = require('fibers');
 
 function createControllerFromClassName(className) {
 	return createControllerFromFunction(function(req) {
-		return createOrGetPage(className, req);
+		return liquid.createPage(className, req);
 	});
 }
 
@@ -15,11 +15,11 @@ function createControllerFromFunction(controllerFunction) {
 				// console.log("in controller created by func");
 				// Setup session object (that we know is the same object identity on each page request)
 				var page = controllerFunction(req)
-				var selection = {};
-				page.selectAll(selection);
+				// var selection = {};
+				// page.selectAll(selection);
 	
 				var data = {
-					serialized : liquid.serializeSelection(selection),
+					// serialized : liquid.serializeSelection(selection),
 					pageUpstreamId : page._id,
 					subscriptionInfo : liquid.getSubscriptionUpdate(page)
 				};
@@ -48,28 +48,14 @@ function createControllers(liquidControllers) {
 	return controllers;
 }
 
-function generateUniqueKey(keysMap) {
-	var newKey = null;
-	while(newKey == null) {
-		var newKey = Number.MAX_SAFE_INTEGER * Math.random();
-		if (typeof(keysMap[newKey]) !== 'undefined') {
-			newKey = null;
-		}
-	}
-	return newKey;
-}
 
 
 
-function createOrGetPage(pageClassName, req) {
-	var session = createOrGetSessionObject(req);
-
-	// Setup page object
-	var hardToGuessPageId = generateUniqueKey(liquid.pagesMap);
-	var page = createPersistent(pageClassName, { hardToGuessPageId: hardToGuessPageId, Session : session });
-	liquid.pagesMap[hardToGuessPageId] = page;
-	page._socket = null;
-	return page;
+function createPage(pageClassName, req) {
+	var session = liquid.createOrGetSessionObject(req);
+	
+	// Setup page object TODO: persistent page object?
+	return create(pageClassName, { hardToGuessPageId: liquid.getPageId(), Session : session });
 }
 
 

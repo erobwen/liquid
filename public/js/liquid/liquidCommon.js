@@ -74,12 +74,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.activePulse = null;
 	liquid.pulse = function(originator, action) { // Changes origin: "downstream", "upstream", "local" (direct ui modifications), "httpRequest"
+
 		// var originator = liquid.clientPage !== null ? liquid.clientPage : 'local'; // 'upstream'
 		if (liquid.activePulse !== null) {
 			throw "Pulses cannot overlap in time!";
 		}
 
-		console.log("=== Starting a pulse ===")
+		console.group("=== Starting a pulse ===")
 		if (typeof(originator) === 'string') {
 			console.log(originator);
 		} else {
@@ -135,6 +136,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 		liquid.activePulse = null;
 		console.log("=== Ending a pulse ===");
+		console.groupEnd();
 	};
 
 	

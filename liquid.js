@@ -4,7 +4,7 @@ var Fiber = require('fibers');
 /* ------------------
  *    Splashscreen
  * ------------------ */
-
+require( 'console-group' ).install();
 var colors = require('colors');
 // console.log(colors.cyan(
 // "  _     _             _     _         \n" +
@@ -38,6 +38,10 @@ Fiber(function() {
 liquid.pagesMap = {};
 liquid.sessionsMap = {};
 
+liquid.generatePageId = function() {
+	return liquid.generateUniqueKey(liquid.pagesMap);
+};
+
 liquid.createOrGetSessionObject = function(req) {
 	var hardToGuessSessionId = req.session.id;
 	if (typeof(liquid.sessionsMap[hardToGuessSessionId]) === 'undefined') {
@@ -45,6 +49,17 @@ liquid.createOrGetSessionObject = function(req) {
 		liquid.sessionsMap[hardToGuessSessionId] = create('LiquidSession', {hardToGuessSessionId: hardToGuessSessionId});
 	}
 	return liquid.sessionsMap[hardToGuessSessionId];
+};
+
+liquid.generateUniqueKey = function(keysMap) {
+	var newKey = null;
+	while(newKey == null) {
+		var newKey = Number.MAX_SAFE_INTEGER * Math.random();
+		if (typeof(keysMap[newKey]) !== 'undefined') {
+			newKey = null;
+		}
+	}
+	return newKey;
 };
 
 
@@ -104,11 +119,11 @@ liquidSocket.on('connection', function (socket) {
 	
 	socket.on('registerPageId', function(hardToGuessPageId) {
 		Fiber(function() {
-			// console.log("Register page connection");
-			// console.log(hardToGuessPageId);
+			console.log("Register page connection:" + hardToGuessPageId);
+			console.log(hardToGuessPageId);
 			if (typeof(hardToGuessPageId) !== 'undefined' && hardToGuessPageId !== null && typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
 				liquid.pagesMap[hardToGuessPageId]._socket = socket;
-				// console.log("Made an association between socket and hardToGuessPageId");
+				console.log("Made an association between socket and hardToGuessPageId");
 			}
 		}).run();
 	});

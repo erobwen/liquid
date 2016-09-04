@@ -38,7 +38,7 @@ var focusComponent = function(component) {
 
 var componentsNeedOfForceUpdate = [];
 liquid.addNoMoreDirtyRepeaterCallback(function() {
-	// console.group("All repeaters refreshed, " + componentsNeedOfForceUpdate.length + " components needs updating");
+	console.group("=== Updating user interface ===");
 	console.log("Starting UI update with " + componentsNeedOfForceUpdate.length + " required updates");
 	componentsNeedOfForceUpdate.forEach(function(component) {
 		// console.log(component);
@@ -46,7 +46,8 @@ liquid.addNoMoreDirtyRepeaterCallback(function() {
 			component.forceUpdate();
 		}
 	});
-	// console.groupEnd();
+	console.log("=== Finished updating user interface ===");
+	console.groupEnd();
 	componentsNeedOfForceUpdate.length = 0;
 });
 

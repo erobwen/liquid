@@ -1,8 +1,8 @@
 
 var addLiquidSelectionFunctionality = function(liquid) {
 
-	liquid.mergeToSelection = function(id, objectSelection, destination) {
-		destination[id] = true;
+	liquid.addToSelection = function(selection, object) {
+		selection[object._id] = true;
 	};
 }
 

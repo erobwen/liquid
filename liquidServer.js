@@ -392,10 +392,17 @@ liquid.getSubscriptionUpdate = function(page) {
 				var targetId = subscription._targetObjectUpstreamId;
 				var selectorSuffix = capitaliseFirstLetter(subscription._selectorSuffix);
 				var object = liquid.getEntity(targetId);
+				console.log("--- Considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
 				var selectorFunctionName = 'select' + selectorSuffix;
 
 				// Perform a selection with dependency recording!
-				object[selectorFunctionName](selection);
+				var subscriptionSelection = {};
+				object[selectorFunctionName](subscriptionSelection);
+				for (id in subscriptionSelection) {
+					selection[id] = true;
+				}
+				console.log("--- Finish considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
+				// console.groupEnd();
 			});
 			// console.log(selection);
 			page._previousSelection = page._selection;
