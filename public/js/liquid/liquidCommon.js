@@ -1349,9 +1349,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				var incomingDefinition = removed._relationDefinitions[incomingRelationQualifiedName];
 				var actuallyRemoved = false;
 				if (incomingDefinition.isSet) {
-					console.log("AAAAAAAAAAAAAAAA");
 					actuallyRemoved = removed[incomingDefinition.removerName](this);
-					console.log("BBBBBBBBBBBBBBBB");
 				} else {
 					actuallyRemoved = removed[incomingDefinition.setterName](null);
 				}

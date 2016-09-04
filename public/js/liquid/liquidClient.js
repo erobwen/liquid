@@ -196,13 +196,16 @@ function unserializeUpstreamObject(serializedObject) {
 		});
 		for (propertyName in targetObject._propertyDefinitions) {
 			definition = targetObject._propertyDefinitions[propertyName];
-			console.log("processingProperty: " + definition.name)
+			console.log("processingProperty: " + definition.name);
 			if (typeof(serializedObject[definition.name]) !== 'undefined') {
 				var data = serializedObject[definition.name];
 				targetObject[definition.setterName](data);
 			}
 		}
 		targetObject._noDataLoaded = false;
+		if (typeof(targetObject._isLoadedObservers) !== 'undefined') {
+			liquid.recordersDirty(targetObject._isLoadedObservers.observers);
+		}
 		targetObject._ = targetObject.__();
 	} else {
 		console.log("Loaded data that was already loaded!!!");

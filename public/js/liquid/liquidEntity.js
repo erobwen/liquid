@@ -45,7 +45,8 @@ var addLiquidEntity = function(liquid) {
                 // Relations
                 object.addRelation('Session', 'toOne');
                 object.addRelation('Service', 'toOne');
-                object.addRelation('Subscription', 'toMany');
+                object.addRelation('ReceivedSubscription', 'toMany');
+                object.addRelation('OrderedSubscription', 'toMany');
             },
     
             addMethods : function(object) {
@@ -58,8 +59,8 @@ var addLiquidEntity = function(liquid) {
                     var hardToGuessPageId = liquid.generatePageId();
                     liquid.pagesMap[hardToGuessPageId] = this;
                     this.setHardToGuessPageId(hardToGuessPageId);
-                    this.addSubscription(create('Subscription', {selector: 'Basics', object: this}));
-                });
+                    this.addOrderedSubscription(create('Subscription', {selector: 'Basics', object: this}));
+                });//Subscription
                 
                 object.addMethod('encryptPassword', function(liquidPassword) {
                     return liquidPassword + " [encrypted]";
@@ -69,6 +70,33 @@ var addLiquidEntity = function(liquid) {
                     liquid.addToSelection(selection, this);
                     liquid.addToSelection(selection, this.getSession());
                     liquid.addToSelection(selection, this.getActiveUser());
+
+                    // Only needed for progressive loading!
+                    this.getReceivedSubscriptions().forEach(function(subscription) {
+                        liquid.addToSelection(selection, subscription);
+                        liquid.addToSelection(selection, subscription.getTargetObject());
+                    });
+                    this.getOrderedSubscriptions().forEach(function(subscription) {
+                        liquid.addToSelection(selection, subscription);
+                        liquid.addToSelection(selection, subscription.getTargetObject());
+                    });
+                });
+
+                object.addMethod('getLoadedSelectionsFor', function(object) {
+                    var idToSelectorsMap = this.cachedCall('getAllReceivedSelections');
+                    return idToSelectorsMap[object._id];
+                });
+
+                object.addMethod('getAllReceivedSelections', function() {
+                    liquid.recordSelectors = true;
+                    liquid.idToSelectorsMap = {};
+                    this.getReceivedSubscriptions().forEach(function(subscription) {
+                        var selection = {};
+                        var selectorFunctionName = capitalizeFirstLetter(selection.getSelector());
+                        subscription.getTargetObject()[selectorFunctionName](selection);
+                    });
+                    liquid.recordingSelectors = false;
+                    return liquid.idToSelectorsMap;
                 });
 
                 object.addMethod('getActiveUser', function(liquidPassword) {
@@ -124,18 +152,23 @@ var addLiquidEntity = function(liquid) {
             name: 'Subscription',  _extends: 'Entity',
 
             addPropertiesAndRelations : function(object) {
+                // Basics
+                object.addProperty('selector', 'all'); //TODO: write once semantics.
+                object.addRelation('TargetObject','toOne'); //TODO: write once semantics
+
                 // Relations
                 object.addReverseRelationTo('LiquidPage_Subscriptions','Page', 'toOne');
-                // object.addRelation('TargetObject','toOne');
+
+                object.addRelation('ChildSubscription');
+                object.addReverseRelationTo('Subscription_ChildSubscription', 'Parent', 'toOne');
             },
 
             addMethods : function(object) {
-
                 // Properties
                 object.overrideMethod('init', function(parent, initData) {
                     // parent(initData); // Should not be needed, has no data visible inside liquid.
-                    this._selectorSuffix = undefinedAsNull(initData.selector);
-                    this._targetObjectUpstreamId = undefinedAsNull(initData.object._id);
+                    this.setSelector(undefinedAsNull(initData.selector));
+                    this.setTargetObject(initData.object);
                     this._previousSelection = {};
                     this._idToDownstreamIdMap = null;  // This is set in pulses where this page pushes data upstream.
                 });
@@ -205,7 +238,28 @@ var addLiquidEntity = function(liquid) {
                         }
                     }
                 };
-    
+
+                object.isLoaded = function() {
+                    if (typeof(liquid.instancePage) !== 'undefined' && liquid.instancePage !== null) {
+                        if (arguments.length = 1) {
+                            var selector = arguments[0];
+                            if (typeof(liquid.instancePage) !== 'undefined' && liquid.instancePage !== null) {
+                                return (typeof(liquid.instancePage.getLoadedSelectionsFor(this)[selector]) !== undefined);
+                            } else {
+                                return true;
+                            }
+                        } else {
+                            if (typeof(this._isLoadedObservers) === 'undefined') {
+                                this._isLoadedObservers = { observers: {} };
+                            }
+                            liquid.setupObservation(this, {name: 'isLoaded'}, this._isLoadedObservers);
+                            return !this._noDataLoaded;
+                        }
+                    } else {
+                        return true;
+                    }
+                };
+
                 object.is = function(className) {
                     return typeof(this.classNames[className]) !== 'undefined';
                 };

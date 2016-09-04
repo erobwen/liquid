@@ -388,10 +388,9 @@ liquid.getSubscriptionUpdate = function(page) {
 	if (page._dirtySubscriptions) {
 		liquid.uponChangeDo(function() {
 			var selection = {};
-			page.getSubscriptions().forEach(function(subscription) {
-				var targetId = subscription._targetObjectUpstreamId;
-				var selectorSuffix = capitaliseFirstLetter(subscription._selectorSuffix);
-				var object = liquid.getEntity(targetId);
+			page.getOrderedSubscriptions().forEach(function(subscription) {
+				var object = subscription._relationInstances['Subscription_TargetObject'].data; // silent get
+				var selectorSuffix = capitaliseFirstLetter(subscription._propertyInstances['selector'].data); // Silent get
 				console.log("--- Considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
 				var selectorFunctionName = 'select' + selectorSuffix;
 

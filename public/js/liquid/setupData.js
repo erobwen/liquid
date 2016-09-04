@@ -12,6 +12,7 @@ var start = new Date().getTime();
 liquid.pulse('upstream', function() {
 	console.log("serialize 0");
 	unserializeFromUpstream(data.subscriptionInfo.addedSerialized);
+
 	console.log("serialize 1");
 });
 var end = new Date().getTime();
@@ -19,10 +20,10 @@ var time = (end - start);
 console.log("Time to unserialize: " + time + " milliseconds.");
 
 console.log("");console.log("=== Page: ===");
-
 // Setup global variables for page and session objects
 liquid.instancePage = liquid.getUpstreamEntity(data.pageUpstreamId);
 window.page = liquid.instancePage;
+liquid.instancePage.setReceivedSubscriptions(liquid.instancePage.getOrderedSubscriptions());
 console.log(liquid.instancePage);
 
 console.log("");console.log("=== Unserialized: ===");

@@ -63,7 +63,7 @@ liquid.pulse('local', function() {
         var session = liquid.createOrGetSessionObject(req);
         session.setUser(user);
         var page = create('LiquidPage', {Session: session});
-        page.addSubscription(create('Subscription', {object: user, selector:'all'}));
+        page.addOrderedSubscription(create('Subscription', {object: user, selector:'all'}));
         return page;
     }
 
