@@ -218,6 +218,9 @@ function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is und
 		console.log("unserializeFromUpstream: " + serialized.id);
 		unserializeUpstreamObject(serialized);
 	});
+	if (typeof(liquid.instancePage) !== 'undefined') {
+		liquid.instancePage.upstreamPulseReceived();
+	}
 }
 
 

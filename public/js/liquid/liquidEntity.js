@@ -52,16 +52,28 @@ var addLiquidEntity = function(liquid) {
             addMethods : function(object) {
                 object.overrideMethod('init', function(parent, initData) {
                     parent(initData);
+
+                    // Server variables
                     this._selection = {};
                     this._dirtySubscriptions = true;
                     this._socket = null;
+
+                    // Client variables
+                    this._requestingSubscription = false;
+                    this._subscriptionQueue = [];
 
                     var hardToGuessPageId = liquid.generatePageId();
                     liquid.pagesMap[hardToGuessPageId] = this;
                     this.setHardToGuessPageId(hardToGuessPageId);
                     this.addOrderedSubscription(create('Subscription', {selector: 'Basics', object: this}));
                 });//Subscription
-                
+
+                object.addMethod('upstreamPulseReceived', function() {
+                    this.setReceivedSubscription(this.getOrderedSubscription()); // TODO: Consider, what happens if two subscriptions are requested at the same time?
+                    this._requestingSubscription = false;
+                    this.checkLoadQueue();
+                });
+
                 object.addMethod('encryptPassword', function(liquidPassword) {
                     return liquidPassword + " [encrypted]";
                 });
@@ -82,6 +94,43 @@ var addLiquidEntity = function(liquid) {
                     });
                 });
 
+                object.addMethod('checkLoadQueue', function() {
+                    if (!this._requestingSubscription) {
+                        this._requestingSubscription = true;
+                        if (this._subscriptionQueue.length > 0) {
+                            var subscription = this._subscriptionQueue.unshift();
+                            subscription.setParent(subscription._parentSubscription);
+                            this.addOrderedSubscription(subscription);
+                        }
+                    }
+                });
+
+                object.addMethod('ensureLoaded', function(object, selector, prioritized, loadedCallback) { // TODO: Optional parent subscription.
+                    var loadedSelections = this.getLoadedSelectionsFor(object);
+                    if (typeof(loadedSelections[selector]) === 'undefined') {
+                        // Find a parent subscription.
+                        var parentSubscription = null;
+                        for (selector in loadedSelections) {
+                            var firstSelection = loadedSelections[selector];
+                            parentSubscription = firstSelection[Object.keys(firstSelection)[0]];// Just take the first one, as good as anyone.
+                            break;
+                        }
+
+                        var subscription = create('Subscription', {selector: selector, object: object}); // , Parent : parentSubscription
+                        subscription._parentSubscription = parentSubscription;
+                        subscription._loadedCallback = loadedCallback;
+                        this._requestingSubscription = false;
+
+                        if (!prioritized) {
+                            this._subscriptionQueue.push(subscription);
+                        } else {
+                            this._subscriptionQueue.shift(subscription);
+                        }
+                        this.checkLoadQueue();
+
+                    }
+                });
+
                 object.addMethod('getLoadedSelectionsFor', function(object) {
                     var idToSelectorsMap = this.cachedCall('getAllReceivedSelections');
                     return idToSelectorsMap[object._id];
@@ -89,8 +138,9 @@ var addLiquidEntity = function(liquid) {
 
                 object.addMethod('getAllReceivedSelections', function() {
                     liquid.recordSelectors = true;
-                    liquid.idToSelectorsMap = {};
+                    liquid.idToSelectorsMap = {}; // Structure {id -> {selector -> {subscriptionId -> subscription}}}
                     this.getReceivedSubscriptions().forEach(function(subscription) {
+                        liquid.recordingSubscription = subscription;
                         var selection = {};
                         var selectorFunctionName = capitalizeFirstLetter(selection.getSelector());
                         subscription.getTargetObject()[selectorFunctionName](selection);

@@ -23,6 +23,7 @@ console.log("");console.log("=== Page: ===");
 // Setup global variables for page and session objects
 liquid.instancePage = liquid.getUpstreamEntity(data.pageUpstreamId);
 window.page = liquid.instancePage;
+
 liquid.instancePage.setReceivedSubscriptions(liquid.instancePage.getOrderedSubscriptions());
 console.log(liquid.instancePage);
 

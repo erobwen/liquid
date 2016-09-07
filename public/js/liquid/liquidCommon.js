@@ -723,18 +723,37 @@ var addCommonLiquidFunctionality = function(liquid) {
 		delete object.addProperty;
 		delete object.addRelation;
 		delete object.addReverseRelationTo;
-		
+
+
+
+
+
 		// Add methods and repeaters
 		object.addMethod = function(methodName, method) {
-			var methodWithPossibleSecurity = method;
-			if (arguments.length > 2 && liquid.onServer) {
-				var methodRoleOnServer = arguments[2];
-				methodWithPossibleSecurity = function() {
-					method.apply(this, argumentsToArray(argumentList));
-				};
+			if (methodName.indexOf("select") === 0) {
+				var selectionName = methodName.substring(6);
+				// liquid.recordSelectors = true;
+				// liquid.idToSelectorsMap = {}; // Structure {id -> {selector -> {subscriptionId -> subscription}}}
+
+				object[methodName] = function() {
+					if (liquid.recordSelectors) {
+						if (typeof(liquid.idToSelectorsMap[this._id]) === 'undefined') {
+							liquid.idToSelectorsMap[this._id] = {};
+						}
+						var selectorsMap = liquid.idToSelectorsMap[this._id];
+						if (typeof(selectorsMap[selectionName]) === 'undefined') {
+							selectorsMap[selectionName] = [];
+						}
+						selectorsMap[selectionName][liquid.recordingSubscription._id] = liquid.recordingSubscription;
+						
+						method.apply(this, argumentsToArray(arguments));
+					} else {
+						return method.apply(this, argumentsToArray(arguments));
+					}
+				}.bind(this);
+			} else {
+				object[methodName] = method;
 			}
-			
-			object[methodName] = methodWithPossibleSecurity;
 		};
 		
 		object.overrideMethod = function(methodName, method) {
@@ -897,7 +916,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property getter
 		object[definition.getterName] = function() {
-			console.log("Get property: " + this._ + "." + definition.getterName + "()");
+			// console.log("Get property: " + this._ + "." + definition.getterName + "()");
 			if (typeof(this._propertyInstances[definition.name]) !== 'undefined') {
 				var instance = this._propertyInstances[definition.name];
 				liquid.setupObservation(this, definition, instance);
@@ -910,7 +929,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property setter
 		object[definition.setterName] = function(value) {
-			console.log("Set property: " + this._ + "." + definition.setterName + "(" + value + ")");
+			// console.log("Set property: " + this._ + "." + definition.setterName + "(" + value + ")");
 			var instance = this._propertyInstances[definition.name];
 			var oldValue = instance.data;
 			if (value != oldValue) {
@@ -1005,8 +1024,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 			object[definition.getterName] = function() {
 				console.log("Getting single relation: " + this.__() + "." + definition.name);
 				if (allowRead(this, liquid.page)) {
+					console.log("A");
+					console.log(this);
 					var instance = this._relationInstances[definition.qualifiedName];
 					liquid.setupObservation(this, definition,  instance);
+					console.log("B");
 					if (typeof(instance.data) === 'undefined') {
 						// if (this.isSaved) {
 						var relatedObject = liquid.loadSingleRelation(this, definition, instance);
@@ -1025,7 +1047,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 			// Member: Reverse single getter
 			object[definition.getterName] = function() {
-				console.log("Getting single relation (reverse): " + this.__() + "." + definition.name);
+				// liquid.inPulse(function(pulse) {
+				// 	var instance = this._relationInstances[definition.qualifiedName];
+				// 	// pulse.add(this, 'getter', definition.getterName, definition, instance);
+				//
+				// }.bind(this));
+
+				// console.log("Getting single relation (reverse): " + this.__() + "." + definition.name);
 				// if (allowRead(this, definition)) {
 				var instance = this._relationInstances[definition.qualifiedName];
 				liquid.setupObservation(this, definition, instance);
@@ -1064,7 +1092,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 				if (allowWrite(this, liquid.page)) {
 					var previousValue = this[definition.getterName]();
 					if (previousValue != newValue) {
+						// console.log("A");
 						liquid.blockObservation(function() {
+							// console.log("B");
 							var instance = this._relationInstances[definition.qualifiedName];
 
 							// Delete previous relation.
@@ -1075,6 +1105,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 							// Set new relation.
 							var instance = this._relationInstances[definition.qualifiedName];
 							instance.data = newValue;
+							// console.log("C");
 
 							if (newValue !== null) {
 								liquid.addIncomingRelation(newValue, definition.qualifiedName, this);

@@ -270,6 +270,9 @@ var pluralize = function(string, revert){
     return string;
 };
 
+var startsWith = function(prefix, string) {
+    return (prefix === string.substr(0, prefix.length));
+}
 
 var camelCaseToPlural = function(string) {
 	var words = breakdownCamelCase(string);

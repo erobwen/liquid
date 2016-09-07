@@ -2,7 +2,12 @@
 var addLiquidSelectionFunctionality = function(liquid) {
 
 	liquid.addToSelection = function(selection, object) {
-		selection[object._id] = true;
+		if (object !== null) {
+			console.log("Added: " + object._);
+			selection[object._id] = true;
+		} else {
+			console.log("Nothing to add!");
+		}
 	};
 }
 
