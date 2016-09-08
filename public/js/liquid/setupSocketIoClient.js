@@ -41,7 +41,7 @@ socket.on('pushSubscriptionChanges', function(changes){
 		
 		unserializeFromUpstream(result.serializedObjects);
 
-		liquid.blockObservation(function() {
+		liquid.blockUponChangeActions(function() {
 			changes.events.forEach(function(event) {
 				if (event.action === 'addingRelation') {
 					var object = liquid.getUpstreamEntity(event.objectId);

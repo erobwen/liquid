@@ -6,7 +6,7 @@
 var addCommonLiquidFunctionality = function(liquid) {	 
 		
 	/**--------------------------------------------------------------------------------
-	*                 Initialize (do after all application classes has been added)
+	*         Initialize (do after all application classes has been added)
 	*----------------------------------------------------------------------------------*/
  
 	liquid.initialize = function() {
@@ -84,7 +84,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if (typeof(originator) === 'string') {
 			console.log(originator);
 		} else {
-			console.log("downstream page: " + originator.hardToGuessPageId());
+			console.log("downstream page: " + originator.getHardToGuessPageId());
 		}
 
 		// Setup pulse data
@@ -112,7 +112,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// neo4j.resetStatistics();
 		console.log("-- Pulse action start --");
 		// Pulse action that adds original events
-		action();    // some repeater events might be here too, interleved with original events!!!
+		action(liquid.activePulse);    // some repeater events might be here too, interleved with original events!!!
 		console.log("-- Pulse action end --");
 
 		// Display measures.
@@ -144,14 +144,29 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.pushDataUpstream = function(){};
 	liquid.pushDataToPersistentStorage = function(){};
 
-	liquid.startOrAddToPulse = function(event) {
+	liquid.inPulseBlockUponChangeActions = function(action) {
 		if (liquid.activePulse === null) {
-			liquid.pulse('local', function() { // We assume it is a local pulse if not explicitly started. 
-				liquid.activePulse.add(event);
+			liquid.pulse('local', function(pulse) { // We assume it is a local pulse if not explicitly started.
+				liquid.blockUponChangeActions(function() {
+					action(pulse);
+				});
+			});
+			return;
+		} else {
+			action(liquid.activePulse);
+		}
+	};
+
+	liquid.inPulse = function(action) {
+		if (liquid.activePulse === null) {
+			liquid.pulse('local', function(pulse) { // We assume it is a local pulse if not explicitly started.
+				action(pulse);
+				// liquid.activePulse.add(event);
 			});// Here the pulse is finished.
 			return;
+		} else {
+			action(liquid.activePulse);
 		}
-		liquid.activePulse.add(event);
 	};
 
 
@@ -329,7 +344,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	// };
 	
 	liquid.normalizeRelation = function(definition, details) {
-		property.type = "relation";
+		definition.type = "relation";
 		// definition.isLoaded = false;
 		// Interpret undefined as false
 		if(typeof(definition.isSet) == 'undefined') definition.isSet = false;
@@ -598,25 +613,28 @@ var addCommonLiquidFunctionality = function(liquid) {
 			_reverseRelations : {}  // qualifiedRelationName of incoming relation -> relation
 		};
 		liquid.addCommonInstanceFields(object);
-		for (property in values) {
+		for (var property in values) {
 			object[property] = values[property];
 		}
 		return object;
 	};
 	
 	liquid.setupInstanceFields = function(object, prototypeObject) {
-		// function cloneInstance(instance) {
-		// }
 		object._id = null;
 		object._upstreamId = null;
 		object._persistentId = null;
 		object._globalId = null;
 		object._persistedDirectly = false;
 		
-		object._incomingRelations = clone(prototypeObject._incomingRelations);   // A general store of all incoming relations. This way we always have back-references!!! (this is important for any kind of garbage collection, or freeing up of memory)
-		// Note:  Clone will only work as long as instance data is empty!
-		object._relationInstances = clone(prototypeObject._relationInstances);   // relationName (qualified?) -> relation
-		object._propertyInstances = clone(prototypeObject._propertyInstances);   // propertyName -> property		
+		object._incomingRelations = {};
+		object._relationInstances = {};
+		for (var relationQualifiedName in (prototypeObject._relationDefinitions)) {
+			object._relationInstances[relationQualifiedName] = {observers: {}};
+		}
+		object._propertyInstances = {};   // propertyName -> property
+		for (var propertyName in prototypeObject._propertyDefinitions) {
+			object._propertyInstances[propertyName] = {observers: {}};
+		}
 
 		// Client only
 		object._noDataLoaded = false;  // Means, if any more information that entity id and class name has been loaded. Only used on client? 
@@ -646,12 +664,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 		
 	
-	/**--------------------------------------------------------------
-	*              Modification of incoming relations
-	*----------------------------------------------------------------*/
+	/**------------------------------------------------------------------------------
+	*              Modification of incoming relations (has to be in a pulse!!!)
+	*--------------------------------------------------------------------------------*/
 		
 	liquid.addIncomingRelation = function(object, incomingRelationQualifiedName, referingObject) {
-		// console.log("addIncomingRelation: " + object.__() + " <-- [" + incomingRelationQualifiedName + "]-- " + referingObject.__());
+		console.log("addIncomingRelation: " + object.__() + " <-- [" + incomingRelationQualifiedName + "]-- " + referingObject.__());
 		// Add in incoming relations, create a new map if necessary
 		if (typeof(object._incomingRelations[incomingRelationQualifiedName]) === 'undefined') {
 			object._incomingRelations[incomingRelationQualifiedName] = {};
@@ -662,7 +680,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if (typeof(object._reverseRelations[incomingRelationQualifiedName]) !== 'undefined') {
 			var reverseDefinition = object._reverseRelations[incomingRelationQualifiedName];
 			var reverseInstance = object._relationInstances[reverseDefinition.qualifiedName];
-			liquid.startOrAddToPulse({redundant: true, action: 'addingReverseRelation', object: object, definition: reverseDefinition, instance: reverseInstance, relatedObject: referingObject});
+			liquid.activePulse.add({redundant: true, action: 'addingReverseRelation', object: object, definition: reverseDefinition, instance: reverseInstance, relatedObject: referingObject});
 			if (reverseDefinition.isSet) {
 				if (typeof(reverseInstance.data) === 'undefined') {
 					reverseInstance.data = [];
@@ -685,7 +703,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if (typeof(object._reverseRelations[incomingRelationQualifiedName])) {
 			var reverseDefinition = object._reverseRelations[incomingRelationQualifiedName];
 			var reverseInstance = object._relationInstances[reverseDefinition.qualifiedName];
-			liquid.startOrAddToPulse({redundant: true,  action: 'deletingReverseRelation', object: object, definition: reverseDefinition, instance: reverseInstance , relatedObject: referingObject});
+			liquid.activePulse.add({redundant: true,  action: 'deletingReverseRelation', object: object, definition: reverseDefinition, instance: reverseInstance , relatedObject: referingObject});
 			if (typeof(reverseInstance.data) !== 'undefined') {
 				if (reverseDefinition.isSet) {
 					removeFromArray(referingObject, reverseInstance.data);
@@ -750,7 +768,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					} else {
 						return method.apply(this, argumentsToArray(arguments));
 					}
-				}.bind(this);
+				};
 			} else {
 				object[methodName] = method;
 			}
@@ -916,10 +934,10 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property getter
 		object[definition.getterName] = function() {
-			// console.log("Get property: " + this._ + "." + definition.getterName + "()");
+			console.log("Get property: " + this._ + "." + definition.getterName + "()");
 			if (typeof(this._propertyInstances[definition.name]) !== 'undefined') {
 				var instance = this._propertyInstances[definition.name];
-				liquid.setupObservation(this, definition, instance);
+				liquid.registerObserverTo(this, definition, instance);
 				return instance.data;
 			} else {
 				// return clone(definition.defaultValue);
@@ -929,13 +947,16 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property setter
 		object[definition.setterName] = function(value) {
-			// console.log("Set property: " + this._ + "." + definition.setterName + "(" + value + ")");
+			console.log("Set property: " + this._ + "." + definition.setterName + "(" + value + ")");
 			var instance = this._propertyInstances[definition.name];
 			var oldValue = instance.data;
 			if (value != oldValue) {
 				if (allowWrite(this, liquid.page)) {
-					instance.data = value;
-					liquid.startOrAddToPulse({redundant: false, action: 'settingProperty', object: object, definition: definition, instance: instance, newValue: value, oldValue: oldValue});
+					liquid.inPulseBlockUponChangeActions(function(pulse) {
+						instance.data = value;
+						pulse.add({redundant: false, action: 'settingProperty', object: this, definition: definition, instance: instance, newValue: value, oldValue: oldValue});
+						this._ = this.__(); // Update debug info upon every set property.
+					}.bind(this));
 				} else {
 					console.log("Access violation: " + this.__() + "." + definition.setterName + "(...) not allowed by page/user");
 				}
@@ -964,7 +985,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		};
 		var relationInstance = {  // Not used if object is a prototype
 			observers: {}
-		}
+		};
 		liquid.normalizeRelation(relationDefinition, details);
 		liquid.registerRelation(object, relationDefinition, relationInstance);
 		
@@ -988,7 +1009,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if (definition.isReverseRelation) {
 			object._reverseRelations[definition.incomingRelationQualifiedName] = definition; // To instance also?
 		}
-	}
+	};
 	
 	liquid.addReverseRelationTo = function(object, otherRelationQualifiedName, name, cardinality, details) {
 		// var isReverseRelationOfParts = isReverseRelationOf.split('.');
@@ -1024,11 +1045,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 			object[definition.getterName] = function() {
 				console.log("Getting single relation: " + this.__() + "." + definition.name);
 				if (allowRead(this, liquid.page)) {
-					console.log("A");
-					console.log(this);
 					var instance = this._relationInstances[definition.qualifiedName];
-					liquid.setupObservation(this, definition,  instance);
-					console.log("B");
+					liquid.registerObserverTo(this, definition,  instance);
 					if (typeof(instance.data) === 'undefined') {
 						// if (this.isSaved) {
 						var relatedObject = liquid.loadSingleRelation(this, definition, instance);
@@ -1047,7 +1065,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 			// Member: Reverse single getter
 			object[definition.getterName] = function() {
-				// liquid.inPulse(function(pulse) {
+				// pulse.add(function(pulse) {
 				// 	var instance = this._relationInstances[definition.qualifiedName];
 				// 	// pulse.add(this, 'getter', definition.getterName, definition, instance);
 				//
@@ -1056,7 +1074,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				// console.log("Getting single relation (reverse): " + this.__() + "." + definition.name);
 				// if (allowRead(this, definition)) {
 				var instance = this._relationInstances[definition.qualifiedName];
-				liquid.setupObservation(this, definition, instance);
+				liquid.registerObserverTo(this, definition, instance);
 				if (typeof(instance.data) === 'undefined') {
 					// if (this.isSaved) {
 					instance.data = null;
@@ -1093,16 +1111,19 @@ var addCommonLiquidFunctionality = function(liquid) {
 					var previousValue = this[definition.getterName]();
 					if (previousValue != newValue) {
 						// console.log("A");
-						liquid.blockObservation(function() {
+						liquid.inPulseBlockUponChangeActions(function(pulse) {
 							// console.log("B");
 							var instance = this._relationInstances[definition.qualifiedName];
+							pulse.add({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: instance, value: newValue, previousValue: previousValue});
 
 							// Delete previous relation.
+							pulse.add({redundant: false,  action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: previousValue});
 							if (previousValue !== null) {
 								liquid.deleteIncomingRelation(previousValue, definition.qualifiedName, this);
 							}
 
 							// Set new relation.
+							pulse.add({redundant: false,  action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: newValue});
 							var instance = this._relationInstances[definition.qualifiedName];
 							instance.data = newValue;
 							// console.log("C");
@@ -1110,10 +1131,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 							if (newValue !== null) {
 								liquid.addIncomingRelation(newValue, definition.qualifiedName, this);
 							}
-
-							liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: instance, value: newValue, previousValue: previousValue});
-							liquid.startOrAddToPulse({redundant: false,  action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: newValue});
-							liquid.startOrAddToPulse({redundant: false,  action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: previousValue});
 						}.bind(this));
 						return true;
 					} else {
@@ -1132,7 +1149,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				console.log("Set single relation (reverse): " + this.__() + "." + definition.name + " = " + newValue.__());
 				var previousValue = this[definition.getterName]();
 				if (previousValue !== newValue) {
-					liquid.blockObservation(function() {
+					liquid.inPulseBlockUponChangeActions(function(pulse) {
 						if (previousValue != null) {
 							var incomingRelation = previousValue._relationDefinitions[incomingRelationQualifiedName];
 							if (!incomingRelation.isSet) {
@@ -1186,7 +1203,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					if (typeof(instance.data) === 'undefined') {
 						liquid.loadSetRelation(this, definition, instance);
 					}
-					liquid.setupObservation(this, definition, instance);
+					liquid.registerObserverTo(this, definition, instance);
 					instance.data.forEach(function(child) {
 						action(child);
 					}.bind(this));
@@ -1207,7 +1224,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					}
 					// console.log("instance.data:");
 					// console.log(instance.data);
-					liquid.setupObservation(this, definition, instance);
+					liquid.registerObserverTo(this, definition, instance);
 					return instance.data;
 				} else {
 					console.log("Access violation: " + this.__() + "." + definition.forAllName + "() not allowed by page/user");
@@ -1224,14 +1241,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 				}
 				var difference = arrayDifference(newSet, instance.data);
 				if (difference.added.length > 0 || difference.removed.length > 0) {
-					liquid.blockObservation(function() {
+					liquid.inPulseBlockUponChangeActions(function(pulse) {
 						difference.added.forEach(function(added) {
 							this[definition.adderName](added);
 						}.bind(this));
 						difference.removed.forEach(function(removed) {
 							this[definition.removerName](removed);
 						}.bind(this));
-						liquid.startOrAddToPulse({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: null, value: newSet, previousValue: null});
+						pulse.add({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: null, value: newSet, previousValue: null});
 					}.bind(this));
 					return true;
 				} else {
@@ -1252,15 +1269,15 @@ var addCommonLiquidFunctionality = function(liquid) {
 					}
 
 					if (!inArray(added, instance.data)) {
-						liquid.blockObservation(function() {
+						liquid.inPulseBlockUponChangeActions(function(pulse) {
 
 							liquid.addIncomingRelation(added, definition.qualifiedName, this);
 
 							instance.data.push(added); //TODO: Create copy of array here?
 							liquid.sortRelationOnElementChange(definition, instance);
 
-							liquid.startOrAddToPulse({redundant: false, action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: added});
-							liquid.startOrAddToPulse({redundant: true, action: 'relationReordered', object: this, definition: definition, instance: instance, relatedObject: added});
+							pulse.add({redundant: false, action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: added});
+							pulse.add({redundant: true, action: 'relationReordered', object: this, definition: definition, instance: instance, relatedObject: added});
 						}.bind(this));
 						return true;
 					} else {
@@ -1284,12 +1301,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 				}
 				removed._tag = true;
 				if (inArray(removed, instance.data)) {
-					liquid.blockObservation(function() {
+					liquid.inPulseBlockUponChangeActions(function(pulse) {
 						removeFromArray(removed, instance.data); //TODO: Create copy of array here?
 
 						liquid.deleteIncomingRelation(removed, definition.qualifiedName, this);
 
-						liquid.startOrAddToPulse({redundant: false, action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: removed});
+						pulse.add({redundant: false, action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: removed});
 						return true;
 					}.bind(this));
 				} else {
@@ -1309,7 +1326,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				if (typeof(instance.data) === 'undefined') {
 					liquid.loadReverseSetRelation(this, definition, instance);
 				}
-				liquid.setupObservation(this, definition, instance);
+				liquid.registerObserverTo(this, definition, instance);
 				instance.data.forEach(function(child) {
 					action(child);
 				}.bind(this));
@@ -1323,7 +1340,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				if (typeof(instance.data) === 'undefined') {
 					liquid.loadReverseSetRelation(this, definition, instance);
 				}
-				liquid.setupObservation(this, definition, instance);
+				liquid.registerObserverTo(this, definition, instance);
 				return instance.data;
 			};
 
@@ -1339,7 +1356,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				// console.log(instance.data);
 				var difference = arrayDifference(newSet, instance.data);
 				if (difference.added.length > 0 || difference.removed.length > 0) {
-					liquid.blockObservation(function() {
+					liquid.blockUponChangeActions(function() {
 						difference.added.forEach(function(added) {
 							//console.log(definition.adderName);
 							//console.log(this);
@@ -1356,38 +1373,40 @@ var addCommonLiquidFunctionality = function(liquid) {
 			};
 
 			// Member: Incoming set adder (just relays to incoming relation, no notification and no actual manipulation)
-			object[definition.adderName] = function(added) { // TODO: Add to pulse? But how to know if the event was rejected?
+			object[definition.adderName] = function(added) { // TODO: Add to pulse? But how to know if the event was rejected? We have to just give a chance!
 				console.log("Add to set (reverse): " + this.__() + "." + definition.adderName + "(" + added.__() + ")");
-
-				var incomingDefinition = added._relationDefinitions[incomingRelationQualifiedName];
-				var actuallyAdded = false;
-				if (incomingDefinition.isSet) {
-					actuallyAdded = added[incomingDefinition.adderName](this);
-				} else {
-					actuallyAdded = added[incomingDefinition.setterName](this);
-				}
-				if (actuallyAdded) {
-					var incomingInstance = added._relationInstances[incomingRelationQualifiedName];
-					liquid.startOrAddToPulse({redundant: true, action: 'addingRelation', object: this, definition: incomingDefinition, instance: incomingInstance, relatedObject: added});
-				}
+				liquid.inPulseBlockUponChangeActions(function(pulse) {
+					var incomingDefinition = added._relationDefinitions[incomingRelationQualifiedName];
+					var actuallyAdded = false;
+					if (incomingDefinition.isSet) {
+						actuallyAdded = added[incomingDefinition.adderName](this);
+					} else {
+						actuallyAdded = added[incomingDefinition.setterName](this);
+					}
+					if (actuallyAdded) {
+						var incomingInstance = added._relationInstances[incomingRelationQualifiedName];
+						pulse.add({redundant: true, action: 'addingRelation', object: this, definition: incomingDefinition, instance: incomingInstance, relatedObject: added});
+					}
+				}.bind(this));
 			};
 
 			// Member: Incoming set remover (just relays to incoming relation, no notification and no actual manipulation)
 			object[definition.removerName] = function(removed) {
 				console.log("Remove from set (reverse): " + this.__() + "." + definition.removerName + "(" + removed.__() + ")");
-
-				console.log(definition.removerName + "(...)");
-				var incomingDefinition = removed._relationDefinitions[incomingRelationQualifiedName];
-				var actuallyRemoved = false;
-				if (incomingDefinition.isSet) {
-					actuallyRemoved = removed[incomingDefinition.removerName](this);
-				} else {
-					actuallyRemoved = removed[incomingDefinition.setterName](null);
-				}
-				if (actuallyRemoved) {
-					var incomingInstance = added._relationInstances[incomingRelationQualifiedName];
-					liquid.startOrAddToPulse({redundant: true, action: 'addingRelation', object: this, definition: incomingDefinition, instance: incomingInstance, relatedObject: added});
-				}
+				liquid.inPulseBlockUponChangeActions(function(pulse) {
+					console.log(definition.removerName + "(...)");
+					var incomingDefinition = removed._relationDefinitions[incomingRelationQualifiedName];
+					var actuallyRemoved = false;
+					if (incomingDefinition.isSet) {
+						actuallyRemoved = removed[incomingDefinition.removerName](this);
+					} else {
+						actuallyRemoved = removed[incomingDefinition.setterName](null);
+					}
+					if (actuallyRemoved) {
+						var incomingInstance = added._relationInstances[incomingRelationQualifiedName];
+						pulse.add({redundant: true, action: 'addingRelation', object: this, definition: incomingDefinition, instance: incomingInstance, relatedObject: added});
+					}
+				}.bind(this));
 			};
 		}
 	};

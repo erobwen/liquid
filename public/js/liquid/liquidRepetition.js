@@ -44,11 +44,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		return returnValue;
 	};
 
-	liquid.setupObservation = function(object, definition, instance) { // instance can be a cached method if observing its return value, object & definition only needed for debugging.
+	liquid.registerObserverTo = function(object, definition, instance) { // instance can be a cached method if observing its return value, object & definition only needed for debugging.
 		if (liquid.activeRecorders.length > 0) {
 			// stackDump();
 			if (traceRepetition) {
-				console.log("setupObservation: " + object._ + "." + definition.name);
+				console.log("registerObserverTo: " + object._ + "." + definition.name);
 			}
 			var activeRecorder = liquid.activeRecorders[liquid.activeRecorders.length - 1];
 			// console.log("Reading property " + object.__() + "." + instance + " with repeater " + activeRecorder.id);
@@ -79,12 +79,12 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 	var dirtyRecorders = [];
 
-	var observationBlocked = 0;
-	liquid.blockObservation = function(callback) {
-		observationBlocked++;
+	liquid.observationBlocked = 0;
+	liquid.blockUponChangeActions = function(callback) {
+		liquid.observationBlocked++;
 		callback();
-		observationBlocked--;
-		if (observationBlocked == 0) {
+		liquid.observationBlocked--;
+		if (liquid.observationBlocked == 0) {
 			while (dirtyRecorders.length > 0) {
 				var recorder = dirtyRecorders.shift()
 				liquid.blockSideEffects(function() {
@@ -114,7 +114,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		}
 
 		liquid.removeObservation(recorder); // Cannot be any more dirty than it already is!
-		if (observationBlocked > 0) {
+		if (liquid.observationBlocked > 0) {
 			dirtyRecorders.push(recorder);
 		} else {
 			liquid.blockSideEffects(function() {
@@ -313,7 +313,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			var methodName = argumentsArray.shift();
 			var methodArguments = argumentsArray;
 
-			stackDump();
+			// stackDump();
 			console.log(this.__() + '.[cachedCall]' +  methodName);
 			
 			// Establish method caches
@@ -359,13 +359,13 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						liquid.recordersDirty(methodCache.observers);
 					}.bind(this));
 				methodCache.returnValue = returnValue;
-				liquid.setupObservation(this, {name: methodName}, methodCache);
+				liquid.registerObserverTo(this, {name: methodName}, methodCache);
 				return returnValue;
 			} else {
 				// Encountered these arguments before, reuse previous repeater
 				console.log("Cached method seen before ...");
 				var methodCache = methodCaches[argumentHash];
-				liquid.setupObservation(this, {name: methodName}, methodCache);
+				liquid.registerObserverTo(this, {name: methodName}, methodCache);
 				return methodCache.returnValue;
 			}
 		}
@@ -575,13 +575,13 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 						}
 					}.bind(this));
 
-				liquid.setupObservation(this, {name: methodName}, projectionRepeater);
+				liquid.registerObserverTo(this, {name: methodName}, projectionRepeater);
 				return projection.establishedReturnValue;
 			} else {
 				// Encountered these arguments before, reuse previous repeater
 				console.log("Cached method seen before ...");
 				var projectionRepeater = projections[argumentHash];
-				liquid.setupObservation(this, {name: methodName}, projectionRepeater);
+				liquid.registerObserverTo(this, {name: methodName}, projectionRepeater);
 				return projectionRepeater.returnValue;
 			}
 		}

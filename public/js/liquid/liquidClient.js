@@ -74,7 +74,7 @@ function serializeEventForUpstream(event) {
 	}
 
 	if (event.definition.type === 'relation') {
-		serialized.relationName = event.definition.qualifiedName;
+		serialized.relationQualifiedName = event.definition.qualifiedName;
 
 		if (typeof(event.relatedObject) !== 'undefined') {
 			if (event.relatedObject._upstreamId !== null) {
@@ -95,6 +95,8 @@ liquid.pushDataUpstream = function() {
 	// console.log("Not yet!");
 	// return;
 	if (typeof(liquid.upstreamSocket) !== undefined) {
+		console.group("Push data upstream");
+
 		// Find data that needs to be pushed upstream
 		var requiredObjects = {};
 		function addRequiredCascade(object, requiredObjects) {
@@ -124,8 +126,10 @@ liquid.pushDataUpstream = function() {
 
 		var serializedEvents = [];
 		liquid.activePulse.events.forEach(function(event) {
+			console.log(event);
 			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
 			if (!event.redundant && !eventIsFromUpstream) {
+				console.log("not from upstream");
 				if (event.object._upstreamId !== null) {
 					serializedEvents.push(serializeEventForUpstream(event));
 				} else if (typeof(requiredObjects[event.object._id]) !== 'undefined') {
@@ -139,6 +143,8 @@ liquid.pushDataUpstream = function() {
 			downstreamIdToSerializedObjectMap : downstreamIdToSerializedObjectMap
 		};
 
+		console.log(pulse);
+		console.groupEnd();
 		if (typeof(liquid.pushDownstreamPulseToServer) !== 'undefined') {
 			liquid.pushDownstreamPulseToServer(pulse);
 		}

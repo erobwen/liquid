@@ -133,7 +133,7 @@ liquidSocket.on('connection', function (socket) {
 			if (typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
 				var page = liquid.pagesMap[hardToGuessPageId];
 				liquid.pulse(page, function() {
-					unserializeDownstreamPulse(pulseData);
+					liquid.unserializeDownstreamPulse(pulseData);
 				});
 			} else {
 				socket.emit('disconnectedDueToInactivityOrServerFault'); // TODO: Consider create new page?

@@ -39,10 +39,12 @@ var focusComponent = function(component) {
 var componentsNeedOfForceUpdate = [];
 liquid.addNoMoreDirtyRepeaterCallback(function() {
 	console.group("=== Updating user interface ===");
+	// stackDump();
 	console.log("Starting UI update with " + componentsNeedOfForceUpdate.length + " required updates");
 	componentsNeedOfForceUpdate.forEach(function(component) {
-		// console.log(component);
+		// console.log("Force update!");
 		if (component._mounted) {
+			// console.log("Actual force update!");
 			component.forceUpdate();
 		}
 	});
@@ -135,6 +137,7 @@ var invalidateUponLiquidChange = function(className, component, renderFunction) 
 	component._ = "<" + className + " />";
 	return uponChangeDo("Component:" + className,
 	function() {
+		// console.log("Actually rendering!");
 		var element = renderFunction();
 		console.groupEnd();
 		return element;

@@ -449,8 +449,7 @@ liquid.getSubscriptionUpdate = function(page) {
 		page._idToDownstreamIdMap = null;
 	}
 
-
-	console.log(result);
+	// console.log(result);
 	return result;
 
 	/**
@@ -513,7 +512,8 @@ liquid.pushDataDownstream = function() {
 //  {action: addingRelation, objectDownstreamId:45, relationName: 'Foobar', relatedObjectDownstreamId:45 }
 //  {action: settingProperty, objectDownstreamId:45, propertyName: 'Foobar', propertyValue: 'Some string perhaps'}
 
-function unserializeDownstreamPulse(pulseData) {
+liquid.unserializeDownstreamPulse = function(pulseData) {
+	// console.log(pulseData);
 	var downstreamIdToSerializedObjectMap = pulseData.downstreamIdToSerializedObjectMap;
 	var downstreamIdToObjectMap = {};
 	
@@ -533,7 +533,7 @@ function unserializeDownstreamPulse(pulseData) {
 	}
 	
 	function ensureRelatedObjectsUnserialized(event) {
-		ensureObjectUnserialized(undefinedAsNull(event.relatedObjectId), undefinedAsNull(event.relatedObjectDownstreamId));
+		return ensureObjectUnserialized(undefinedAsNull(event.relatedObjectId), undefinedAsNull(event.relatedObjectDownstreamId));
 	}
 
 	function ensureObjectUnserialized(id, downstreamId) {
@@ -573,12 +573,12 @@ function unserializeDownstreamPulse(pulseData) {
 		return newObject;
 	}
 	
-	liquid.blockObservation(function() {
+	liquid.blockUponChangeActions(function() {
 		pulseData.serializedEvents.forEach(function(event) {
 			if (typeof(event.objectId) !== 'undefined' || typeof(downstreamIdToObjectMap[event.downstreamObjectId])) { // Filter out events that should not be visible to server TODO: Make client not send them?
 	
-				var object = typeof(event.objectId) !== 'undefined' ?  liquid.getEntity(action.objectId) : downstreamIdToObjectMap[event.downstreamObjectId];
-	
+				var object = typeof(event.objectId) !== 'undefined' ?  liquid.getEntity(event.objectId) : downstreamIdToObjectMap[event.downstreamObjectId];
+				// console.log()
 				if (event.action === 'settingRelation' ||
 					event.action === 'addingRelation' ||
 					event.action === 'deletingRelation') {
@@ -588,6 +588,9 @@ function unserializeDownstreamPulse(pulseData) {
 					var relatedObject = ensureRelatedObjectsUnserialized(event, downstreamIdToSerializedObjectMap, downstreamIdToObjectMap);
 	
 					if (event.action === 'addingRelation') {
+						// console.log(object._);
+						// console.log(event);
+						// console.log(object._relationDefinitions);
 						var adderName = object._relationDefinitions[event.relationQualifiedName].adderName;
 						object[adderName](relatedObject);
 					} else if (event.action === 'deletingRelation'){
@@ -596,7 +599,7 @@ function unserializeDownstreamPulse(pulseData) {
 					}
 				} else if (event.action === "settingProperty") {
 					var setterName = object._propertyDefinitions[event.propertyName].setterName;
-					object[setterName](action.newValue);
+					object[setterName](event.newValue);
 				}
 			}
 	

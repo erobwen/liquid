@@ -302,7 +302,7 @@ var addLiquidEntity = function(liquid) {
                             if (typeof(this._isLoadedObservers) === 'undefined') {
                                 this._isLoadedObservers = { observers: {} };
                             }
-                            liquid.setupObservation(this, {name: 'isLoaded'}, this._isLoadedObservers);
+                            liquid.registerObserverTo(this, {name: 'isLoaded'}, this._isLoadedObservers);
                             return !this._noDataLoaded;
                         }
                     } else {
@@ -340,7 +340,7 @@ var addLiquidEntity = function(liquid) {
                         // console.log("Selecting " + this.__());
                         selection[this._id] = true;
                         this.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {
-                            liquid.setupObservation(this, definition, instance);
+                            liquid.registerObserverTo(this, definition, instance);
                             relatedObject.selectAll(selection);
                         }.bind(this));
                     }
