@@ -152,6 +152,41 @@ var arrayDifference = function(updatedArray, oldArray) {
 
 
 /*------------------------------
+*        Liquid objects Utility
+*-------------------------------*/
+
+
+function isLiquidObject(data) {
+    return (typeof(data._id) !== 'undefined' && typeof(data._upstreamId) !== 'undefined');
+}
+
+function mapLiquidObjectsDeep(data, mapFunction) {
+    if (data === null) {
+        return null;
+    } else if (isArray(data)) {
+        newData = [];
+        data.forEach(function(element) {
+            newData.push(mapLiquidObjectsDeep(element, mapFunction));
+        });
+        replaceArrayContents(newData, data);
+        return data;
+    } else if (typeof(data) == 'object') {
+        if (isLiquidObject(data)) {
+            // Liquid object for sure!
+            return mapFunction(data);
+        } else {
+            for (property in data) {
+                data[property] = mapLiquidObjectsDeep(data[property], mapFunction);
+            }
+            return data;
+        }
+    } else {
+        return data;
+    }
+}
+
+
+/*------------------------------
 *        String Utility
 *-------------------------------*/
 
@@ -322,6 +357,9 @@ if (typeof(module) !== 'undefined') {
 	module.exports.removeFromArray = removeFromArray;
 	module.exports.clone = clone;
 	module.exports.arrayDifference = arrayDifference;
+    
+	module.exports.isLiquidObject = isLiquidObject;
+	module.exports.mapLiquidObjectsDeep = mapLiquidObjectsDeep;
 	
     module.exports.capitalize = capitalize;
 	module.exports.pluralize = pluralize;

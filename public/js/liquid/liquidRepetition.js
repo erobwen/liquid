@@ -443,30 +443,21 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 			// Merge state to established objects, and change references to established objects.
 			infusion.objectsToInfuse.forEach(function(infusedObject) {
-				function getInfusionTarget(object) {
-					if (typeof(object._infusionIdOrObject) === 'string') {
-						var infusionId = object._infusionIdOrObject;
-						if (typeof(infusion.establishedInfusionIdToObjectMap[infusionId]) !== 'undefined') {
-							return infusion.establishedInfusionIdToObjectMap[infusionId];
-						} else {
-							return object;
-						}
-					} else {
-						return object._infusionIdOrObject;
-					}
-				}
-
 				function replaceReference(relatedObject) {
 					if (relatedObject === null) {
 						return null;
 					} else if (typeof(relatedObject._infusion) !== 'undefined' && relatedObject._infusion === infusion) {
-						return infusionIdToObjectMap[relatedObject.infusionId];
+						if (typeof(object._infusionIdOrObject) === 'string') {
+							return infusionIdToObjectMap[relatedObject.infusionId];
+						} else {
+							return relatedObject._infusionIdOrObject;
+						}
 					} else {
 						return relatedObject;
 					}
 				}
 
-				var infusionTarget = getInfusionTarget(infusedObject);
+				var infusionTarget = replaceReference(infusedObject);
 				if (infusionTarget !== null) {
 					// Merge relations into established object
 					infusedObject.forAllOutgoingRelations(function(definition, instance) {
@@ -524,8 +515,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			infusion.establishedInfusionIdToObjectMap = infusion.temporaryInfusionIdToObjectMap;
 			infusion.temporaryInfusionIdToObjectMap = {};
 
-			// newReturnValue = mapLiquidObjectsDeep(newReturnValue, function(liquidObject) {replaceReference(liquidObject);});
-			returnValue = null; // Get infused object;
+			returnValue = mapLiquidObjectsDeep(returnValue, replaceReference); // Get infused object;
 			
 			liquid.activeInfusions.pop();
 		});
