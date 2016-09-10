@@ -107,8 +107,11 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 				for (pageId in event.object._observingPages) {
 					var page = event.object._observingPages[pageId];
-					if (!(event.isDirectEvent && event.originator === page)) {
-						liquid.dirtyPageSubscritiptions.push(page);
+					// console.log(event.isDirectEvent);
+					// console.log(originator);
+					if (!(event.isDirectEvent && originator === page)) {
+						console.log("Page subscription dirty");
+						liquid.dirtyPageSubscritiptions[page._id] = page; // TODO: change to map
 					}
 				}
 				this.events.push(event);

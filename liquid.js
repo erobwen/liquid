@@ -122,8 +122,10 @@ liquidSocket.on('connection', function (socket) {
 			console.log("Register page connection:" + hardToGuessPageId);
 			console.log(hardToGuessPageId);
 			if (typeof(hardToGuessPageId) !== 'undefined' && hardToGuessPageId !== null && typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
-				liquid.pagesMap[hardToGuessPageId]._socket = socket;
+				var page = liquid.pagesMap[hardToGuessPageId];
+				page._socket = socket;
 				console.log("Made an association between socket and hardToGuessPageId");
+				//console.log(page._socket);
 			}
 		}).run();
 	});

@@ -380,7 +380,7 @@ function getMapDifference(firstSet, secondSet) {
 }
 
 
-liquid.dirtyPageSubscritiptions = [];
+liquid.dirtyPageSubscritiptions = {};
 liquid.getSubscriptionUpdate = function(page) {
 	var result = {};
 
@@ -410,7 +410,7 @@ liquid.getSubscriptionUpdate = function(page) {
 			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._dirtySubscriptionSelections  = false;
 		}, function() {
-			liquid.dirtyPageSubscritiptions.push(page);
+			liquid.dirtyPageSubscritiptions[page._id] = page;
 			page._dirtySubscriptionSelections  = true;
 		});
 		addedAndRemovedIds = page._addedAndRemovedIds;
@@ -425,7 +425,7 @@ liquid.getSubscriptionUpdate = function(page) {
 	// Add as subscriber
 	for (id in addedAndRemovedIds.added) {
 		var addedObject = liquid.getEntity(id);
-		addedObject._observingPages[page.id] = id;
+		addedObject._observingPages[page.id] = page;
 	}
 
 	// Remove subscriber
@@ -505,10 +505,14 @@ function serializeEventForDownstream(event) {
 
 liquid.pushDataDownstream = function() {
 	console.log(liquid.dirtyPageSubscritiptions);
-	liquid.dirtyPageSubscritiptions.forEach(function(page) {
-		update = liquid.getSubscriptionUpdate(page);
+	for (id in liquid.dirtyPageSubscritiptions) {
+		var page = liquid.dirtyPageSubscritiptions[id];
+		var update = liquid.getSubscriptionUpdate(page);
+		console.log("Push update to page: " + page.id);
+		console.log(update);
 		page._socket.emit('pushSubscriptionChanges', update);
-	});
+		delete liquid.dirtyPageSubscritiptions[id];
+	}
 };
 
 // if (liquid.activePulse.originator === liquid.clientPage) {
