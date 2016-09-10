@@ -55,7 +55,7 @@ var addLiquidEntity = function(liquid) {
 
                     // Server variables
                     this._selection = {};
-                    this._dirtySubscriptions = true;
+                    this._dirtySubscriptionSelections = true;
                     this._socket = null;
 
                     // Client variables

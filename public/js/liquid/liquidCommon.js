@@ -104,6 +104,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 				}
 				event.repeater = liquid.isRefreshingRepeater() ? liquid.activeRepeater() : null;
 				event.isDirectEvent = event.repeater === null;
+
+				for (pageId in event.object._observingPages) {
+					var page = event.object._observingPages[pageId];
+					if (!(event.isDirectEvent && event.originator === page)) {
+						liquid.dirtyPageSubscritiptions.push(page);
+					}
+				}
 				this.events.push(event);
 			}
 		};
@@ -632,6 +639,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object._incomingRelations = {};
 		object._relationInstances = {};
 		for (var relationQualifiedName in (prototypeObject._relationDefinitions)) {
+			// Note: data is not set here, to denote unloaded data on the server.
 			object._relationInstances[relationQualifiedName] = {observers: {}};
 		}
 		object._propertyInstances = {};   // propertyName -> property
@@ -744,11 +752,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		delete object.addProperty;
 		delete object.addRelation;
 		delete object.addReverseRelationTo;
-
-
-
-
-
+		
 		// Add methods and repeaters
 		object.addMethod = function(methodName, method) {
 			if (methodName.indexOf("select") === 0) {

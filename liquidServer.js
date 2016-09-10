@@ -360,7 +360,7 @@ function getMapDifference(firstSet, secondSet) {
 	var static = {};
 	for(id in firstSet) {
 		if(typeof(secondSet[id]) === 'undefined') {
-			removed[id] = true;	
+			removed[id] = true;
 		} else {
 			static[id] = true;
 		}
@@ -385,7 +385,7 @@ liquid.getSubscriptionUpdate = function(page) {
 	var result = {};
 
 	var addedAndRemovedIds;
-	if (page._dirtySubscriptions) {
+	if (page._dirtySubscriptionSelections) {
 		liquid.uponChangeDo(function() {
 			var selection = {};
 			page.getOrderedSubscriptions().forEach(function(subscription) {
@@ -408,9 +408,10 @@ liquid.getSubscriptionUpdate = function(page) {
 			page._previousSelection = page._selection;
 			page._selection = selection;
 			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
-			page._dirtySubscriptions  = false;
+			page._dirtySubscriptionSelections  = false;
 		}, function() {
-			page._dirtySubscriptions  = true;
+			liquid.dirtyPageSubscritiptions.push(page);
+			page._dirtySubscriptionSelections  = true;
 		});
 		addedAndRemovedIds = page._addedAndRemovedIds;
 	} else {
@@ -419,6 +420,18 @@ liquid.getSubscriptionUpdate = function(page) {
 			removed : {},
 			static : page._selection
 		}
+	}
+	
+	// Add as subscriber
+	for (id in addedAndRemovedIds.added) {
+		var addedObject = liquid.getEntity(id);
+		addedObject._observingPages[page.id] = id;
+	}
+
+	// Remove subscriber
+	for (id in addedAndRemovedIds.removed) {
+		var removedObject = liquid.getEntity(id);
+		delete removedObject._observingPages[page.id];
 	}
 
 	// Serialize
@@ -491,7 +504,8 @@ function serializeEventForDownstream(event) {
 
 
 liquid.pushDataDownstream = function() {
-	liquid.dirtyPageSubscritiptions.forEach(function() {
+	console.log(liquid.dirtyPageSubscritiptions);
+	liquid.dirtyPageSubscritiptions.forEach(function(page) {
 		update = liquid.getSubscriptionUpdate(page);
 		page._socket.emit('pushSubscriptionChanges', update);
 	});

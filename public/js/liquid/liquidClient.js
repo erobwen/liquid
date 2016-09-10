@@ -63,6 +63,7 @@ liquid.findLocalEntities = function(properties) {
 //  {action: addingRelation, objectDownstreamId:45, relationName: 'Foobar', relatedObjectDownstreamId:45 }
 //  {action: settingProperty, objectDownstreamId:45, propertyName: 'Foobar', propertyValue: 'Some string perhaps'}
 function serializeEventForUpstream(event) {
+	console.log(event);
 	var serialized  = {
 		action: event.action
 	};
@@ -85,7 +86,7 @@ function serializeEventForUpstream(event) {
 		}
 	} else {
 		serialized.propertyName = event.definition.name;
-		serialized.value = event.value;
+		serialized.newValue = event.newValue;
 	}
 
 	return serialized;
