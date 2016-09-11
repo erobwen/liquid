@@ -2,27 +2,27 @@ var addLiquidEntity = function(liquid) {
     liquid.addCommonLiquidClasses = function() {
         liquid.registerClass({
             name: 'LiquidSession', _extends: 'Entity',
-    
+
             addPropertiesAndRelations : function (object) {
                 // Properties
                 object.addProperty('hardToGuessSessionId', '');
-    
+
                 // Relations
                 object.addRelation('User', 'toOne', {order: function(a, b) { return -1; }});
 
                 // Relations
                 object.addReverseRelationTo('LiquidPage_Session', 'Page', 'toMany', {order: function(a, b) { return -1; }}); //readOnly: [], readAndWrite:['administrator'],
             },
-    
+
             addMethods : function (object) {
                 object.addMethod('canReadAndWrite', function(user) { return liquid.isAdministrator; });
                 object.addMethod('canRead', function(user) { return liquid.isAdministrator; });
-    
-    
+
+
                 object.addMethod('encryptPassword', function(liquidPassword) {
                     return liquidPassword + " [encrypted]";
                 });
-    
+
                 object.addMethod('login', function(loginName, liquidPassword) {
                     var user = liquid.find({loginName: loginName});
                     if (this.encryptPassword(liquidPassword) == user.getEncryptedPassword()) {
@@ -34,21 +34,21 @@ var addLiquidEntity = function(liquid) {
                 }, 'administrator');
             }
         });
-    
+
         liquid.registerClass({
             name: 'LiquidPage', _extends: 'Entity',
-    
+
             addPropertiesAndRelations : function(object) {
                 // Properties
                 object.addProperty('hardToGuessPageId', '');
-                
+
                 // Relations
                 object.addRelation('Session', 'toOne');
                 object.addRelation('Service', 'toOne');
                 object.addRelation('ReceivedSubscription', 'toMany');
                 object.addRelation('OrderedSubscription', 'toMany');
             },
-    
+
             addMethods : function(object) {
                 object.overrideMethod('init', function(parent, initData) {
                     parent(initData);
@@ -69,7 +69,7 @@ var addLiquidEntity = function(liquid) {
                 });//Subscription
 
                 object.addMethod('upstreamPulseReceived', function() {
-                    this.setReceivedSubscription(this.getOrderedSubscription()); // TODO: Consider, what happens if two subscriptions are requested at the same time?
+                    this.setReceivedSubscriptions(this.getOrderedSubscriptions()); // TODO: Consider, what happens if two subscriptions are requested at the same time?
                     this._requestingSubscription = false;
                     this.checkLoadQueue();
                 });
@@ -95,6 +95,7 @@ var addLiquidEntity = function(liquid) {
                 });
 
                 object.addMethod('checkLoadQueue', function() {
+                    return;
                     if (!this._requestingSubscription) {
                         this._requestingSubscription = true;
                         if (this._subscriptionQueue.length > 0) {
@@ -157,7 +158,7 @@ var addLiquidEntity = function(liquid) {
                     }
                     return null;
                 });
-    
+
                 object.addMethod('login', function(loginName, liquidPassword) {
                 }, 'administrator');
             }
@@ -187,7 +188,7 @@ var addLiquidEntity = function(liquid) {
 
                 object.addMethod('login', function(loginName, liquidPassword) {
                     // Use SHA and similar here!
-                    this.callOnServer('loginOnServer', loginName, liquidPassword);  
+                    this.callOnServer('loginOnServer', loginName, liquidPassword);
                 });
 
                 object.addMethod('loginOnServer', function(loginName, liquidPassword) {
@@ -197,7 +198,7 @@ var addLiquidEntity = function(liquid) {
                 });
             }
         });
-            
+
         liquid.registerClass({
             name: 'Subscription',  _extends: 'Entity',
 
@@ -224,46 +225,46 @@ var addLiquidEntity = function(liquid) {
                 });
             }
         });
-    
+
         liquid.registerClass({
             name: 'LiquidUser', _extends: 'Entity',
-    
+
             addPropertiesAndRelations : function (object) {
                 // Properties
                 object.addProperty('loginName', '');
                 object.addProperty('alternativeLoginName', '');
                 object.addProperty('encryptedPassword', '', {readOnly: [], readAndWrite:['administrator']});
-    
+
                 // Relations
                 object.addReverseRelationTo('LiquidSession_User', 'Session', 'toOne');
             },
-    
+
             addMethods : function (object) {}
         });
 
 
         /**
-         * Experimental, a class that 
+         * Experimental, a class that
          */
-        
+
         // liquid.registerClass({
         //     name: 'ServiceEntity',
         //     addPropertiesAndRelations : function (object) {},
         //
         //     addMethods : function (object) {}
         // });
-        
+
         liquid.registerClass({
             name: 'Entity',
             addPropertiesAndRelations : function (object) {
                 // Note: This information needs to match what is in the database definition (fields and their default values) and the model and its relations.
             },
-    
+
             addMethods : function (object) {
                 object.touchedByEntity = true;
-    
+
                 // TODO: Use define method functions instead!!!
-    
+
                 object.roles = function(liquidPage) {
                     // Do something with: liquidPage.getUser();
                     return [];
@@ -274,7 +275,7 @@ var addLiquidEntity = function(liquid) {
                     // Only some persitent servers can create global ids.
                     // https://github.com/rauschma/strint
                 };
-    
+
                 object.init = function(initData) {
                     for(var property in initData) {
                         // console.log("property: " + property);
@@ -313,7 +314,7 @@ var addLiquidEntity = function(liquid) {
                 object.is = function(className) {
                     return typeof(this.classNames[className]) !== 'undefined';
                 };
-                    
+
                 object._idString = function() {
                     // var idString = "";
                     // if (this._globalId !== null) {
@@ -346,21 +347,21 @@ var addLiquidEntity = function(liquid) {
                     }
                 };
             },
-    
+
             addServerMethods : function(object) {
             },
-    
+
             addClientMethods : function(object) {
                 object.getSaver = function() {
                     return cream.defaultSaver;
                 };
-    
+
                 // object.callOnServer = function(method, postCallCallback) { // TODO: an arglist
                 // cream.callOnServer(object, method, postCallCallback);
                 // };
             }
         });
-    
+
         liquid.registerClass({
             name: 'Index',
             addPropertiesAndRelations : function (object) {

@@ -35,11 +35,11 @@ socket.on('disconnect', function(){
 socket.on('pushSubscriptionChanges', function(changes){
 	liquid.pulse('upstream', function() {
 		// Consolidate ids:
-		for (id in result.idToUpstreamId) {
-			liquid.getEntity(id)._upstreamId = result.idToUpstreamId[id];
+		for (id in changes.idToUpstreamId) {
+			liquid.getEntity(id)._upstreamId = changes.idToUpstreamId[id];
 		}
-		
-		unserializeFromUpstream(result.serializedObjects);
+		//result
+		unserializeFromUpstream(changes.addedSerialized);
 
 		liquid.blockUponChangeActions(function() {
 			changes.events.forEach(function(event) {
@@ -57,14 +57,14 @@ socket.on('pushSubscriptionChanges', function(changes){
 					liquid.activeSaver = liquid.defaultSaver;
 				} else if (event.action === 'settingProperty') {
 					liquid.activeSaver = null;
-					var object = liquid.getUpstreamEntity(objectId);
+					var object = liquid.getUpstreamEntity(event.objectId);
 					var setterName = object._propertyDefinitions[event.propertyName].setterName;
-					object[setterName](newValue);
+					object[setterName](event.newValue);
 					liquid.activeSaver = liquid.defaultSaver;
 				}
 			});
 		});
-		// TODO: kill objects result.unsubscribedUpstreamIds, even remove from persistent memory if found, 
+		// TODO: kill objects changes.unsubscribedUpstreamIds, even remove from persistent memory if found,
 		// and create an "originators copy" of the data for safekeeping. 
 	});
 });

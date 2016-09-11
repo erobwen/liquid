@@ -382,10 +382,12 @@ function getMapDifference(firstSet, secondSet) {
 
 liquid.dirtyPageSubscritiptions = {};
 liquid.getSubscriptionUpdate = function(page) {
+	console.group("getSubscriptionUpdate");
 	var result = {};
 
 	var addedAndRemovedIds;
 	if (page._dirtySubscriptionSelections) {
+		console.log("dirty selection");
 		liquid.uponChangeDo(function() {
 			var selection = {};
 			page.getOrderedSubscriptions().forEach(function(subscription) {
@@ -410,11 +412,14 @@ liquid.getSubscriptionUpdate = function(page) {
 			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._dirtySubscriptionSelections  = false;
 		}, function() {
+			console.log("A subscription selection got dirty");
+			stackDump();
 			liquid.dirtyPageSubscritiptions[page._id] = page;
 			page._dirtySubscriptionSelections  = true;
 		});
 		addedAndRemovedIds = page._addedAndRemovedIds;
 	} else {
+		console.log("just events");
 		addedAndRemovedIds = {
 			added : {},
 			removed : {},
@@ -424,14 +429,18 @@ liquid.getSubscriptionUpdate = function(page) {
 	
 	// Add as subscriber
 	for (id in addedAndRemovedIds.added) {
+		// console.log("Adding page observers");
 		var addedObject = liquid.getEntity(id);
-		addedObject._observingPages[page.id] = page;
+		addedObject._observingPages[page._id] = page;
+		// console.log(Object.keys(addedObject._observingPages));
 	}
 
 	// Remove subscriber
 	for (id in addedAndRemovedIds.removed) {
+		// console.log("Removing page observers");
 		var removedObject = liquid.getEntity(id);
-		delete removedObject._observingPages[page.id];
+		delete removedObject._observingPages[page._id];
+		// console.log(Object.keys(addedObject._observingPages));
 	}
 
 	// Serialize
@@ -441,8 +450,11 @@ liquid.getSubscriptionUpdate = function(page) {
 	//add event info originating from repeaters.
 	result.events = [];
 	liquid.activePulse.events.forEach(function (event) {
-		if (!(event.originator === page || event.repeater === null)) { // Do not send back events to originator!
+		// console.log(event);
+		if (liquid.activePulse.originator !== page || event.repeater !== null) { // Do not send back events to originator!
+			// console.log("A");
 			if (addedAndRemovedIds.static[event.object._id]) {
+				// console.log("B");
 				result.events.push(serializeEventForDownstream(event));
 			}
 		}
@@ -463,6 +475,7 @@ liquid.getSubscriptionUpdate = function(page) {
 	}
 
 	// console.log(result);
+	console.groupEnd();
 	return result;
 
 	/**
@@ -483,6 +496,8 @@ liquid.getSubscriptionUpdate = function(page) {
 //  {action: addingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
 //  {action: deletingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
 function serializeEventForDownstream(event) {
+	console.log("Serialize event");
+	console.log(event);
 	var serialized  = {
 		action: event.action
 	};
@@ -496,7 +511,7 @@ function serializeEventForDownstream(event) {
 		}
 	} else {
 		serialized.propertyName = event.definition.name;
-		serialized.value = event.value;
+		serialized.newValue = event.newValue;
 	}
 
 	return serialized;
@@ -504,11 +519,13 @@ function serializeEventForDownstream(event) {
 
 
 liquid.pushDataDownstream = function() {
+	console.log("x");
 	console.log(liquid.dirtyPageSubscritiptions);
+	console.log("y");
 	for (id in liquid.dirtyPageSubscritiptions) {
+		console.log("Push update to page: " + id);
 		var page = liquid.dirtyPageSubscritiptions[id];
 		var update = liquid.getSubscriptionUpdate(page);
-		console.log("Push update to page: " + page.id);
 		console.log(update);
 		page._socket.emit('pushSubscriptionChanges', update);
 		delete liquid.dirtyPageSubscritiptions[id];
