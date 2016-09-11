@@ -496,8 +496,8 @@ liquid.getSubscriptionUpdate = function(page) {
 //  {action: addingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
 //  {action: deletingRelation, objectId:45, relationName: 'Foobar', relatedObjectId:45 }
 function serializeEventForDownstream(event) {
-	console.log("Serialize event");
-	console.log(event);
+	// console.log("Serialize event");
+	// console.log(event);
 	var serialized  = {
 		action: event.action
 	};
@@ -519,14 +519,14 @@ function serializeEventForDownstream(event) {
 
 
 liquid.pushDataDownstream = function() {
-	console.log("x");
-	console.log(liquid.dirtyPageSubscritiptions);
-	console.log("y");
+	// console.log("x");
+	// console.log(liquid.dirtyPageSubscritiptions);
+	// console.log("y");
 	for (id in liquid.dirtyPageSubscritiptions) {
-		console.log("Push update to page: " + id);
+		// console.log("Push update to page: " + id);
 		var page = liquid.dirtyPageSubscritiptions[id];
 		var update = liquid.getSubscriptionUpdate(page);
-		console.log(update);
+		// console.log(update);
 		page._socket.emit('pushSubscriptionChanges', update);
 		delete liquid.dirtyPageSubscritiptions[id];
 	}
