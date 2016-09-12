@@ -549,7 +549,11 @@ liquid.pushDataDownstream = function() {
 
 liquid.unserializeDownstreamPulse = function(pulseData) {
 	// console.log(pulseData);
-	var downstreamIdToSerializedObjectMap = pulseData.downstreamIdToSerializedObjectMap;
+
+	var downstreamIdToSerializedObjectMap = {};
+	pulseData.serializedObjects.forEach(function(serializedObject) {
+		downstreamIdToSerializedObjectMap[serializedObject.downstreamId] = serializedObject;
+	});
 	var downstreamIdToObjectMap = {};
 	
 	function unserializeDownstreamReference(reference) {
@@ -568,13 +572,23 @@ liquid.unserializeDownstreamPulse = function(pulseData) {
 	}
 	
 	function ensureRelatedObjectsUnserialized(event) {
-		return ensureObjectUnserialized(undefinedAsNull(event.relatedObjectId), undefinedAsNull(event.relatedObjectDownstreamId));
+		var relatedObjectId = typeof(event.relatedObjectId) !== 'undefined' ? event.relatedObjectId : null;
+		var relatedObjectDownstreamId = typeof(event.relatedObjectDownstreamId) !== 'undefined' ? event.relatedObjectDownstreamId : null;
+		return ensureObjectUnserialized(relatedObjectId, relatedObjectDownstreamId);
 	}
 
 	function ensureObjectUnserialized(id, downstreamId) {
+		console.log("ensureObjectUnserialized");
+		console.log(id);
+		console.log(downstreamId);
+		console.log(downstreamIdToSerializedObjectMap);
 		if(id == null) {
-			if (downstreamIdToObjectMap[downstreamId] === 'undefined') {
+			if (typeof(downstreamIdToObjectMap[downstreamId]) === 'undefined') {
 				var serializedObject = downstreamIdToSerializedObjectMap[downstreamId];
+				// console.log("here");
+				// console.log(num.toString(downstreamId));
+				// console.log(downstreamId);
+				// console.log(serializedObject);
 				return unserializeDownstreamObjectRecursivley(serializedObject);
 			} else {
 				return downstreamIdToObjectMap[downstreamId];
@@ -589,7 +603,7 @@ liquid.unserializeDownstreamPulse = function(pulseData) {
 		downstreamIdToObjectMap[serializedObject.downstreamId] = newObject; // Set this early, so recursive unserializes can point to this object, avoiding infinite loop.
 
 		newObject.forAllOutgoingRelations(function(definition, instance) {
-			var data = serializedObject[definition.name];
+			var data = serializedObject[definition.qualifiedName];
 			if (definition.isSet) {
 				data = data.map(unserializeDownstreamReference);
 			} else {
@@ -621,7 +635,7 @@ liquid.unserializeDownstreamPulse = function(pulseData) {
 					// This removes and replaces downstream id:s in the event!
 	
 					var relatedObject = ensureRelatedObjectsUnserialized(event, downstreamIdToSerializedObjectMap, downstreamIdToObjectMap);
-	
+					console.log(relatedObject);
 					if (event.action === 'addingRelation') {
 						// console.log(object._);
 						// console.log(event);

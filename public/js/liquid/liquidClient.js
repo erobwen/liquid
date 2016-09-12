@@ -112,17 +112,17 @@ liquid.pushDataUpstream = function() {
 		liquid.activePulse.events.forEach(function(event) {
 			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
 			if (!eventIsFromUpstream) {
-				var requiredObjects = {};
+				console.log("processing event required objects");
 				if (event.object._upstreamId !== null && event.action == 'addingRelation' && event.relatedObject._upstreamId === null) {
 					addRequiredCascade(event.relatedObject, requiredObjects);
 				}
 			}
 		});
 
-		var downstreamIdToSerializedObjectMap = [];
+		var serializedObjects = [];
 		for(id in requiredObjects) {
-			var serializedObject = serializeObject(requiredObjects[id], true);
-			downstreamIdToSerializedObjectMap[serializedObject.downstreamId] = serializedObject;
+			var serializedObject = liquid.serializeObject(requiredObjects[id], true);
+			serializedObjects.push(serializedObject);
 		}
 
 		var serializedEvents = [];
@@ -141,7 +141,7 @@ liquid.pushDataUpstream = function() {
 
 		var pulse = {
 			serializedEvents : serializedEvents,
-			downstreamIdToSerializedObjectMap : downstreamIdToSerializedObjectMap
+			serializedObjects : serializedObjects
 		};
 
 		console.log(pulse);
