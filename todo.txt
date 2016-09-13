@@ -1,0 +1,28 @@
+Things to do:
+
+* Security
+    - select as
+    - call on server
+    - login ui
+
+* Support shape constraints: nonrecursive, tree, acyclic, graph
+
+* Complete DAG ui support.
+
+* Work on readme file.
+    split to several files
+    add images
+    describe infusion.
+
+* Sort order for all relations. Make database work again.
+
+* Add a nice look n feel.
+    consider how to deal with screen sizes.
+    material design for react.
+
+* Different animations on:
+       change field from upstream.
+       changed field by repeater
+       added/removed subtree from upstream
+       (added/removed subtree by repeater)
+

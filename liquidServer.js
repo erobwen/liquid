@@ -399,7 +399,7 @@ liquid.getSubscriptionUpdate = function(page) {
 				// Perform a selection with dependency recording!
 				var subscriptionSelection = {};
 				object[selectorFunctionName](subscriptionSelection);
-				console.log(subscriptionSelection);
+				// console.log(subscriptionSelection);
 				for (id in subscriptionSelection) {
 					selection[id] = true;
 				}
@@ -412,7 +412,7 @@ liquid.getSubscriptionUpdate = function(page) {
 			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._dirtySubscriptionSelections  = false;
 		}, function() {
-			console.log("A subscription selection got dirty");
+			console.log("A subscription selection got dirty: " + page._id);
 			stackDump();
 			liquid.dirtyPageSubscritiptions[page._id] = page;
 			page._dirtySubscriptionSelections  = true;
@@ -426,7 +426,11 @@ liquid.getSubscriptionUpdate = function(page) {
 			static : page._selection
 		}
 	}
-	
+
+
+	console.log("Added ids:");
+	console.log(addedAndRemovedIds.added);
+
 	// Add as subscriber
 	for (id in addedAndRemovedIds.added) {
 		// console.log("Adding page observers");
@@ -635,7 +639,7 @@ liquid.unserializeDownstreamPulse = function(pulseData) {
 					// This removes and replaces downstream id:s in the event!
 	
 					var relatedObject = ensureRelatedObjectsUnserialized(event, downstreamIdToSerializedObjectMap, downstreamIdToObjectMap);
-					console.log(relatedObject);
+					// console.log(relatedObject);
 					if (event.action === 'addingRelation') {
 						// console.log(object._);
 						// console.log(event);

@@ -96,7 +96,7 @@ liquid.pushDataUpstream = function() {
 	// console.log("Not yet!");
 	// return;
 	if (typeof(liquid.upstreamSocket) !== undefined) {
-		console.group("Push data upstream");
+		console.group("Consider push data upstream");
 
 		// Find data that needs to be pushed upstream
 		var requiredObjects = {};
@@ -127,7 +127,7 @@ liquid.pushDataUpstream = function() {
 
 		var serializedEvents = [];
 		liquid.activePulse.events.forEach(function(event) {
-			console.log(event);
+			// console.log(event);
 			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
 			if (!event.redundant && !eventIsFromUpstream) {
 				console.log("not from upstream");
@@ -144,11 +144,14 @@ liquid.pushDataUpstream = function() {
 			serializedObjects : serializedObjects
 		};
 
-		console.log(pulse);
-		console.groupEnd();
-		if (typeof(liquid.pushDownstreamPulseToServer) !== 'undefined') {
-			liquid.pushDownstreamPulseToServer(pulse);
+		if (pulse.serializedEvents.length > 0 || pulse.serializedObjects.length > 0) {
+			console.log(pulse);
+			if (typeof(liquid.pushDownstreamPulseToServer) !== 'undefined') {
+				liquid.pushDownstreamPulseToServer(pulse);
+			}
 		}
+
+		console.groupEnd();
 	}
 };
 
