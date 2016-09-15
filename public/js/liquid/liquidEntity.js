@@ -311,6 +311,10 @@ var addLiquidEntity = function(liquid) {
                     }
                 };
 
+                object.accessLevel = function(page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
+                    return "readAndWrite";
+                };
+                
                 object.is = function(className) {
                     return typeof(this.classNames[className]) !== 'undefined';
                 };

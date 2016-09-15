@@ -89,7 +89,16 @@ registerClass({
 			var unloadedOrName = this._noDataLoaded ? "[no data]" : this._propertyInstances['name'].data;  // Without regestring as observer!
 			return "(" + this.className + "." + this._idString() + ":" + unloadedOrName + ")";
 		});
-		
+
+		object.overrideMethod('accessLevel', function(page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
+			console.log("Considering security");
+			if (startsWith("X", this.getName())) {
+				return "noAccess";
+ 			} else {
+				return "readAndWrite";
+			}
+		});
+
 		object.addMethod("isParentOf", function(category) {
 			var result = false;
 			category.getParents().forEach(function(parentCategory) {

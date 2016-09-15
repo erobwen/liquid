@@ -361,6 +361,7 @@ if (typeof(module) !== 'undefined') {
 	module.exports.isLiquidObject = isLiquidObject;
 	module.exports.mapLiquidObjectsDeep = mapLiquidObjectsDeep;
 	
+    module.exports.startsWith = startsWith;
     module.exports.capitalize = capitalize;
 	module.exports.pluralize = pluralize;
 	module.exports.camelCaseToPlural = camelCaseToPlural;

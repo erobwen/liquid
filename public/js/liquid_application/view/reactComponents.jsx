@@ -222,7 +222,7 @@ window.CategoryView = React.createClass(liquidClassData({
 		var droppedCategory = draggedCategory;
 		draggedCategory = null;
 		if (category.canAddAsSubCategory(droppedCategory)) {
-			liquid.pulse('user', function() {
+			liquid.pulse('local', function() {
 				console.log(droppedCategory.getParents().length);
 				console.log(droppedCategory.getParents());
 				var parents = copyArray(droppedCategory.getParents());

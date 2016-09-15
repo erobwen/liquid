@@ -340,7 +340,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				methodCaches[argumentHash] = methodCache;
 
 				// Never encountered these arguments before, make a new cache
-				var returnValue = uponChangeDo(this.__() + "." + methodName,
+				var returnValue = liquid.uponChangeDo(this.__() + "." + methodName,
 					function() {
 						var returnValue;
 						liquid.blockSideEffects(function() {

@@ -398,7 +398,9 @@ liquid.getSubscriptionUpdate = function(page) {
 
 				// Perform a selection with dependency recording!
 				var subscriptionSelection = {};
+				liquid.pageSubject = page;
 				object[selectorFunctionName](subscriptionSelection);
+				liquid.pageSubject = null;
 				// console.log(subscriptionSelection);
 				for (id in subscriptionSelection) {
 					selection[id] = true;
@@ -428,8 +430,12 @@ liquid.getSubscriptionUpdate = function(page) {
 	}
 
 
-	console.log("Added ids:");
-	console.log(addedAndRemovedIds.added);
+	console.log("Added and removed:");
+	console.log(addedAndRemovedIds);
+	// console.log("Added ids:");
+	// console.log(addedAndRemovedIds.added);
+	// console.log("Removed ids:");
+	// console.log(addedAndRemovedIds.added);
 
 	// Add as subscriber
 	for (id in addedAndRemovedIds.added) {
