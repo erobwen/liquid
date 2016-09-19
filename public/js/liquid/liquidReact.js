@@ -113,7 +113,7 @@ var liquidClassData = function(classData) {
 		if (typeof(applicationComponentDidMount) === 'function') {
 			applicationComponentDidMount.bind(this)();
 		}
-	}
+	};
 	
 	var applicationComponentWillUnmount = classData.componentWillUnmount;
 	classData.componentWillUnmount = function() {
@@ -124,10 +124,10 @@ var liquidClassData = function(classData) {
 		if (typeof(applicationComponentWillUnmount) === 'function') {
 			applicationComponentWillUnmount.bind(this)();
 		}
-	}
+	};
 	
 	return classData;
-}
+};
 
 
 var invalidateUponLiquidChange = function(className, component, renderFunction) {

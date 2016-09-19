@@ -26,3 +26,24 @@ Things to do:
        added/removed subtree from upstream
        (added/removed subtree by repeater)
 
+
+
+'variable' (just an observable variable)
+'set' (an ordered set with immutable order)
+'ordered_set'  (a dictionary with "true" as value for included objects +  a sequence defining the order)
+'sequence' (an array under 128 elements, then grows into an AVL tree, it should be possible to decorate tree nodes with cached methods etc.)
+'dictionary' (improved from Javascript with possibility to use objects as indexes, implicitly using their id, uses a sequence for underlying storage).
+
+
+
+
+
+# Roadmap (from readme)
+
+The plan for the future is to include the following features.
+
+1. Support for data structure synchronization, currently the synchronization is on object level.
+2. Integrated security model based on custom user/object access levels.
+3. Client side routing with url/browser navigation support.
+4. Object version control.
+6. Liquid server clustering. It should be possible to organize Liquid servers in cluster-trees where end users communicate with leafs, and where the cluster tree act as a multi level data-cache.
