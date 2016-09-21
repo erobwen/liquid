@@ -44,8 +44,17 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		return returnValue;
 	};
 
+	
+	var recordingPaused = 0;
+	liquid.pauseRecording = function(action) {
+		recordingPaused++;
+		action();
+		recordingPaused--;
+	};
+	
+	
 	liquid.registerObserverTo = function(object, definition, instance) { // instance can be a cached method if observing its return value, object & definition only needed for debugging.
-		if (liquid.activeRecorders.length > 0) {
+		if (liquid.activeRecorders.length > 0 && recordingPaused === 0) {
 			// stackDump();
 			if (traceRepetition) {
 				console.log("registerObserverTo: " + object._ + "." + definition.name);
@@ -77,6 +86,11 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 		}
 	};
 
+
+	/** -------------
+	 *  Upon change
+     * -------------- */
+	
 	var dirtyRecorders = [];
 
 	liquid.observationBlocked = 0;
@@ -249,7 +263,6 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			repeater.childRepeaters.length = 0;
 		}
 
-		//removeFromArray(repeater, liquid.activeRecorders);
 		removeFromArray(repeater, dirtyRepeaters);
 		removeFromArray(repeater, allRepeaters);
 	};

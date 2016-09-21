@@ -1,3 +1,5 @@
+
+
 Things to do:
 
 * Security
@@ -26,14 +28,15 @@ Things to do:
        added/removed subtree from upstream
        (added/removed subtree by repeater)
 
+* Think through datatypes support:
+    'variable' (just an observable variable)
+    'set' (an ordered set with immutable order)
+    'ordered_set'  (a dictionary with "true" as value for included objects +  a sequence defining the order)
+    'sequence' (an array under 128 elements, then grows into an AVL tree, it should be possible to decorate tree nodes with cached methods etc.)
+    'dictionary' (improved from Javascript with possibility to use objects as indexes, implicitly using their id, uses a sequence for underlying storage).
 
 
-'variable' (just an observable variable)
-'set' (an ordered set with immutable order)
-'ordered_set'  (a dictionary with "true" as value for included objects +  a sequence defining the order)
-'sequence' (an array under 128 elements, then grows into an AVL tree, it should be possible to decorate tree nodes with cached methods etc.)
-'dictionary' (improved from Javascript with possibility to use objects as indexes, implicitly using their id, uses a sequence for underlying storage).
-
+https://www.geckoandfly.com/5556/free-open-source-vector-graphics-editor-adobe-illustrator-alternative/
 
 
 

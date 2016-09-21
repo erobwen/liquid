@@ -79,7 +79,7 @@ In addition, liquid offers the following features that are built upon these prim
 
 Some people might have difficoulty to understand the reactive primitives of liquid due to their simple nature. There is no need to "declare inputs", "define outputs" or setup a rendering pipeline. With liquid, you simply read a variable in the right situation, in order to register a dependency. It goes automatically and is integrated into what is normally viewed as the programming language.
 
-## uponChangeDo ##
+#### uponChangeDo ####
 Upon change do is the simplest primitive that uses dependency recording, and has a signature as follows:
 
     uponChangeDo(doFirstCallback, doOnChangeCallback)
@@ -99,7 +99,7 @@ With it, it is possible to execute an arbitrary function with recursion, loops e
     x.setSomeValue("newValue"); // This will trigger alert!
 
 
-## repeatOnChange ##
+#### repeatOnChange ####
     repeatOnChange(callback)
 
 The callback given to this function will be executed immedeatley, and upon every change in any data that the callback read, the callback will be called again, continously. This can be used to set up
