@@ -570,6 +570,7 @@ var addCommonLiquidFunctionality = function(liquid) {
      */
 	liquid.create = function(className) { // optional: object initData  optional: string/integer projectionId
 		console.log("create: " + className);
+		trace(className);
 		// Get parameters		
 		var projectionId = null;
 		var initData = {};

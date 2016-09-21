@@ -4,6 +4,7 @@ var liquidSelection = require('./public/js/liquid/liquidSelection.js');
 var liquidRepetition = require('./public/js/liquid/liquidRepetition.js');
 var neo4j = require('./liquidNeo4jInterface.js');
 include('./public/js/liquid/liquidUtility.js'); ///..  // Note: path relative to the include service!
+include('./public/js/liquid/liquidTrace.js'); ///..  // Note: path relative to the include service!
 require( 'console-group' ).install();
 
 /**
