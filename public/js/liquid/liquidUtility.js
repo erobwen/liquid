@@ -11,16 +11,6 @@ var stackDump = function() {
     console.log(stack);
 };
 
-var nthCaller = function(n) {
-    var e = new Error('dummy');
-    var stack = e.stack
-        // .replace(/^[^\(]+?[\n$]/gm, '')
-        // .replace(/^\s+at\s+/gm, '')
-        // .replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
-        .split('\n');
-    return stack[n];
-    
-};
 
 var nullOr__ = function(liquidObject) {
     if (liquidObject === null) {
@@ -355,7 +345,7 @@ var nameToVariable = function(string) {
 
 if (typeof(module) !== 'undefined') {
 	module.exports.stackDump = stackDump;
-    module.exports.nthCaller = nthCaller;
+    // module.exports.nthCaller = nthCaller;
     
 	module.exports.nullOr__ = nullOr__;
 	module.exports.undefinedAsNull = undefinedAsNull;

@@ -281,10 +281,10 @@ var addLiquidEntity = function(liquid) {
                         // console.log("property: " + property);
                         setterName = 'set' + capitaliseFirstLetter(property);
                         if (typeof(this[setterName]) !== 'undefined') {
-                            console.log("setting using standard constructor:" + setterName);
+                            trace("setting using standard constructor: ", setterName);
                             this[setterName](initData[property]);
                         } else {
-                            console.log("Error: Setter not found: " + this.__() + "." + setterName + "!");
+                            trace("Error: Setter not found: ", this, ".", setterName, "!");
                             // console.log(this);
                         }
                     }

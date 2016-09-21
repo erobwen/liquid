@@ -569,8 +569,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 * @param className
      */
 	liquid.create = function(className) { // optional: object initData  optional: string/integer projectionId
-		console.log("create: " + className);
-		trace(className);
+		// trace("create: " + className);
+		trace('create', "(className: ", className, ")");
 		// Get parameters		
 		var projectionId = null;
 		var initData = {};
@@ -728,7 +728,10 @@ var addCommonLiquidFunctionality = function(liquid) {
 	*--------------------------------------------------------------------------------*/
 		
 	liquid.addIncomingRelation = function(object, incomingRelationQualifiedName, referingObject) {
-		console.log("addIncomingRelation: " + object.__() + " <-- [" + incomingRelationQualifiedName + "]-- " + referingObject.__());
+		// console.log("addIncomingRelation: " + object.__() + " <-- [" + incomingRelationQualifiedName + "]-- " + referingObject.__());
+
+		trace('incoming', object, " <-- [", incomingRelationQualifiedName, "]-- ", referingObject);
+
 		// Add in incoming relations, create a new map if necessary
 		if (typeof(object._incomingRelations[incomingRelationQualifiedName]) === 'undefined') {
 			object._incomingRelations[incomingRelationQualifiedName] = {};
@@ -975,6 +978,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property getter
 		object[definition.getterName] = function() {
+			trace('property', this, ".", definition.getterName, "()");
+
 			// console.log("Get property: " + this._ + "." + definition.getterName + "()");
 			if (liquid.allowRead(this) && typeof(this._propertyInstances[definition.name]) !== 'undefined') {
 				var instance = this._propertyInstances[definition.name];
@@ -988,6 +993,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property setter
 		object[definition.setterName] = function(value) {
+			trace('property', this, ".", definition.setterName, "(", value, ")");
+
 			// console.log("Set property: " + this._ + "." + definition.setterName + "(" + value + ")");
 			var instance = this._propertyInstances[definition.name];
 			var oldValue = instance.data;

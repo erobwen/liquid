@@ -263,7 +263,8 @@ liquid.loadSingleRelation = function(object, definition, instance) {
 
 liquid.ensureIncomingRelationsLoaded = function(object) {
 	if (object._persistentId !== null) {
-		console.log("ensureIncomingRelationsLoaded: " + object.__() + " <--  ?");
+		// console.log("ensureIncomingRelationsLoaded: " + object.__() + " <--  ?");
+		trace('incoming', object, " <--  ?");
 		if (typeof(object._allIncomingRelationsLoaded) === 'undefined') {
 			// console.log("run liquid version of ensureIncomingRelationLoaded");
 			var incomingRelationAndIds = neo4j.getAllIncomingRelationsAndIds(object._persistentId); // This now contains potentially too many ids.
@@ -291,7 +292,9 @@ liquid.ensureIncomingRelationsLoaded = function(object) {
 
 
 liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualifiedName) {
-	console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationQualifiedName + "] -- ?");
+	// console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationQualifiedName + "] -- ?");
+
+	trace('incoming', object, " <-- [",  incomingRelationQualifiedName, "] -- ?");
 	if (object._persistentId !== null) {
 		if (typeof(object._incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
 			// console.log("run liquid version of ensureIncomingRelationLoaded");
