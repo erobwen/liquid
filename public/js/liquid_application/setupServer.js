@@ -14,7 +14,7 @@ liquid.pulse('local', function() {
 // User
     var user = create('User', {name: "Some Person", email: "some.person@gmail.com" });
 
-    trace(['setup'], 'created user: ', user);
+    trace('setup', 'created user: ', user);
 
 // Create categories
     var favourite = create('Category', {name: 'Favourite', description: '', owner: user});

@@ -96,7 +96,7 @@ liquid.pushDataUpstream = function() {
 	// console.log("Not yet!");
 	// return;
 	if (typeof(liquid.upstreamSocket) !== undefined) {
-		console.group("Consider push data upstream");
+		// console.group("Consider push data upstream");
 
 		// Find data that needs to be pushed upstream
 		var requiredObjects = {};
@@ -151,7 +151,7 @@ liquid.pushDataUpstream = function() {
 			}
 		}
 
-		console.groupEnd();
+		// console.groupEnd();
 	}
 };
 

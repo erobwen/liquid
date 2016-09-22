@@ -293,8 +293,7 @@ liquid.ensureIncomingRelationsLoaded = function(object) {
 
 liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualifiedName) {
 	// console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationQualifiedName + "] -- ?");
-
-	trace('incoming', object, " <-- [",  incomingRelationQualifiedName, "] -- ?");
+	trace('incoming', object, " <--[",  incomingRelationQualifiedName, "] -- ?");
 	if (object._persistentId !== null) {
 		if (typeof(object._incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
 			// console.log("run liquid version of ensureIncomingRelationLoaded");

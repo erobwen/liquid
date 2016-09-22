@@ -80,12 +80,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 			throw "Pulses cannot overlap in time!";
 		}
 
-		console.group("=== Starting a pulse ===")
-		if (typeof(originator) === 'string') {
-			console.log(originator);
-		} else {
-			console.log("downstream page: " + originator.getHardToGuessPageId());
-		}
+		// console.group("=== Starting a pulse ===")
+		traceGroup('pulse', "=== Starting a pulse: ", originator, "===");
+		// if (typeof(originator) === 'string') {
+		// 	console.log(originator);
+		// } else {
+		// 	console.log("downstream page: " + originator.getHardToGuessPageId());
+		// }
 
 		// Setup pulse data
 		liquid.activePulse = {
@@ -123,10 +124,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 		// Measure query time and pageRequest time
 		// neo4j.resetStatistics();
-		console.log("-- Pulse action start --");
+		traceGroup('pulse', "--- Pulse action ----");
+		// console.log("-- Pulse action start --");
 		// Pulse action that adds original events
 		action(liquid.activePulse);    // some repeater events might be here too, interleved with original events!!!
-		console.log("-- Pulse action end --");
+		// console.log("-- Pulse action end --");
+		traceGroupEnd();
 
 		// Display measures.
 		// var statistics = neo4j.getStatistics();
@@ -134,22 +137,31 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// console.log("Page Request data queries: " + statistics.dataQueries);
 		// console.log("Page Request data query time: " + statistics.dataQueryTime + " milliseconds.");
 
+		traceGroup('pulse', "--- Refreshing UI ----");
 		liquid.blockSideEffects(function() { // TODO: Block writings to server.
-			console.log("=== Refreshing UI ===");
 			liquid.noModeDirtyRepeatersCallback.forEach(function(callback) { callback() }); // No events or repeaters can trigger here (except for local data inside call).
 		});
+		traceGroupEnd();
 
 		// Propagate changes, up down and sideways.
-		console.log("=== Push data downstream ===");
+
+		// console.log("=== Push data downstream ===");
+		traceGroup('pulse', "--- Push data downstream ----");
 		liquid.pushDataDownstream(); // Do not send just the change to originator of pulse, but send if any selection has changed.
-		console.log("=== Push data upstream ===");
+		traceGroupEnd();
+		// console.log("=== Push data upstream ===");
+		traceGroup('pulse', "--- Push data upstream ----");
 		liquid.pushDataUpstream();
-		console.log("=== Push data to persistent storage ===");
+		traceGroupEnd();
+		// console.log("=== Push data to persistent storage ===");
+		traceGroup('pulse', "--- Push data to persistent storage ----");
 		liquid.pushDataToPersistentStorage();
+		traceGroupEnd();
 
 		liquid.activePulse = null;
-		console.log("=== Ending a pulse ===");
-		console.groupEnd();
+		// console.log("=== Ending a pulse ===");
+		// console.groupEnd();
+		traceGroupEnd();
 	};
 
 	
@@ -490,7 +502,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 	liquid.loadReverseSetRelation = function(object, definition, instance) {
 		// Load relation
-		console.log("loadReverseSetRelation: " + object.__() + " <-- ["+ definition.incomingRelationQualifiedName + "] --?");
+		trace('incoming', object, " <-- [", definition.incomingRelationQualifiedName, "] --?");
+		// console.log("loadReverseSetRelation: " + object.__() + " <-- ["+ definition.incomingRelationQualifiedName + "] --?");
 		liquid.ensureIncomingRelationLoaded(object, definition.incomingRelationQualifiedName);
 		
 		var set = [];
@@ -729,7 +742,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 	liquid.addIncomingRelation = function(object, incomingRelationQualifiedName, referingObject) {
 		// console.log("addIncomingRelation: " + object.__() + " <-- [" + incomingRelationQualifiedName + "]-- " + referingObject.__());
-
+		// stackDump();
 		trace('incoming', object, " <-- [", incomingRelationQualifiedName, "]-- ", referingObject);
 
 		// Add in incoming relations, create a new map if necessary
@@ -1088,6 +1101,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			// Member: Outgoing single getter
 			object[definition.getterName] = function() {
 				// console.log("Getting single relation: " + this.__() + "." + definition.name);
+				trace('member', this, ".", definition.name);
 				if (liquid.allowRead(this)) {
 					var instance = this._relationInstances[definition.qualifiedName];
 					liquid.registerObserverTo(this, definition,  instance);
@@ -1109,13 +1123,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 			// Member: Reverse single getter
 			object[definition.getterName] = function() {
 				// console.log("Getting single relation (reverse): " + this.__() + "." + definition.name);
+				trace('member', this, ".", definition.name);
 				if (liquid.allowRead(this)) {
 					var instance = this._relationInstances[definition.qualifiedName];
 					liquid.registerObserverTo(this, definition, instance);
 					if (typeof(instance.data) === 'undefined') {
 						// if (this.isSaved) {
 						instance.data = null;
-						liquid.ensureIncomingRelationLoaded(this, definition.incomingRelationName);
+						liquid.ensureIncomingRelationLoaded(this, definition.incomingRelationQualifiedName);
 
 						// Return the first one or null
 						var incomingRelationQualifiedName = definition.incomingRelationQualifiedName;
@@ -1144,6 +1159,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			// Member: Outgoing single setter
 			object[definition.setterName] = function(newValue) {
 				// console.log("Set single relation: " + this.__() + "." + definition.name + " = " + nullOr__(newValue));
+				trace('member', this, ".", definition.setterName, "(", newValue, ")");
 				if (liquid.allowWrite(this)) {
 					var previousValue = this[definition.getterName]();
 					if (previousValue != newValue) {
@@ -1185,6 +1201,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			var incomingRelationQualifiedName = definition.incomingRelationQualifiedName;
 			object[definition.setterName] = function(newValue) {
 				// console.log("Set single relation (reverse): " + this.__() + "." + definition.name + " = " + newValue.__());
+				trace('member', this, ".", definition.setterName, "(", newValue, ")");
 				var previousValue = this[definition.getterName]();
 				if (liquid.allowWrite(this) && previousValue !== newValue) {
 					liquid.inPulseBlockUponChangeActions(function(pulse) {
