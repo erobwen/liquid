@@ -3,10 +3,11 @@ var addLiquidSelectionFunctionality = function(liquid) {
 
 	liquid.addToSelection = function(selection, object) {
 		if (object !== null && liquid.allowRead(object)) {
-			console.log("Added: " + object._);
+			trace('selection', "Added: ", object);
 			selection[object._id] = true;
 		} else {
-			console.log("Nothing to add!");
+			trace('selection', "Nothing to add!");
+			// console.log("Nothing to add!");
 		}
 	};
 }

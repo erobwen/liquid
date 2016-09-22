@@ -2,7 +2,7 @@
  *           Tracing
  *-------------------------------*/
 
-var col1Width = 26;
+var col1Width = 35;
 var col2Width = 50;
 var col3Width = 40;
 
@@ -18,7 +18,11 @@ var traceTags = {
     'incoming' : true,
     'property' : true,
     'create' : true,
-    'pulse' : true
+    'pulse' : true,
+    'subscribe' : true,
+    'repetition' : true,
+    'unserialize' : true,
+    'selection' : true
 
     // 'database' : true,
     // 'pushDownstream' : true,

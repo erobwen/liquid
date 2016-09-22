@@ -145,6 +145,7 @@ liquid.pushDataUpstream = function() {
 		};
 
 		if (pulse.serializedEvents.length > 0 || pulse.serializedObjects.length > 0) {
+			trace('serialize', "Push upstream:");
 			console.log(pulse);
 			if (typeof(liquid.pushDownstreamPulseToServer) !== 'undefined') {
 				liquid.pushDownstreamPulseToServer(pulse);
@@ -193,7 +194,8 @@ function unserializeUpstreamObject(serializedObject) {
 	// console.log(targetObject);
 	if (targetObject._noDataLoaded) {
 		targetObject.forAllOutgoingRelations(function(definition, instance) {
-			console.log("processingRelation: " + definition.name);
+			// console.log("processingRelation: " + definition.name);
+			trace('unserialize', definition.name, "~~>", targetObject);
 			if (typeof(serializedObject[definition.qualifiedName]) !== 'undefined') {
 				var data = serializedObject[definition.qualifiedName];
 				if (definition.isSet) {
@@ -206,7 +208,8 @@ function unserializeUpstreamObject(serializedObject) {
 		});
 		for (propertyName in targetObject._propertyDefinitions) {
 			definition = targetObject._propertyDefinitions[propertyName];
-			console.log("processingProperty: " + definition.name);
+			// console.log("processingProperty: " + definition.name);
+			trace('unserialize', definition.name, "~~>", targetObject);
 			if (typeof(serializedObject[definition.name]) !== 'undefined') {
 				var data = serializedObject[definition.name];
 				targetObject[definition.setterName](data);
@@ -218,14 +221,16 @@ function unserializeUpstreamObject(serializedObject) {
 		}
 		targetObject._ = targetObject.__();
 	} else {
-		console.log("Loaded data that was already loaded!!!");
+		trace('unserialize', "Loaded data that was already loaded!!!");
+		// console.log("Loaded data that was already loaded!!!");
 	}
 }
 
 
 function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is undefined it will be used to set saver for all unserialized objects.
 	arrayOfSerialized.forEach(function(serialized) {
-		console.log("unserializeFromUpstream: " + serialized.id);
+		trace('unserialize', "unserializeFromUpstream: ", serialized.id);
+		// console.log("unserializeFromUpstream: " + serialized.id);
 		unserializeUpstreamObject(serialized);
 	});
 	if (typeof(liquid.instancePage) !== 'undefined') {

@@ -385,18 +385,21 @@ function getMapDifference(firstSet, secondSet) {
 
 liquid.dirtyPageSubscritiptions = {};
 liquid.getSubscriptionUpdate = function(page) {
-	console.group("getSubscriptionUpdate");
+	// console.group("getSubscriptionUpdate");
+	traceGroup('subscribe', "--- getSubscriptionUpdate ", page, "---");
 	var result = {};
 
 	var addedAndRemovedIds;
 	if (page._dirtySubscriptionSelections) {
-		console.log("dirty selection");
+		traceGroup('subscribe', '--- dirty footprint selection --- ');
+		// console.log("dirty selection");
 		liquid.uponChangeDo(function() {
 			var selection = {};
 			page.getOrderedSubscriptions().forEach(function(subscription) {
 				var object = subscription._relationInstances['Subscription_TargetObject'].data; // silent get
 				var selectorSuffix = capitaliseFirstLetter(subscription._propertyInstances['selector'].data); // Silent get
-				console.log("--- Considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
+				// console.log("--- Considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
+				traceGroup('subscribe', "--- Considering subscription: ", object, ".select" + selectorSuffix + "() ---");
 				var selectorFunctionName = 'select' + selectorSuffix;
 
 				// Perform a selection with dependency recording!
@@ -408,7 +411,8 @@ liquid.getSubscriptionUpdate = function(page) {
 				for (id in subscriptionSelection) {
 					selection[id] = true;
 				}
-				console.log("--- Finish considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
+				traceGroupEnd();
+				// console.log("--- Finish considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
 				// console.groupEnd();
 			});
 			// console.log(selection);
@@ -423,6 +427,7 @@ liquid.getSubscriptionUpdate = function(page) {
 			page._dirtySubscriptionSelections  = true;
 		});
 		addedAndRemovedIds = page._addedAndRemovedIds;
+		traceGroupEnd();
 	} else {
 		console.log("just events");
 		addedAndRemovedIds = {
@@ -488,7 +493,8 @@ liquid.getSubscriptionUpdate = function(page) {
 	}
 
 	// console.log(result);
-	console.groupEnd();
+	// console.groupEnd();
+	traceGroupEnd();
 	return result;
 
 	/**
