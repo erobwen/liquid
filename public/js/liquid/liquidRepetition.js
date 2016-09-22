@@ -59,7 +59,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			// if (traceRepetition) {
 			// 	console.log("registerObserverTo: " + object._ + "." + definition.name);
 			// }
-			trace('repetition', "Observe: ", object, ".", definition.name);
+			// trace('repetition', "Observe: ", object, ".", definition.name);
 			var activeRecorder = liquid.activeRecorders[liquid.activeRecorders.length - 1];
 			// console.log("Reading property " + object.__() + "." + instance + " with repeater " + activeRecorder.id);
 
@@ -73,6 +73,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			// Add repeater on object beeing observed, if not already added before
 			var recorderId = activeRecorder.id;
 			if (typeof(observerSet[recorderId]) === 'undefined') {
+				trace('repetition', "Actually observe: ", object, ".", definition.name);
 				observerSet[recorderId] = activeRecorder;
 
 				// Note dependency in repeater itself (for cleaning up)
@@ -336,7 +337,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 
 			// stackDump();
 			// console.log(this.__() + '.[cachedCall]' +  methodName);
-			traceGroup('repetition', this + '.[cachedCall]' +  methodName);
+			traceGroup('repetition', this, '.[cachedCall]' +  methodName);
 
 			// Establish method caches
 			if (typeof(this["__cachedCalls"]) === 'undefined') {
@@ -355,7 +356,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			// console.log("Argument hash:" + argumentHash);
 			if (typeof(methodCaches[argumentHash]) === 'undefined') {
 				// console.log("Cached method not seen before, or re-caching needed... ");
-				trace('repitition', "Cached method not seen before, or re-caching needed... ");
+				// trace('repitition', "Cached method not seen before, or re-caching needed... ");
 				var methodCache = {
 					observers : {},
 					returnValue : returnValue
@@ -365,10 +366,12 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 				// Never encountered these arguments before, make a new cache
 				var returnValue = liquid.uponChangeDo(this.__() + "." + methodName,
 					function() {
+						traceGroup('repetition', "Evlauate cached function");
 						var returnValue;
 						liquid.blockSideEffects(function() {
 							returnValue = this[methodName].apply(this, methodArguments);
 						}.bind(this));
+						traceGroupEnd();
 						return returnValue;
 					}.bind(this), 
 					function() {
@@ -389,7 +392,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			} else {
 				// Encountered these arguments before, reuse previous repeater
 				// console.log("Cached method seen before ...");
-				trace('repetition', "Cached method seen before ...");
+				// trace('repetition', "Cached method seen before ...");
 				var methodCache = methodCaches[argumentHash];
 				liquid.registerObserverTo(this, {name: methodName}, methodCache);
 				traceGroupEnd();

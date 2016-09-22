@@ -79,9 +79,13 @@ var addLiquidEntity = function(liquid) {
                 });
 
                 object.addMethod('selectBasics', function(selection) {
+                    trace('selection', "----------");
                     liquid.addToSelection(selection, this);
+                    trace('selection', "----------");
                     liquid.addToSelection(selection, this.getSession());
+                    trace('selection', "----------");
                     liquid.addToSelection(selection, this.getActiveUser());
+                    trace('selection', "----------");
 
                     // Only needed for progressive loading!
                     this.getReceivedSubscriptions().forEach(function(subscription) {
