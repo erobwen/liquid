@@ -222,11 +222,24 @@ var addCommonLiquidFunctionality = function(liquid) {
 		return null;
 	};
 
+	liquid.allUnlocked = 0;
 
+	liquid.unlockAll = function(action) {
+		liquid.allUnlocked++;
+		action();
+		liquid.allUnlocked--;
+	};
+	
 	liquid.allowRead = function(object) {
+		console.log(liquid.allUnlocked);
+		if (liquid.allUnlocked > 0) {
+			return true;
+		}
 		var page = liquid.subjectPage();
 		if (page !== null) {
+			liquid.allUnlocked++;
 			var accessLevel = object.cachedCall('accessLevel', page);
+			liquid.allUnlocked--;
 			return accessLevel === 'readOnly' || accessLevel === 'readAndWrite';
 		}
 		return true;
@@ -234,9 +247,15 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 
 	liquid.allowWrite = function(object) {
+		console.log(liquid.allUnlocked);
+		if (liquid.allUnlocked > 0) {
+			return true;
+		}
 		var page = liquid.subjectPage();
 		if (page !== null) {
+			liquid.allUnlocked++;
 			var accessLevel = object.cachedCall('accessLevel', page);
+			liquid.allUnlocked--;
 			return accessLevel === 'readAndWrite';
 		}
 		return true;

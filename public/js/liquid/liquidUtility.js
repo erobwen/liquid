@@ -158,7 +158,7 @@ var arrayDifference = function(updatedArray, oldArray) {
 
 
 function isLiquidObject(data) {
-    return (typeof(data._id) !== 'undefined' && typeof(data._upstreamId) !== 'undefined');
+    return data !== null && (typeof(data._id) !== 'undefined' && typeof(data._upstreamId) !== 'undefined');
 }
 
 function mapLiquidObjectsDeep(data, mapFunction) {
@@ -307,6 +307,9 @@ var pluralize = function(string, revert){
 };
 
 var startsWith = function(prefix, string) {
+    // trace('security', string);
+    // trace('security', prefix.length);
+    // trace('security', string.substr(0, prefix.length));
     return (prefix === string.substr(0, prefix.length));
 }
 

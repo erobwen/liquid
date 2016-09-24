@@ -91,10 +91,14 @@ registerClass({
 		});
 
 		object.overrideMethod('accessLevel', function(page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
-			console.log("Considering security");
+			trace('security', "Considering security");
+			// trace('security', startsWith("X", this.getName()));
+			// trace('security', this.getName());
 			if (startsWith("X", this.getName())) {
+				trace('security', "return noAccess");
 				return "noAccess";
  			} else {
+				trace('security', "return readAndWrite");
 				return "readAndWrite";
 			}
 		});

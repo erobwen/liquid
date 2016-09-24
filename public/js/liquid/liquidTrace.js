@@ -22,7 +22,9 @@ var traceTags = {
     'subscribe' : true,
     'repetition' : true,
     'unserialize' : true,
-    'selection' : true
+    'selection' : true,
+    'security' : true,
+    'react' : true
 
     // 'database' : true,
     // 'pushDownstream' : true,
@@ -183,7 +185,11 @@ var constructTraceString = function(elements) {
     // if (functionName === null) {
     //     stackDump();
     // }
-    codeShort = (codeLong != null) ? "(" + codeLong.split("\\").pop() : null;
+    if (codeLong.indexOf("\\") > 0) {
+        codeShort = (codeLong != null) ? "(" + codeLong.split("\\").pop() : null;
+    } else {
+        codeShort = (codeLong != null) ? "(" + codeLong.split("\/").pop() : null;
+    }
     // console.log(functionName);
     // console.log(codeLong);
     // console.log(codeShort);
@@ -204,9 +210,11 @@ var trace = function() {
         var argumentsArray = argumentsToArray(arguments);
         var tag = argumentsArray.shift();
         if (shouldTrace(tag)) {
+            liquid.allUnlocked++;
             liquid.pauseRecording(function() {
                 console.log(constructTraceString(argumentsArray));
             });
+            liquid.allUnlocked--;
         }
     }
 };
@@ -217,12 +225,14 @@ var traceGroup = function() {
         var argumentsArray = argumentsToArray(arguments);
         var tag = argumentsArray.shift();
         if (shouldTrace(tag)) {
+            liquid.allUnlocked++;
             liquid.pauseRecording(function() {
                 groupNesting--;
                 console.log(constructTraceString(argumentsArray));
                 groupNesting++;
                 // console.group(constructTraceString(argumentsArray));
             });
+            liquid.allUnlocked--;
         } else {
             surpressChildTraces = true;
             hiddenGroupAtNesting = groupNesting;

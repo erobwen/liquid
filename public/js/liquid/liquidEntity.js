@@ -345,7 +345,7 @@ var addLiquidEntity = function(liquid) {
                 };
 
                 object.selectAll = function(selection) {
-                    if (typeof(selection[this._id]) === 'undefined') {
+                    if (typeof(selection[this._id]) === 'undefined' && liquid.allowRead(this)) {
                         // console.log("Selecting " + this.__());
                         selection[this._id] = true;
                         this.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {

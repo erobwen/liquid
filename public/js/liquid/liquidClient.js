@@ -112,7 +112,7 @@ liquid.pushDataUpstream = function() {
 		liquid.activePulse.events.forEach(function(event) {
 			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
 			if (!eventIsFromUpstream) {
-				console.log("processing event required objects");
+				trace('serialize', "processing event required objects");
 				if (event.object._upstreamId !== null && event.action == 'addingRelation' && event.relatedObject._upstreamId === null) {
 					addRequiredCascade(event.relatedObject, requiredObjects);
 				}
@@ -130,7 +130,7 @@ liquid.pushDataUpstream = function() {
 			// console.log(event);
 			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
 			if (!event.redundant && !eventIsFromUpstream) {
-				console.log("not from upstream");
+				trace('serialize', "not from upstream");
 				if (event.object._upstreamId !== null) {
 					serializedEvents.push(serializeEventForUpstream(event));
 				} else if (typeof(requiredObjects[event.object._id]) !== 'undefined') {
@@ -228,6 +228,7 @@ function unserializeUpstreamObject(serializedObject) {
 
 
 function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is undefined it will be used to set saver for all unserialized objects.
+	liquid.allUnlocked++;
 	arrayOfSerialized.forEach(function(serialized) {
 		trace('unserialize', "unserializeFromUpstream: ", serialized.id);
 		// console.log("unserializeFromUpstream: " + serialized.id);
@@ -236,6 +237,7 @@ function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is und
 	if (typeof(liquid.instancePage) !== 'undefined') {
 		liquid.instancePage.upstreamPulseReceived();
 	}
+	liquid.allUnlocked--;
 }
 
 

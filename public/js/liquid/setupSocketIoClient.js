@@ -5,14 +5,14 @@ var socket = io('http://localhost:8080');
 liquid.upstreamSocket = socket;
 
 socket.on('connect', function(){
-	console.log("received CONNECT");
-	console.log(liquid.instancePage.getHardToGuessPageId());
+	trace('serialize', "received CONNECT");
+	trace('serialize', liquid.instancePage, " Page id:", liquid.instancePage.getHardToGuessPageId());
 	socket.emit("registerPageId", liquid.instancePage.getHardToGuessPageId());
 });
 
 
 socket.on('disconnect', function(){
-	console.log("Disconnected");
+	trace('serialize', "Disconnected");
 });
 
 
