@@ -64,9 +64,15 @@ socket.on('pushSubscriptionChanges', function(changes){
 					liquid.activeSaver = liquid.defaultSaver;
 				}
 			});
+
+			// TODO: kill objects changes.unsubscribedUpstreamIds, even remove from persistent memory if found,
+			// and create an "originators copy" of the data for safekeeping. 
+			for (upstreamId in changes.unsubscribedUpstreamIds) {
+				var object = liquid.getUpstreamEntity(upstreamId);
+				object.setIsLockedObject(true);
+			}
+
 		});
-		// TODO: kill objects changes.unsubscribedUpstreamIds, even remove from persistent memory if found,
-		// and create an "originators copy" of the data for safekeeping. 
 	});
 });
 

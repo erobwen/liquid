@@ -129,27 +129,29 @@ window.CategoryView = React.createClass(liquidClassData({
 	},
 	
 	componentDidMount: function() {
-		var subCategoriesDiv = this.refs.subCategoriesDiv;
-		// console.log(subCategoriesDiv.style.marginLeft);
-		subCategoriesDiv.style.overflow = 'hidden';
-		subCategoriesDiv.style.height = 'auto';
-		subCategoriesDiv.style.transition = 'height .5s';
-		subCategoriesDiv.addEventListener("transitionend", function() {
-			// console.log("Finished transition");
-			// console.log(subCategoriesDiv);
-			// console.log(this);
-			// console.log("Height: " + subCategoriesDiv.clientHeight);
-			if (subCategoriesDiv.clientHeight !== 0) {
-				// console.log("Tree open");
-				subCategoriesDiv.style.height = "auto";
+		if (typeof(this.refs.subCategoriesDiv) !== 'undefined') {
+			var subCategoriesDiv = this.refs.subCategoriesDiv;
+			// console.log(subCategoriesDiv.style.marginLeft);
+			subCategoriesDiv.style.overflow = 'hidden';
+			subCategoriesDiv.style.height = 'auto';
+			subCategoriesDiv.style.transition = 'height .5s';
+			subCategoriesDiv.addEventListener("transitionend", function() {
+				// console.log("Finished transition");
+				// console.log(subCategoriesDiv);
 				// console.log(this);
-				this.setState({collapsed : false});
-			} else {
-				// console.log("Tree closed");
-				// console.log(this);
-				this.setState({collapsed : true});
-			}
-		}.bind(this), false);
+				// console.log("Height: " + subCategoriesDiv.clientHeight);
+				if (subCategoriesDiv.clientHeight !== 0) {
+					// console.log("Tree open");
+					subCategoriesDiv.style.height = "auto";
+					// console.log(this);
+					this.setState({collapsed : false});
+				} else {
+					// console.log("Tree closed");
+					// console.log(this);
+					this.setState({collapsed : true});
+				}
+			}.bind(this), false);
+		}
     },
 		
 	
@@ -260,19 +262,39 @@ window.CategoryView = React.createClass(liquidClassData({
 			var subCategories = [];
 			var categoryViewElementName ="CategoryView"
 
-			if (!this.props.category.canRead() ||this.props.category._noDataLoaded) {
+			// To replace the plus sign when not showing
+			var createCollapseSpacer = function() {
+				return (
+					<span
+						style={{opacity: 0, marginRight: "0.61em"}}
+						className={ "fa fa-plus-square-o" }>
+					</span>);
+			};
+			
+			// This category is locked
+			if (!this.props.category.isLocked()) { // TODO: consider !canRead() can liquid always set the locked property??
 				return (
 					<div className="CategoryView">
-						<span
-							style={{opacity: 0, marginRight: "0.61em"}}
-							className={ "fa fa-plus-square-o" }>
-						</span>
+						{ createCollapseSpacer() }
 						<span
 							style={{marginRight: "0.61em"}}
 							className={ "fa fa-lock" }>
 						</span>
 					</div>);
 			}
+
+			// This category is not loaded
+			if (!this.props.category.isLoaded()) {
+				return (
+					<div className="CategoryView">
+						{ createCollapseSpacer() }
+						<span
+							style={{marginRight: "0.61em"}}
+							className={ "fa fa-spinner" }>
+						</span>
+					</div>);
+			}
+
 
 			this.props.category.getSubCategories().forEach(function(category) {
 				// How to do it with standard syntax:

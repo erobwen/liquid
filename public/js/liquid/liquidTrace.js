@@ -16,7 +16,7 @@ var traceTags = {
     // 'setup' : true,
     // 'member' : true,
     // 'incoming' : true,
-    // 'property' : true,
+    'property' : true,
     // 'create' : true,
     'pulse' : true,
     'subscribe' : true,

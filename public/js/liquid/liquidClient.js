@@ -132,7 +132,7 @@ liquid.pushDataUpstream = function() {
 			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
 			if (!event.redundant && !eventIsFromUpstream) {
 				trace('serialize', "not from upstream");
-				if (event.object._upstreamId !== null) {
+				if (event.object._upstreamId !== null && typeof(event.definition) !== 'undefined' && !event.definition.clientOnly) {
 					serializedEvents.push(serializeEventForUpstream(event));
 				} else if (typeof(requiredObjects[event.object._id]) !== 'undefined') {
 					serializedEvents.push(serializeEventForUpstream(event));
@@ -177,9 +177,10 @@ function ensureEmptyObjectExists(upstreamId, className) {
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 		var newObject = liquid.createClassInstance(className);
 		newObject._upstreamId = upstreamId;
-		newObject._noDataLoaded = true;
 		liquid.upstreamIdObjectMap[upstreamId] = newObject;
 		newObject._ = newObject.__();
+		newObject.setIsPlaceholderObject(true);
+		// newObject._noDataLoaded = true;
 	}
 	return liquid.upstreamIdObjectMap[upstreamId];
 }
@@ -193,7 +194,7 @@ function unserializeUpstreamObject(serializedObject) {
 	}
 	var targetObject = liquid.upstreamIdObjectMap[upstreamId];
 	// console.log(targetObject);
-	if (targetObject._noDataLoaded) {
+	if (targetObject.getIsPlaceholderObject()) {
 		targetObject.forAllOutgoingRelations(function(definition, instance) {
 			// console.log("processingRelation: " + definition.name);
 			trace('unserialize', definition.name, "~~>", targetObject);
@@ -216,10 +217,7 @@ function unserializeUpstreamObject(serializedObject) {
 				targetObject[definition.setterName](data);
 			}
 		}
-		targetObject._noDataLoaded = false;
-		if (typeof(targetObject._isLoadedObservers) !== 'undefined') {
-			liquid.recordersDirty(targetObject._isLoadedObservers.observers);
-		}
+		targetObject.setIsPlaceholderObject(false);
 		targetObject._ = targetObject.__();
 	} else {
 		trace('unserialize', "Loaded data that was already loaded!!!");

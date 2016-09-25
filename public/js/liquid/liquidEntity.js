@@ -69,9 +69,10 @@ var addLiquidEntity = function(liquid) {
                 });//Subscription
 
                 object.addMethod('upstreamPulseReceived', function() {
-                    this.setReceivedSubscriptions(this.getOrderedSubscriptions()); // TODO: Consider, what happens if two subscriptions are requested at the same time?
-                    this._requestingSubscription = false;
-                    this.checkLoadQueue();
+                    // TODO: activate this later
+                    // this.setReceivedSubscriptions(this.getOrderedSubscriptions()); // TODO: Consider, what happens if two subscriptions are requested at the same time?
+                    // this._requestingSubscription = false;
+                    // this.checkLoadQueue();
                 });
 
                 object.addMethod('encryptPassword', function(liquidPassword) {
@@ -147,7 +148,7 @@ var addLiquidEntity = function(liquid) {
                     this.getReceivedSubscriptions().forEach(function(subscription) {
                         liquid.recordingSubscription = subscription;
                         var selection = {};
-                        var selectorFunctionName = capitalizeFirstLetter(selection.getSelector());
+                        var selectorFunctionName = capitaliseFirstLetter(selection.getSelector());
                         subscription.getTargetObject()[selectorFunctionName](selection);
                     });
                     liquid.recordingSelectors = false;
@@ -262,8 +263,8 @@ var addLiquidEntity = function(liquid) {
             name: 'Entity',
             addPropertiesAndRelations : function (object) {
                 // Note: This information needs to match what is in the database definition (fields and their default values) and the model and its relations.
-                object.addProperty('placeholderObject', false, {clientOnly : true});
-                object.addProperty('lockedObject', false, {clientOnly : true});
+                object.addProperty('isPlaceholderObject', false, {clientOnly : true});
+                object.addProperty('isLockedObject', false, {clientOnly : true});
             },
 
             addMethods : function (object) {
@@ -296,9 +297,17 @@ var addLiquidEntity = function(liquid) {
                     }
                 };
 
+                object.isLocked = function() {
+                    if (liquid.onClient) {
+                        return this.getIsLockedObject() || !this.canRead();
+                    } else {
+                        return false;
+                    }
+                };
+
                 object.isLoaded = function() {
-                    if (typeof(liquid.instancePage) !== 'undefined' && liquid.instancePage !== null) {
-                        if (arguments.length = 1) {
+                    if (liquid.onClient) {
+                        if (arguments.length == 1) {
                             var selector = arguments[0];
                             if (typeof(liquid.instancePage) !== 'undefined' && liquid.instancePage !== null) {
                                 return (typeof(liquid.instancePage.getLoadedSelectionsFor(this)[selector]) !== undefined);
@@ -306,11 +315,7 @@ var addLiquidEntity = function(liquid) {
                                 return true;
                             }
                         } else {
-                            if (typeof(this._isLoadedObservers) === 'undefined') {
-                                this._isLoadedObservers = { observers: {} };
-                            }
-                            liquid.registerObserverTo(this, {name: 'isLoaded'}, this._isLoadedObservers);
-                            return !this._noDataLoaded;
+                            return !this.getIsPlaceholderObject();
                         }
                     } else {
                         return true;

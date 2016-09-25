@@ -728,10 +728,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		for (var propertyName in prototypeObject._propertyDefinitions) {
 			object._propertyInstances[propertyName] = {observers: {}};
 		}
-
-		// Client only
-		object._noDataLoaded = false;  // Means, if any more information that entity id and class name has been loaded. Only used on client? 
-
+		
 		// Server only
 		object._observingPages = {};
 		object._incomingRelationsComplete = {}; // Server only
@@ -748,9 +745,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object._incomingRelations = {};   // A general store of all incoming relations. This way we always have back-references!!! (this is important for any kind of garbage collection, or freeing up of memory)
 		object._relationInstances = {};   // relationName (qualified?) -> relation
 		object._propertyInstances = {};  // propertyName -> property		
-
-		// Client only
-		object._noDataLoaded = false;  // Means, if any more information that entity id and class name has been loaded. Only used on client? 
 
 		// Server only
 		object._incomingRelationsComplete = {}; // Server only
