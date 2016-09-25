@@ -170,16 +170,21 @@ function unserializeUpstreamReference(reference) {
 	var fragments = reference.split(":");
 	var className = fragments[0];
 	var id = parseInt(fragments[1]);
-	return ensureEmptyObjectExists(id, className);
+	var locked = fragments[2] === 'true' ? true : false;
+	console.log("What the hell!!!");
+	console.log(fragments);
+	console.log(locked);
+	return ensureEmptyObjectExists(id, className, locked);
 }
 
-function ensureEmptyObjectExists(upstreamId, className) {
+function ensureEmptyObjectExists(upstreamId, className, isLocked) {
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 		var newObject = liquid.createClassInstance(className);
 		newObject._upstreamId = upstreamId;
 		liquid.upstreamIdObjectMap[upstreamId] = newObject;
 		newObject._ = newObject.__();
 		newObject.setIsPlaceholderObject(true);
+		newObject.setIsLockedObject(isLocked);
 		// newObject._noDataLoaded = true;
 	}
 	return liquid.upstreamIdObjectMap[upstreamId];
@@ -190,7 +195,7 @@ function unserializeUpstreamObject(serializedObject) {
 	// console.log(serializedObject);
 	var upstreamId = serializedObject.id;
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
-		ensureEmptyObjectExists(upstreamId, serializedObject.className);
+		ensureEmptyObjectExists(upstreamId, serializedObject.className, false);
 	}
 	var targetObject = liquid.upstreamIdObjectMap[upstreamId];
 	// console.log(targetObject);

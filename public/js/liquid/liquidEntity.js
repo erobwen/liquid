@@ -299,15 +299,12 @@ var addLiquidEntity = function(liquid) {
 
                 object.isLocked = function() {
                     if (liquid.onClient) {
-                        console.log(this);
-                        // console.log(this.__());
-                        console.log(this.getIsLockedObject);
                         liquid.allUnlocked++;
                         var isLockedProperty = this.getIsLockedObject();
-                        console.log(isLockedProperty);
                         liquid.allUnlocked--;
-                        console.log(this.canRead());
-                        return isLockedProperty || !this.canRead();
+                        var result = isLockedProperty || !this.canRead();
+                        trace('security', this, '.isLocked() returns ', result);
+                        return result;
                     } else {
                         return false;
                     }

@@ -272,6 +272,10 @@ window.CategoryView = React.createClass(liquidClassData({
 			};
 			
 			// This category is locked
+			console.log("In rendering!");
+			var value = this.props.category.isLocked();
+			console.log(value);
+			console.log(typeof(value));
 			if (this.props.category.isLocked()) { // TODO: consider !canRead() can liquid always set the locked property??
 				return (
 					<div className="CategoryView">

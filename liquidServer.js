@@ -359,25 +359,25 @@ liquid.loadSetRelation = function(object, definition, instance) {
  *-----------------------------------------------------------------*/
 
 function getMapDifference(firstSet, secondSet) {
-	console.log("getmapdifference");
-	console.log(firstSet);
-	console.log(secondSet);
+	// console.log("getmapdifference");
+	// console.log(firstSet);
+	// console.log(secondSet);
 	var added = {};
 	var removed = {};
 	var static = {};
 	for(id in firstSet) {
 		if(typeof(secondSet[id]) === 'undefined') {
-			console.log("removed");
+			// console.log("removed");
 			removed[id] = true;
 		} else {
-			console.log("static");
+			// console.log("static");
 			static[id] = true;
 		}
 	} 
 	
 	for(id in secondSet) {
 		if(typeof(firstSet[id]) === 'undefined') {
-			console.log("added");
+			// console.log("added");
 			added[id] = true;
 		}
 	}
@@ -414,7 +414,7 @@ liquid.getSubscriptionUpdate = function(page) {
 				liquid.pageSubject = page;
 				object[selectorFunctionName](subscriptionSelection);
 				liquid.pageSubject = null;
-				console.log(subscriptionSelection);
+				// console.log(subscriptionSelection);
 				// console.log(subscriptionSelection);
 				for (id in subscriptionSelection) {
 					selection[id] = true;
@@ -423,10 +423,10 @@ liquid.getSubscriptionUpdate = function(page) {
 				// console.log("--- Finish considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
 				// console.groupEnd();
 			});
-			console.log("consolidate");
-			console.log(selection);
+			// console.log("consolidate");
+			// console.log(selection);
 			page._previousSelection = page._selection;
-			console.log(page._previousSelection);
+			// console.log(page._previousSelection);
 			page._selection = selection;
 			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._dirtySubscriptionSelections  = false;
@@ -439,7 +439,7 @@ liquid.getSubscriptionUpdate = function(page) {
 		addedAndRemovedIds = page._addedAndRemovedIds;
 		traceGroupEnd();
 	} else {
-		console.log("just events");
+		trace('serialize', "just events");
 		addedAndRemovedIds = {
 			added : {},
 			removed : {},
@@ -447,9 +447,20 @@ liquid.getSubscriptionUpdate = function(page) {
 		}
 	}
 
-
-	console.log("Added and removed:");
-	console.log(addedAndRemovedIds);
+	traceGroup('serialize', "Added and removed:");
+	trace('serialize', "Added:");
+	for (var id in addedAndRemovedIds.added) {
+		trace('serialize', getEntity(id));
+	}
+	trace('serialize', "Removed:");
+	for (var id in addedAndRemovedIds.removed) {
+		trace('serialize', getEntity(id));
+	}
+	trace('serialize', "Static:");
+	for (var id in addedAndRemovedIds.static) {
+		trace('serialize', getEntity(id));
+	}
+	traceGroupEnd();
 	// console.log("Added ids:");
 	// console.log(addedAndRemovedIds.added);
 	// console.log("Removed ids:");
@@ -472,7 +483,10 @@ liquid.getSubscriptionUpdate = function(page) {
 	}
 
 	// Serialize
+	liquid.pageSubject = page;
 	result.addedSerialized = liquid.serializeSelection(addedAndRemovedIds.added);
+	liquid.pageSubject = null;
+
 	result.unsubscribedUpstreamIds = addedAndRemovedIds.removed;
 
 	//add event info originating from repeaters.
@@ -483,7 +497,9 @@ liquid.getSubscriptionUpdate = function(page) {
 			// console.log("A");
 			if (addedAndRemovedIds.static[event.object._id]) {
 				// console.log("B");
+				liquid.pageSubject = page;
 				result.events.push(serializeEventForDownstream(event));
+				liquid.pageSubject = null;
 			}
 		}
 	});

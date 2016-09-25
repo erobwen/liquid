@@ -165,7 +165,7 @@ function mapLiquidObjectsDeep(data, mapFunction) {
     if (data === null) {
         return null;
     } else if (isArray(data)) {
-        newData = [];
+        var newData = [];
         data.forEach(function(element) {
             newData.push(mapLiquidObjectsDeep(element, mapFunction));
         });
@@ -178,6 +178,32 @@ function mapLiquidObjectsDeep(data, mapFunction) {
         } else {
             for (property in data) {
                 data[property] = mapLiquidObjectsDeep(data[property], mapFunction);
+            }
+            return data;
+        }
+    } else {
+        return data;
+    }
+}
+
+
+function cloneAndMapLiquidObjectsDeep(data, mapFunction) {
+    if (data === null) {
+        return null;
+    } else if (isArray(data)) {
+        var newData = [];
+        data.forEach(function(element) {
+            newData.push(cloneAndMapLiquidObjectsDeep(element, mapFunction));
+        });
+        return newData;
+    } else if (typeof(data) == 'object') {
+        if (isLiquidObject(data)) {
+            // Liquid object for sure!
+            return mapFunction(data);
+        } else {
+            var newData = {};
+            for (property in data) {
+                newData[property] = cloneAndMapLiquidObjectsDeep(data[property], mapFunction);
             }
             return data;
         }

@@ -22,6 +22,7 @@ var traceTags = {
     'subscribe' : true,
     // 'repetition' : true,
     'unserialize' : true,
+    'serialize' : true,
     'selection' : true,
     'security' : true,
     // 'react' : true
@@ -206,7 +207,7 @@ var constructTraceString = function(elements) {
 };
 
 var trace = function() {
-    if (!surpressChildTraces) {
+    // if (!surpressChildTraces) {
         var argumentsArray = argumentsToArray(arguments);
         var tag = argumentsArray.shift();
         if (shouldTrace(tag)) {
@@ -216,12 +217,12 @@ var trace = function() {
             });
             liquid.allUnlocked--;
         }
-    }
+    // }
 };
 
 var traceGroup = function() {
     groupNesting++;
-    if (!surpressChildTraces) {
+    // if (!surpressChildTraces) {
         var argumentsArray = argumentsToArray(arguments);
         var tag = argumentsArray.shift();
         if (shouldTrace(tag)) {
@@ -237,7 +238,7 @@ var traceGroup = function() {
             surpressChildTraces = true;
             hiddenGroupAtNesting = groupNesting;
         }
-    }
+    // }
 };
 
 var traceGroupEnd = function() {

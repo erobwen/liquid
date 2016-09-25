@@ -1008,20 +1008,24 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property getter
 		object[definition.getterName] = function() {
-			console.log("Getter!");
+			// console.log("Getter!");
 			trace('property', this, ".", definition.getterName, "()");
 
 			// console.log("Get property: " + this._ + "." + definition.getterName + "()");
-			if (liquid.allowRead(this) && typeof(this._propertyInstances[definition.name].data) !== 'undefined') {
-				console.log("A");
-				var instance = this._propertyInstances[definition.name];
-				liquid.registerObserverTo(this, definition, instance);
-				return instance.data;
+			if (liquid.allowRead(this)) {
+				if (typeof(this._propertyInstances[definition.name].data) !== 'undefined') {
+					trace('property', 'A stored value exists.');
+					var instance = this._propertyInstances[definition.name];
+					liquid.registerObserverTo(this, definition, instance);
+					return instance.data;
+				} else {
+					trace('property', 'Resort to default value');
+					// console.log(definition);
+					// return clone(definition.defaultValue);
+					return definition.defaultValue;
+				}
 			} else {
-				console.log("B");
-				console.log(definition);
-				// return clone(definition.defaultValue);
-				return definition.defaultValue;
+				trace('property', 'Access denied!');
 			}
 		};
 		
@@ -1544,7 +1548,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						return object.className + ":downstreamId:" + object._id;
 					}
 				} else {
-					return object.className + ":" + object._id + ":" + object.canRead();
+					return object.className + ":" + object._id + ":" + !object.canRead();
 				}
 			} else {
 				return null;
