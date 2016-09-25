@@ -997,6 +997,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 
 	liquid.addPropertyInfo = function(object, definition) {
+		if (typeof(definition) === 'undefined')
+			debugger;
 		if (liquid.onServer && definition.clientOnly) {
 			return;
 		}
@@ -1006,14 +1008,18 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Member: Property getter
 		object[definition.getterName] = function() {
+			console.log("Getter!");
 			trace('property', this, ".", definition.getterName, "()");
 
 			// console.log("Get property: " + this._ + "." + definition.getterName + "()");
-			if (liquid.allowRead(this) && typeof(this._propertyInstances[definition.name]) !== 'undefined') {
+			if (liquid.allowRead(this) && typeof(this._propertyInstances[definition.name].data) !== 'undefined') {
+				console.log("A");
 				var instance = this._propertyInstances[definition.name];
 				liquid.registerObserverTo(this, definition, instance);
 				return instance.data;
 			} else {
+				console.log("B");
+				console.log(definition);
 				// return clone(definition.defaultValue);
 				return definition.defaultValue;
 			}

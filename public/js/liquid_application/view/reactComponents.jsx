@@ -272,7 +272,7 @@ window.CategoryView = React.createClass(liquidClassData({
 			};
 			
 			// This category is locked
-			if (!this.props.category.isLocked()) { // TODO: consider !canRead() can liquid always set the locked property??
+			if (this.props.category.isLocked()) { // TODO: consider !canRead() can liquid always set the locked property??
 				return (
 					<div className="CategoryView">
 						{ createCollapseSpacer() }
