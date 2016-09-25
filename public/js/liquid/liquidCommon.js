@@ -231,7 +231,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 	
 	liquid.allowRead = function(object) {
-		console.log(liquid.allUnlocked);
+		// console.log(liquid.allUnlocked);
 		if (liquid.allUnlocked > 0) {
 			return true;
 		}
@@ -247,7 +247,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 
 	liquid.allowWrite = function(object) {
-		console.log(liquid.allUnlocked);
+		// console.log(liquid.allUnlocked);
 		if (liquid.allUnlocked > 0) {
 			return true;
 		}
@@ -403,7 +403,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 		} else {
 			property.securityInfo = false;
 		}
-		
+
+		property.clientOnly = (typeof(details) !== 'undefined' && typeof(details.clientOnly) !== 'undefined');
+
 		// Interpret undefined as false
 		if(typeof(property.type) == 'undefined') property.type = 'string';
 		if(typeof(property.defaultValue) == 'undefined') property.defaultValue = '';
@@ -822,7 +824,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		object.addProperty = function(name, defaultValue, details) {
 			liquid.addProperty(object, name, defaultValue, details);
 		};
-		
+
 		object.addRelation = function(name, cardinality, details) {
 			liquid.addRelation(object, name, cardinality, details);
 		};
@@ -838,7 +840,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Add methods and repeaters
 		object.addMethod = function(methodName, method) {
-			if (methodName.indexOf("select") === 0) {
+			if (methodName.indexOf("select") === 0) { // TODO: Should we be able to override selects as well?
 				var selectionName = methodName.substring(6);
 				// liquid.recordSelectors = true;
 				// liquid.idToSelectorsMap = {}; // Structure {id -> {selector -> {subscriptionId -> subscription}}}
@@ -866,9 +868,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		object.overrideMethod = function(methodName, method) {
 			var parent = object[methodName];
-			if (arguments.length > 2 && liquid.onServer) {
-				throw "Error: Cannot change method role on inherited function!"
-			}
 
 			// Note: this is important, because in a repeatOnChange we can track what methods are overwritten on the server, so we know they can only be called on the server. 
 			object[methodName] = function() {
@@ -1004,6 +1003,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 
 	liquid.addPropertyInfo = function(object, definition) {
+		if (liquid.onServer && definition.clientOnly) {
+			return;
+		}
 		var instance = {observers : {}};
 		object._propertyDefinitions[definition.name] = definition;
 		object._propertyInstances[definition.name] = instance; // This is only used in object augmentation mode. 
@@ -1542,7 +1544,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						return object.className + ":downstreamId:" + object._id;
 					}
 				} else {
-					return object.className + ":" + object._id;
+					return object.className + ":" + object._id + ":" + object.canRead();
 				}
 			} else {
 				return null;
@@ -1568,13 +1570,17 @@ var addCommonLiquidFunctionality = function(liquid) {
 					serialized[relationQualifiedName] = object[definition.getterName]().map(serializedReference);
 				} else {
 					serialized[relationQualifiedName] = serializedReference(object[definition.getterName]());
-					console.log(serialized[relationQualifiedName]);
+					// console.log(serialized[relationQualifiedName]);
 				}
 			}
 		}
 		for (propertyName in object._propertyDefinitions) {
-			definition = object._propertyDefinitions[propertyName];
-			serialized[definition.name] = object[definition.getterName]();
+			if (forUpstream && definition.clientOnly) {
+				// Ignore
+			} else {
+				definition = object._propertyDefinitions[propertyName];
+				serialized[definition.name] = object[definition.getterName]();
+			}
 		}
 		return serialized;
 	};

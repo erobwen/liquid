@@ -12,6 +12,7 @@ require( 'console-group' ).install();
  */ 
 var liquid = {};
 liquid.onServer = true;
+liquid.onClient = false;
 liquidCommon.addCommonLiquidFunctionality(liquid);
 liquidEntity.addLiquidEntity(liquid)
 liquidSelection.addLiquidSelectionFunctionality(liquid);
@@ -358,19 +359,25 @@ liquid.loadSetRelation = function(object, definition, instance) {
  *-----------------------------------------------------------------*/
 
 function getMapDifference(firstSet, secondSet) {
+	console.log("getmapdifference");
+	console.log(firstSet);
+	console.log(secondSet);
 	var added = {};
 	var removed = {};
 	var static = {};
 	for(id in firstSet) {
 		if(typeof(secondSet[id]) === 'undefined') {
+			console.log("removed");
 			removed[id] = true;
 		} else {
+			console.log("static");
 			static[id] = true;
 		}
 	} 
 	
 	for(id in secondSet) {
 		if(typeof(firstSet[id]) === 'undefined') {
+			console.log("added");
 			added[id] = true;
 		}
 	}
@@ -407,6 +414,7 @@ liquid.getSubscriptionUpdate = function(page) {
 				liquid.pageSubject = page;
 				object[selectorFunctionName](subscriptionSelection);
 				liquid.pageSubject = null;
+				console.log(subscriptionSelection);
 				// console.log(subscriptionSelection);
 				for (id in subscriptionSelection) {
 					selection[id] = true;
@@ -415,8 +423,10 @@ liquid.getSubscriptionUpdate = function(page) {
 				// console.log("--- Finish considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
 				// console.groupEnd();
 			});
-			// console.log(selection);
+			console.log("consolidate");
+			console.log(selection);
 			page._previousSelection = page._selection;
+			console.log(page._previousSelection);
 			page._selection = selection;
 			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._dirtySubscriptionSelections  = false;

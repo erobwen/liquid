@@ -38,6 +38,7 @@ socket.on('pushSubscriptionChanges', function(changes){
 		for (id in changes.idToUpstreamId) {
 			liquid.getEntity(id)._upstreamId = changes.idToUpstreamId[id];
 		}
+		console.log(changes);
 		//result
 		unserializeFromUpstream(changes.addedSerialized);
 

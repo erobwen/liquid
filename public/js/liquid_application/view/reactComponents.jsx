@@ -259,6 +259,21 @@ window.CategoryView = React.createClass(liquidClassData({
 		return invalidateUponLiquidChange("CategoryView", this, function() {
 			var subCategories = [];
 			var categoryViewElementName ="CategoryView"
+
+			if (!this.props.category.canRead() ||this.props.category._noDataLoaded) {
+				return (
+					<div className="CategoryView">
+						<span
+							style={{opacity: 0, marginRight: "0.61em"}}
+							className={ "fa fa-plus-square-o" }>
+						</span>
+						<span
+							style={{marginRight: "0.61em"}}
+							className={ "fa fa-lock" }>
+						</span>
+					</div>);
+			}
+
 			this.props.category.getSubCategories().forEach(function(category) {
 				// How to do it with standard syntax:
 

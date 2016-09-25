@@ -3,7 +3,8 @@
  */
 
 var liquid = {
-	onServer : false
+	onServer : false,
+	onClient: true
 };
 
 addCommonLiquidFunctionality(liquid);

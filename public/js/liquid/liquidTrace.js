@@ -13,18 +13,18 @@ var col3Left = col1Width + col2Width;
 // (liquidCommon.js:573:3)             create:       (className: Category)
 
 var traceTags = {
-    'setup' : true,
-    'member' : true,
-    'incoming' : true,
-    'property' : true,
-    'create' : true,
+    // 'setup' : true,
+    // 'member' : true,
+    // 'incoming' : true,
+    // 'property' : true,
+    // 'create' : true,
     'pulse' : true,
     'subscribe' : true,
-    'repetition' : true,
+    // 'repetition' : true,
     'unserialize' : true,
     'selection' : true,
     'security' : true,
-    'react' : true
+    // 'react' : true
 
     // 'database' : true,
     // 'pushDownstream' : true,

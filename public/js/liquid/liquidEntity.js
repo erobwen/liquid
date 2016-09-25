@@ -262,6 +262,8 @@ var addLiquidEntity = function(liquid) {
             name: 'Entity',
             addPropertiesAndRelations : function (object) {
                 // Note: This information needs to match what is in the database definition (fields and their default values) and the model and its relations.
+                object.addProperty('placeholderObject', false, {clientOnly : true});
+                object.addProperty('lockedObject', false, {clientOnly : true});
             },
 
             addMethods : function (object) {
@@ -328,7 +330,7 @@ var addLiquidEntity = function(liquid) {
                     // if (this._globalId !== null) {
                     //     idString = "¤." + this._globalId;
                     // } else if (this._persistentId !== null){
-                    //     idString = "#." + this._persistentId;
+                    //     idString = "#." + this._persistsentId;
                     // } else if (this._id !== null) {
                     //     idString = "id." + this._id;
                     // }
@@ -342,6 +344,14 @@ var addLiquidEntity = function(liquid) {
                 // This is the signum function, useful for debugging and tracing.
                 object.__ = function() {
                     return "(" + this.className + "." + this._idString() + ")";
+                };
+
+                object.canRead = function() {
+                    return liquid.allowRead(this);
+                };
+
+                object.canWrite = function() {
+                    return liquid.allowWrite(this);
                 };
 
                 object.selectAll = function(selection) {

@@ -30,6 +30,7 @@ Fiber(function() {
 	liquid.initialize();
 }).run();
 
+liquid.onNodeJs = true;
 
 /**--------------------------------------------------------------
  *                 Connection management
