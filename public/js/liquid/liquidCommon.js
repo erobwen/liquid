@@ -1408,7 +1408,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 
 			// Member: Incoming set iterator
 			object[definition.forAllName] = function(action) {
-				if (liquid.allowRead(this)) {
+				// if (liquid.allowRead(this)) {
 					// console.log("Iterate set: " + this.__() + "." + definition.name);
 					var instance = this._relationInstances[definition.qualifiedName];
 					if (typeof(instance.data) === 'undefined') {
@@ -1418,12 +1418,12 @@ var addCommonLiquidFunctionality = function(liquid) {
 					instance.data.forEach(function(child) {
 						action(child);
 					}.bind(this));
-				}
+				// }
 			};
 
 			// Member: Incoming set getter
 			object[definition.getterName] = function() {
-				if (liquid.allowRead(this)) {
+				// if (liquid.allowRead(this)) {
 					// console.log("Get set: " + this.__() + "." + definition.name);
 					// console.log(definition.getterName + "(...)");
 					var instance = this._relationInstances[definition.qualifiedName];
@@ -1432,13 +1432,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 					}
 					liquid.registerObserverTo(this, definition, instance);
 					return instance.data;
-				}
-				return [];
+				// }
+				// return [];
 			};
 
 			// Member: Incoming set setter // Init setter (uses adder and remover  no notification and no actual manipulation)
 			object[definition.setterName] = function(newSet) {
-				if (liquid.allowWrite(this)) {
+				// if (liquid.allowWrite(this)) {
 					// console.log("Set set: " + this.__() + "." + definition.name);
 					// console.log(definition.setterName + "(...)");
 					var instance = this._relationInstances[definition.qualifiedName];				
@@ -1463,13 +1463,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 					} else {
 						return false;
 					}
-				}
-				return false;
+				// }
+				// return false;
 			};
 
 			// Member: Incoming set adder (just relays to incoming relation, no notification and no actual manipulation)
 			object[definition.adderName] = function(added) { // TODO: Add to pulse? But how to know if the event was rejected? We have to just give a chance!
-				if (liquid.allowWrite(this)) {
+				// if (liquid.allowWrite(this)) {
 					// console.log("Add to set (reverse): " + this.__() + "." + definition.adderName + "(" + added.__() + ")");
 					liquid.inPulseBlockUponChangeActions(function(pulse) {
 						var incomingDefinition = added._relationDefinitions[incomingRelationQualifiedName];
@@ -1484,13 +1484,13 @@ var addCommonLiquidFunctionality = function(liquid) {
 							pulse.add({redundant: true, action: 'addingRelation', object: this, definition: incomingDefinition, instance: incomingInstance, relatedObject: added});
 						}
 					}.bind(this));
-				} 
-				return false;
+				// }
+				// return false;
 			};
 
 			// Member: Incoming set remover (just relays to incoming relation, no notification and no actual manipulation)
 			object[definition.removerName] = function(removed) {
-				if (liquid.allowWrite(this)) {
+				// if (liquid.allowWrite(this)) {
 					// console.log("Remove from set (reverse): " + this.__() + "." + definition.removerName + "(" + removed.__() + ")");
 					liquid.inPulseBlockUponChangeActions(function(pulse) {
 						console.log(definition.removerName + "(...)");
@@ -1506,8 +1506,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 							pulse.add({redundant: true, action: 'addingRelation', object: this, definition: incomingDefinition, instance: incomingInstance, relatedObject: added});
 						}
 					}.bind(this));
-				}
-				return false;
+				// }
+				// return false;
 			};
 		}
 	};

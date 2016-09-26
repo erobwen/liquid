@@ -47,6 +47,9 @@ var addLiquidEntity = function(liquid) {
                 object.addRelation('Service', 'toOne');
                 object.addRelation('ReceivedSubscription', 'toMany');
                 object.addRelation('OrderedSubscription', 'toMany');
+
+                // Reverse relations
+                object.addReverseRelationTo('LiquidPageService_Page', 'PageService', 'toOne');
             },
 
             addMethods : function(object) {
@@ -173,13 +176,13 @@ var addLiquidEntity = function(liquid) {
             name: 'LiquidPageService', _extends: 'Entity',
 
             addPropertiesAndRelations : function(object) {
-                // Relations
-                object.addReverseRelationTo('LiquidPage_Service', 'Page', 'toOne');
+                // Reverse relations
+                object.addRelation('Page', 'toOne');
             },
 
             addMethods : function(object) {
                 object.addMethod('encryptPassword', function(liquidPassword) {
-                    return liquidPassword + " [encrypted]";
+                    return liquidPassword + "[encrypted]"; // Dummy encryption, replace with SHA5 or similar.
                 });
 
                 object.addMethod('getActiveUser', function(liquidPassword) {
@@ -193,13 +196,15 @@ var addLiquidEntity = function(liquid) {
 
                 object.addMethod('login', function(loginName, liquidPassword) {
                     // Use SHA and similar here!
-                    this.callOnServer('loginOnServer', loginName, liquidPassword);
+                    this.callOnServer('loginOnServer', loginName, this.encryptPassword(liquidPassword));
                 });
 
-                object.addMethod('loginOnServer', function(loginName, liquidPassword) {
+                object.addMethod('loginOnServer', function(loginName, clientEncryptedPassword) {
+                    var serverEncryptedPassword = this.encryptPassword(clientEncryptedPassword);
                     var user = liquid.findPersistentEntity({name: loginName});
-                    // Verify password
-                    this.getPage().setUser(user);
+                    if (user.getEncryptedPassword() == serverEncryptedPassword) {
+                        this.getPage().setUser(user);
+                    }
                 });
             }
         });
@@ -238,7 +243,20 @@ var addLiquidEntity = function(liquid) {
                 // Properties
                 object.addProperty('loginName', '');
                 object.addProperty('alternativeLoginName', '');
-                object.addProperty('encryptedPassword', '', {readOnly: [], readAndWrite:['administrator']});
+
+                // Relations
+                object.addReverseRelationTo('LiquidSession_User', 'Session', 'toOne');
+            },
+
+            addMethods : function (object) {}
+        });
+
+        liquid.registerClass({
+            name: 'LiquidUserPasswordVault', _extends: 'Entity',
+
+            addPropertiesAndRelations : function (object) {
+                // Properties
+                object.addProperty('encryptedPassword', '');
 
                 // Relations
                 object.addReverseRelationTo('LiquidSession_User', 'Session', 'toOne');
