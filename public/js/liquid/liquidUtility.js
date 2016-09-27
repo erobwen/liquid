@@ -187,29 +187,36 @@ function mapLiquidObjectsDeep(data, mapFunction) {
 }
 
 
-function cloneAndMapLiquidObjectsDeep(data, mapFunction) {
-    if (data === null) {
+function safeCloneAndMapLiquidObjectsDeep(data, mapFunction, depth) {
+    if (depth === 0) {
+        return "...";
+    } else if (data === null) {
         return null;
     } else if (isArray(data)) {
         var newData = [];
         data.forEach(function(element) {
-            newData.push(cloneAndMapLiquidObjectsDeep(element, mapFunction));
+            newData.push(safeCloneAndMapLiquidObjectsDeep(element, mapFunction, depth - 1));
         });
         return newData;
-    } else if (typeof(data) == 'object') {
+    } else if (typeof(data) === 'object') {
         if (isLiquidObject(data)) {
             // Liquid object for sure!
             return mapFunction(data);
         } else {
             var newData = {};
             for (property in data) {
-                newData[property] = cloneAndMapLiquidObjectsDeep(data[property], mapFunction);
+                newData[property] = safeCloneAndMapLiquidObjectsDeep(data[property], mapFunction, depth - 1);
             }
-            return data;
+            return newData;
         }
     } else {
         return data;
     }
+}
+
+
+function cloneAndMapLiquidObjectsDeep(data, mapFunction) {
+    return safeCloneAndMapLiquidObjectsDeep(data, mapFunction, 4);
 }
 
 
@@ -393,7 +400,8 @@ if (typeof(module) !== 'undefined') {
     
 	module.exports.isLiquidObject = isLiquidObject;
 	module.exports.mapLiquidObjectsDeep = mapLiquidObjectsDeep;
-	
+	module.exports.cloneAndMapLiquidObjectsDeep = cloneAndMapLiquidObjectsDeep;
+
     module.exports.startsWith = startsWith;
     module.exports.capitalize = capitalize;
 	module.exports.pluralize = pluralize;

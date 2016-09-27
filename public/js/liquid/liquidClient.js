@@ -24,7 +24,7 @@ addLiquidRepetitionFunctionality(liquid);
 * Find entity
 */
 liquid.findLocalEntity = function(properties) {
-	return liquid.findEntities(properties)[0];
+	return liquid.findLocalEntities(properties)[0];
 }
 liquid.find = liquid.findEntity;
 
@@ -32,8 +32,10 @@ liquid.findLocalEntities = function(properties) {
 	var result = [];
 	for (id in liquid.idObjectMap) {
 		var object = liquid.idObjectMap[id];
+		trace('setup', "Try to match ", object, " with ", properties)
 		var failed = false;
 		for (key in properties) {
+			console.log(key);
 			if (key === 'className') {
 				failed = object.className !== properties[key];
 			} else if (typeof(object._propertyInstances[key]) !== 'undefined') {
@@ -45,12 +47,44 @@ liquid.findLocalEntities = function(properties) {
 				break;
 			}
 		}
+		trace('setup', "Result: ", !failed)
 		if (!failed) {
 			result.push(object);
 		}
 	}
 	return result;
 }
+
+
+/**--------------------------------------------------------------
+ *              Call on server
+ *----------------------------------------------------------------*/
+
+
+var callId = 0;
+liquid.addCallOnServer = function(object) {
+	if (liquid.onClient) {
+		object['callOnServer'] = function() {
+			// Split arguments
+			var argumentsArray = argumentsToArray(arguments);
+			var methodName = argumentsArray.shift();
+			var methodArguments = argumentsArray;
+
+			liquid.makeCallOnServer({
+				callId: callId++,
+				objectId: this._upstreamId,
+				methodName: methodName,
+				argumentList: cloneAndMapLiquidObjectsDeep(function(liquidObject) {
+					if (liquidObject._upstreamId != null) {
+						return { id : liquidObject._upstreamId };
+					} else {
+						return null; // TODO: consider, should we push data to server?
+					}
+				})
+			});
+		};
+	}
+};
 
 
 /**--------------------------------------------------------------
@@ -64,7 +98,7 @@ liquid.findLocalEntities = function(properties) {
 //  {action: addingRelation, objectDownstreamId:45, relationName: 'Foobar', relatedObjectDownstreamId:45 }
 //  {action: settingProperty, objectDownstreamId:45, propertyName: 'Foobar', propertyValue: 'Some string perhaps'}
 function serializeEventForUpstream(event) {
-	console.log(event);
+	// console.log(event);
 	var serialized  = {
 		action: event.action
 	};
@@ -146,8 +180,8 @@ liquid.pushDataUpstream = function() {
 		};
 
 		if (pulse.serializedEvents.length > 0 || pulse.serializedObjects.length > 0) {
-			trace('serialize', "Push upstream:");
-			console.log(pulse);
+			trace('serialize', "Push upstream:", pulse);
+			// console.log(pulse);
 			if (typeof(liquid.pushDownstreamPulseToServer) !== 'undefined') {
 				liquid.pushDownstreamPulseToServer(pulse);
 			}
@@ -171,9 +205,9 @@ function unserializeUpstreamReference(reference) {
 	var className = fragments[0];
 	var id = parseInt(fragments[1]);
 	var locked = fragments[2] === 'true' ? true : false;
-	console.log("What the hell!!!");
-	console.log(fragments);
-	console.log(locked);
+	// console.log("What the hell!!!");
+	// console.log(fragments);
+	// console.log(locked);
 	return ensureEmptyObjectExists(id, className, locked);
 }
 

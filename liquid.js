@@ -144,6 +144,34 @@ liquidSocket.on('connection', function (socket) {
 		}).run();
 	});
 
+	liquid.callOnServer = false;
+	socket.on('makeCallOnServer', function(hardToGuessPageId, callInfo) {
+		liquid.callOnServer = true;
+		// trace('serialize', "Make call on server");
+		// console.log(hardToGuessPageId);
+		// console.log(callInfo);
+		Fiber(function() {
+			// console.log(Object.keys(liquid.pagesMap));
+			if (typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
+				var page = liquid.pagesMap[hardToGuessPageId];
+				trace('serialize', "Make call on server ", page);
+
+				liquid.pulse(page, function() {
+					var object = getEntity(callInfo.objectId);
+					var methodName = callInfo.methodName;
+					var arguments = callInfo.argumentList;
+
+					// traceTags.event = true;
+					object[methodName].apply(object, arguments);
+					// delete traceTags.event;
+
+					trace('serialize', "Results after call to server", page.getSession(), page.getSession().getUser());
+				});
+			}
+		}).run();
+		liquid.callOnServer = false;
+	});
+
 	socket.on('disconnect', function(hardToGuessPageId) {
 		Fiber(function() {
 			// hardToGuessPageId

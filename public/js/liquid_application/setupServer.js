@@ -26,23 +26,23 @@ liquid.pulse('local', function() {
     var georgism = create('Category', {name: 'Georgism', description: '', owner: user});
     politics.addSubCategory(georgism);
 
-    setTimeout(function() {
-        liquid.pulse('local', function() {
-
-            var myPolitics = create('Category', {name: 'MyPoliticalCommitments', description: '', owner: user});
-            politics.addSubCategory(myPolitics);
-
-            var directDemocracy = create('Category', {name: 'Direct Democracy', description: '', owner: user});
-            politics.addSubCategory(directDemocracy);
-
-            var liquidDemocracy = create('Category', {name: 'Liquid Democracy', description: '', owner: user});
-            directDemocracy.addSubCategory(liquidDemocracy);
-
-            var direktdemokraterna = create('Category', {name: 'Direktdemokraterna', description: '', owner: user});
-            liquidDemocracy.addSubCategory(direktdemokraterna);
-            myPolitics.addSubCategory(direktdemokraterna);
-        });
-    }, 10000);
+    // setTimeout(function() {
+    //     liquid.pulse('local', function() {
+    //
+    //         var myPolitics = create('Category', {name: 'MyPoliticalCommitments', description: '', owner: user});
+    //         politics.addSubCategory(myPolitics);
+    //
+    //         var directDemocracy = create('Category', {name: 'Direct Democracy', description: '', owner: user});
+    //         politics.addSubCategory(directDemocracy);
+    //
+    //         var liquidDemocracy = create('Category', {name: 'Liquid Democracy', description: '', owner: user});
+    //         directDemocracy.addSubCategory(liquidDemocracy);
+    //
+    //         var direktdemokraterna = create('Category', {name: 'Direktdemokraterna', description: '', owner: user});
+    //         liquidDemocracy.addSubCategory(direktdemokraterna);
+    //         myPolitics.addSubCategory(direktdemokraterna);
+    //     });
+    // }, 10000);
 
 // Create References
     var created = 0;
@@ -68,7 +68,7 @@ liquid.pulse('local', function() {
         var session = liquid.createOrGetSessionObject(req);
         session.setUser(user);
         var page = create('LiquidPage', {Session: session});
-        page.addOrderedSubscription(create('Subscription', {object: user, selector:'all'}));
+        page.getPageService().addOrderedSubscription(create('Subscription', {object: user, selector:'all'}));
         return page;
     }
 

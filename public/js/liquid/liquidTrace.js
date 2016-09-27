@@ -12,12 +12,12 @@ var col3Left = col1Width + col2Width;
 
 // (liquidCommon.js:573:3)             create:       (className: Category)
 
-var traceTags = {
-    // 'setup' : true,
-    // 'member' : true,
-    // 'incoming' : true,
+traceTags = {
+    'setup' : true,
+    'member' : true,
+    'incoming' : true,
     'property' : true,
-    // 'create' : true,
+    'create' : true,
     'pulse' : true,
     'subscribe' : true,
     // 'repetition' : true,
@@ -31,6 +31,8 @@ var traceTags = {
     // 'pushDownstream' : true,
     // 'pushUpstream' : true,
 };
+
+
 
 function nTimes(count, string) {
     var result = "";
@@ -197,11 +199,14 @@ var constructTraceString = function(elements) {
     traceString += fillTo(fillTo(codeShort, col1Width) + "|" + stackDepthString(functionName) + functionName + " ", col3Left) + "| ";
     traceString += nTimes(groupNesting, "  ");
     elements.forEach(function(element) {
-        if (isLiquidObject(element)) {
-            traceString += element.__();
-        } else {
-            traceString += element;
-        }
+        // console.log(element);
+        var serialized = cloneAndMapLiquidObjectsDeep(element, function(liquidObject) { return liquidObject.__()})
+        traceString += (typeof(serialized) === 'object') ? ("\n" + (JSON.stringify(serialized, null, 2))) : serialized;
+        // if (isLiquidObject(element)) {
+        //     traceString += element.__();
+        // } else {
+        //     traceString += element;
+        // }
     });
     return traceString;
 };
@@ -254,5 +259,6 @@ if (typeof(module) !== 'undefined') {
     module.exports.trace = trace;
     module.exports.traceGroup = traceGroup;
     module.exports.traceGroupEnd = traceGroupEnd;
+    module.exports.traceTage = traceTags;
 }
 

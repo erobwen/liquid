@@ -320,7 +320,7 @@ var addLiquidRepetitionFunctionality = function(liquid) {
 			if (isArray(argument)) {
 				hash += "[" + makeArgumentHash(argument) + "]";
 			} else if (typeof(argument) === 'object') {
-				hash += "{id=" + argument._id + "}";   // Note! Do not use id here as it can change when source is shifted.  
+				hash += "{id=" + argument._id + "}";
 			} else {
 				hash += argument;
 			}

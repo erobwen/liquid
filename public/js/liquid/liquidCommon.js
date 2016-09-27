@@ -93,6 +93,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 			originator : originator, // 'upstream', 'local' or a Page object
 			events : [],
 			add : function(event) {
+				trace('event', 'Event added:', event);
 				if (event.instance !== null) {
 					liquid.recordersDirty(event.instance.observers);
 				}
@@ -877,6 +878,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		liquid.addGenericMethodCacher(object);
 		liquid.addGenericProjection(object);
 		liquid.addGenericRelationBrowsing(object);
+		liquid.addCallOnServer(object);
 		liquid.addClassMethods(object);
 		delete object.addMethod;
 		delete object.overrideMethod;
@@ -887,6 +889,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 		// liquid.setupPartsAndContainerIterators(object);
 		// liquid.setupVersionControl(object);
 		// liquid.setupCopying(object);	
+	};
+
+	liquid.addCallOnServer = function(object) {
 	};
 
 	liquid.addPulseChangeDetection = function(object) {
@@ -1188,9 +1193,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 				if (liquid.allowWrite(this)) {
 					var previousValue = this[definition.getterName]();
 					if (previousValue != newValue) {
-						// console.log("A");
 						liquid.inPulseBlockUponChangeActions(function(pulse) {
-							// console.log("B");
 							var instance = this._relationInstances[definition.qualifiedName];
 							pulse.add({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: instance, value: newValue, previousValue: previousValue});
 
@@ -1199,14 +1202,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 							if (previousValue !== null) {
 								liquid.deleteIncomingRelation(previousValue, definition.qualifiedName, this);
 							}
+							trace('member', previousValue);
 
 							// Set new relation.
-							pulse.add({redundant: false,  action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: newValue});
 							var instance = this._relationInstances[definition.qualifiedName];
 							instance.data = newValue;
-							// console.log("C");
-
+							
 							if (newValue !== null) {
+								pulse.add({redundant: false,  action: 'addingRelation', object: this, definition: definition, instance: instance, relatedObject: newValue});
 								liquid.addIncomingRelation(newValue, definition.qualifiedName, this);
 							}
 						}.bind(this));

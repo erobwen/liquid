@@ -3,7 +3,7 @@
 // Reference service
 var defined = function(something) {
 	return typeof(something) !== 'undefined';
-}
+};
 
 var alphabeticSorter = function(getterName) {
 	return function(a, b) {
@@ -14,7 +14,7 @@ var alphabeticSorter = function(getterName) {
 		if(aProperty > bProperty) return 1;
 		return 0;		
 	}
-}
+};
 
 registerClass({
 	name: 'User', _extends: 'LiquidUser',

@@ -26,12 +26,24 @@ traceGroup('setup', "=== Page: ===");
 // Setup global variables for page and session objects
 liquid.instancePage = liquid.getUpstreamEntity(data.pageUpstreamId);
 window.page = liquid.instancePage;
-liquid.instancePage.setReceivedSubscriptions(liquid.instancePage.getOrderedSubscriptions());
-trace('setup', liquid.instancePage);
+console.log();
+// trace('setup', liquid.instancePage.getPageService().getOrderedSubscriptions());
+liquid.instancePage.setReceivedSubscriptions(liquid.instancePage.getPageService().getOrderedSubscriptions());
+// console.log("Here?");
+// trace('setup', liquid.instancePage.getReceivedSubscriptions());
+liquid.instancePage.getReceivedSubscriptions().forEach(function(subscription) {
+	trace('setup', "Received Subscription ", subscription, " : ", subscription.getTargetObject(), ".", subscription.getSelector(), "()");
+});
+trace('setup', 'Instance page:', liquid.instancePage);
 traceGroupEnd();
 
-trace('setup', "=== Unserialized: ===");
-console.log(liquid.idObjectMap);
+// trace('setup', "=== Unserialized: ===");
+// console.log(liquid.idObjectMap);
+
+
+// Setup user
+// TODO: Get from subscription? or page somewhere, but just not the session or through getActiveUser().
+window.displayedUser = liquid.findLocalEntity({className: 'User'})
 
 
 // Setup global variables for each local entity

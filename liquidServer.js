@@ -402,7 +402,7 @@ liquid.getSubscriptionUpdate = function(page) {
 		// console.log("dirty selection");
 		liquid.uponChangeDo(function() {
 			var selection = {};
-			page.getOrderedSubscriptions().forEach(function(subscription) {
+			page.getPageService().getOrderedSubscriptions().forEach(function(subscription) {
 				var object = subscription._relationInstances['Subscription_TargetObject'].data; // silent get
 				var selectorSuffix = capitaliseFirstLetter(subscription._propertyInstances['selector'].data); // Silent get
 				// console.log("--- Considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
@@ -431,8 +431,9 @@ liquid.getSubscriptionUpdate = function(page) {
 			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._dirtySubscriptionSelections  = false;
 		}, function() {
-			console.log("A subscription selection got dirty: " + page._id);
-			stackDump();
+			trace('serialize', "A subscription selection got dirty: ", page);
+			// console.log("A subscription selection got dirty: " + page._id);
+			// stackDump();
 			liquid.dirtyPageSubscritiptions[page._id] = page;
 			page._dirtySubscriptionSelections  = true;
 		});
@@ -491,9 +492,10 @@ liquid.getSubscriptionUpdate = function(page) {
 
 	//add event info originating from repeaters.
 	result.events = [];
+	trace('serialize', "Serialize events");
 	liquid.activePulse.events.forEach(function (event) {
-		// console.log(event);
-		if (liquid.activePulse.originator !== page || event.repeater !== null) { // Do not send back events to originator!
+		trace('serialize', event.action, event.object);
+		if (!event.redundant && (liquid.activePulse.originator !== page || event.repeater !== null || liquid.callOnServer)) { // Do not send back events to originator!
 			// console.log("A");
 			if (addedAndRemovedIds.static[event.object._id]) {
 				// console.log("B");
@@ -519,6 +521,7 @@ liquid.getSubscriptionUpdate = function(page) {
 	}
 
 	// console.log(result);
+	trace('serialize', "Subscription update: ", result);
 	// console.groupEnd();
 	traceGroupEnd();
 	return result;

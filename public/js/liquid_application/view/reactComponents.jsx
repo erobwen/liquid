@@ -1,38 +1,82 @@
 // var ReactTransitionGroup = React.addons.TransitionGroup;
 // http://react-toolbox.com/#/components/autocomplete
-
-var performScript = function() {
-	// console.log("performScript");
-	setTimeout(
-		function(){
-			// console.log("=== Setting name ===")
-			data.user.setName("Foobar");
-		}, 
-		1000
-	);
-
-	setTimeout(
-		function(){
-			// var rootCategories = data.user.getRootCategories();
-			// rootCategories[0].addSubCategory(rootCategories[1]);
-		}, 
-		2000
-	);
-}
-
+//
+// var performScript = function() {
+// 	// console.log("performScript");
+// 	setTimeout(
+// 		function(){
+// 			// console.log("=== Setting name ===")
+// 			data.user.setName("Foobar");
+// 		},
+// 		1000
+// 	);
+//
+// 	setTimeout(
+// 		function(){
+// 			// var rootCategories = data.user.getRootCategories();
+// 			// rootCategories[0].addSubCategory(rootCategories[1]);
+// 		},
+// 		2000
+// 	);
+// }
 
 window.LiquidApplication = React.createClass(liquidClassData({
 	render: function() {
-		return invalidateUponLiquidChange("UserView", this, function() {
+		return invalidateUponLiquidChange("LiquidApplication", this, function() {
 			return (
 				<div onClick={ function(event) { dropFocus(event);} }>
-					<UserView user = {page.getActiveUser()}/>
+					<LoginUI page = { page }/>
+					<UserView user = { displayedUser }/>
 				</div>
 			);
 		}.bind(this));
 	}
 }));
 
+
+var LoginUI = React.createClass(liquidClassData({
+	tryLogin : function() {
+		// alert("login");
+		page.getPageService().tryLogin(this.refs.usernameInput.value, this.refs.passwordInput.value);
+	},
+	
+	logout : function() {
+		// alert("logout");
+		page.getPageService().logout();
+	},
+	
+	render : function() {
+		return invalidateUponLiquidChange("LoginUI", this, function() {
+			console.log(this.props.page);
+			var page = this.props.page; // same as window.page'
+			// traceTags.repetition = true;
+			var user = page.getActiveUser();
+			// traceTags.repetition = false;
+			if (user == null) {
+				return (
+					<div style={{border: '1px', margin: '1em', padding: '1em'}}>
+						<span>Username: </span><input ref="usernameInput" type="text"></input>
+						<span>Password: </span><input ref="passwordInput" type="password"></input>
+						<button onClick={ this.tryLogin } >Login</button>
+					</div>
+					// <div>
+					// <span>Username: </span><input type="text"></input>
+					// <span>Password: </span><input type="password"></input>
+					// <span>Password repeat: </span><input type="password"></input>
+					// <button>Register</button>
+					// </div>
+				);
+			} else {
+				return (
+					<div style={{border: '1px', margin: '1em', padding: '1em'}}>
+						<span>Logged in as { user.getName() }</span>
+						<button onClick={ this.logout } >Logout</button>
+					</div>
+				);
+			}
+		}.bind(this));
+	}
+}));
 
 var UserView = React.createClass(liquidClassData({
 	render: function() {
