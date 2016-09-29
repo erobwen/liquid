@@ -14,48 +14,6 @@ addLiquidRepetitionFunctionality(liquid);
 
 
 
-
-/**--------------------------------------------------------------
- *                   Object/Entity retreival
- *----------------------------------------------------------------*/
-
-
-/**
-* Find entity
-*/
-liquid.findLocalEntity = function(properties) {
-	return liquid.findLocalEntities(properties)[0];
-}
-liquid.find = liquid.findEntity;
-
-liquid.findLocalEntities = function(properties) {
-	var result = [];
-	for (id in liquid.idObjectMap) {
-		var object = liquid.idObjectMap[id];
-		trace('setup', "Try to match ", object, " with ", properties)
-		var failed = false;
-		for (key in properties) {
-			console.log(key);
-			if (key === 'className') {
-				failed = object.className !== properties[key];
-			} else if (typeof(object._propertyInstances[key]) !== 'undefined') {
-				failed = object._propertyInstances[key].data !== properties[key];
-			} else {
-				failed = true;
-			}
-			if (failed) {
-				break;
-			}
-		}
-		trace('setup', "Result: ", !failed)
-		if (!failed) {
-			result.push(object);
-		}
-	}
-	return result;
-}
-
-
 /**--------------------------------------------------------------
  *              Call on server
  *----------------------------------------------------------------*/
@@ -69,19 +27,23 @@ liquid.addCallOnServer = function(object) {
 			var argumentsArray = argumentsToArray(arguments);
 			var methodName = argumentsArray.shift();
 			var methodArguments = argumentsArray;
-
-			liquid.makeCallOnServer({
+			var callData = {
 				callId: callId++,
 				objectId: this._upstreamId,
 				methodName: methodName,
-				argumentList: cloneAndMapLiquidObjectsDeep(function(liquidObject) {
+				argumentList: cloneAndMapLiquidObjectsDeep(argumentsArray, function(liquidObject) {
 					if (liquidObject._upstreamId != null) {
 						return { id : liquidObject._upstreamId };
 					} else {
 						return null; // TODO: consider, should we push data to server?
 					}
 				})
-			});
+			};
+			traceGroup('serialize', "=== Call on server ===");
+			trace('serialize', callData.callId, callData.objectId, callData.methodName);
+			trace('serialize', callData.argumentList);
+			traceGroupEnd();
+			liquid.makeCallOnServer(callData);
 		};
 	}
 };

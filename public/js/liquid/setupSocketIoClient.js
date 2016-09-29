@@ -43,6 +43,7 @@ socket.on('pushSubscriptionChanges', function(changes){
 		unserializeFromUpstream(changes.addedSerialized);
 
 		liquid.blockUponChangeActions(function() {
+			liquid.allUnlocked++;
 			changes.events.forEach(function(event) {
 				if (event.action === 'addingRelation') {
 					var object = liquid.getUpstreamEntity(event.objectId);
@@ -79,7 +80,7 @@ socket.on('pushSubscriptionChanges', function(changes){
 				var object = liquid.getUpstreamEntity(upstreamId);
 				object.setIsLockedObject(true);
 			}
-
+			liquid.allUnlocked--;
 		});
 	});
 });

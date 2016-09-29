@@ -65,6 +65,52 @@ var addCommonLiquidFunctionality = function(liquid) {
 	};
 
 
+
+	/**--------------------------------------------------------------
+	 *                   Object/Entity retreival
+	 *----------------------------------------------------------------*/
+	
+	liquid.addToLocalRegistry = function(object) {
+		liquid.idObjectMap[object._id] = object; // TODO:
+	};
+	
+	/**
+	 * Find entity
+	 */
+	liquid.findLocalEntity = function(properties) {
+		return liquid.findLocalEntities(properties)[0];
+	};
+	liquid.find = liquid.findEntity;
+
+	liquid.findLocalEntities = function(properties) {
+		console.log(properties)
+		var result = [];
+		for (id in liquid.idObjectMap) {
+			var object = liquid.idObjectMap[id];
+			trace('setup', "Try to match ", object, " with ", properties)
+			var failed = false;
+			for (key in properties) {
+				console.log(key);
+				if (key === 'className') {
+					failed = object.className !== properties[key];
+				} else if (typeof(object._propertyInstances[key]) !== 'undefined') {
+					failed = object._propertyInstances[key].data !== properties[key];
+				} else {
+					failed = true;
+				}
+				if (failed) {
+					break;
+				}
+			}
+			trace('setup', "Result: ", !failed)
+			if (!failed) {
+				result.push(object);
+			}
+		}
+		return result;
+	}
+
+
 	/**--------------------------------------------------------------
 	 *                 Liquid Pulse 
 	 *----------------------------------------------------------------*/
@@ -230,12 +276,24 @@ var addCommonLiquidFunctionality = function(liquid) {
 		action();
 		liquid.allUnlocked--;
 	};
-	
+
+	// Note: see also Entity::allowCallOnServer()
+
 	liquid.allowRead = function(object) {
-		// console.log(liquid.allUnlocked);
+		// All is open?
 		if (liquid.allUnlocked > 0) {
 			return true;
 		}
+
+		// Check is locked property on client
+		if (liquid.onClient) {
+			liquid.allUnlocked++;
+			var isLockedProperty = object.getIsLockedObject();
+			liquid.allUnlocked--;
+			var result = isLockedProperty
+		}
+
+		// Check page access
 		var page = liquid.subjectPage();
 		if (page !== null) {
 			liquid.allUnlocked++;
@@ -1198,8 +1256,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 							pulse.add({redundant: true,  action: 'settingRelation', object: this, definition: definition, instance: instance, value: newValue, previousValue: previousValue});
 
 							// Delete previous relation.
-							pulse.add({redundant: false,  action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: previousValue});
 							if (previousValue !== null) {
+								pulse.add({redundant: false,  action: 'deletingRelation', object: this, definition: definition, instance: instance, relatedObject: previousValue});
 								liquid.deleteIncomingRelation(previousValue, definition.qualifiedName, this);
 							}
 							trace('member', previousValue);
@@ -1551,7 +1609,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 						return object.className + ":downstreamId:" + object._id;
 					}
 				} else {
-					return object.className + ":" + object._id + ":" + !object.canRead();
+					return object.className + ":" + object._id + ":" + !object.readable();
 				}
 			} else {
 				return null;

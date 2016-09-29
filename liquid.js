@@ -159,10 +159,16 @@ liquidSocket.on('connection', function (socket) {
 				liquid.pulse(page, function() {
 					var object = getEntity(callInfo.objectId);
 					var methodName = callInfo.methodName;
-					var arguments = callInfo.argumentList;
+					var argumentList = callInfo.argumentList; // TODO: Convert to
+					trace('serialize', "Call: ", methodName);
+					trace('serialize', "Call: ", argumentList);
 
 					// traceTags.event = true;
-					object[methodName].apply(object, arguments);
+					if (object.allowCallOnServer(page)) {
+						liquid.unlockAll(function() {
+							object[methodName].apply(object, argumentList);
+						});
+					}
 					// delete traceTags.event;
 
 					trace('serialize', "Results after call to server", page.getSession(), page.getSession().getUser());

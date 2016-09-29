@@ -12,7 +12,8 @@ liquid.pulse('local', function() {
 
 // !function addTestData() {
 // User
-    var user = create('User', {name: "Some Person", email: "some.person@gmail.com" });
+    var user = create('User', {name: "Walter", email: "some.person@gmail.com", password: "liquid"});
+    liquid.addToLocalRegistry(user);
 
     trace('setup', 'created user: ', user);
 
@@ -66,9 +67,9 @@ liquid.pulse('local', function() {
 
     function createTestPage(req) {
         var session = liquid.createOrGetSessionObject(req);
-        session.setUser(user);
+        // session.setUser(user);
         var page = create('LiquidPage', {Session: session});
-        page.getPageService().addOrderedSubscription(create('Subscription', {object: user, selector:'all'}));
+        page.getPageService().addOrderedSubscription(create('Subscription', {object: user, selector:'all'})); //object: user,
         return page;
     }
 

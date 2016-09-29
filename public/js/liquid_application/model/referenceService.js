@@ -89,16 +89,27 @@ registerClass({
 			return "(" + this.className + "." + this._idString() + ":" + unloadedOrName + ")";
 		});
 
-		object.overrideMethod('accessLevel', function(page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
-			trace('security', "Considering security");
+		object.overrideMethod('accessLevel', function(parent, page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
+			// console.log(page);
+			trace('security', "Considering security: ", page, " access level to ",  this);
 			// trace('security', startsWith("X", this.getName()));
 			// trace('security', this.getName());
+			// trace('security', page);
+			var pageUserIsOwner = this.getOwner() === page.getActiveUser();
 			if (startsWith("X", this.getName())) {
-				trace('security', "return noAccess");
-				return "noAccess";
+				if (pageUserIsOwner)  {
+					return "readAndWrite";
+				} else {
+					return "noAccess";
+				}
+				// trace('security', "return noAccess");
  			} else {
-				trace('security', "return readAndWrite");
-				return "readAndWrite";
+				// trace('security', "return readAndWrite");
+				if (pageUserIsOwner)  {
+					return "readAndWrite";
+				} else {
+					return "readOnly";
+				}
 			}
 		});
 

@@ -33,15 +33,19 @@ window.LiquidApplication = React.createClass(liquidClassData({
 	}
 }));
 
+// <div>
+// <span>Username: </span><input type="text"></input>
+// <span>Password: </span><input type="password"></input>
+// <span>Password repeat: </span><input type="password"></input>
+// <button>Register</button>
+// </div>
 
 var LoginUI = React.createClass(liquidClassData({
 	tryLogin : function() {
-		// alert("login");
 		page.getPageService().tryLogin(this.refs.usernameInput.value, this.refs.passwordInput.value);
 	},
 	
 	logout : function() {
-		// alert("logout");
 		page.getPageService().logout();
 	},
 	
@@ -54,21 +58,15 @@ var LoginUI = React.createClass(liquidClassData({
 			// traceTags.repetition = false;
 			if (user == null) {
 				return (
-					<div style={{border: '1px', margin: '1em', padding: '1em'}}>
-						<span>Username: </span><input ref="usernameInput" type="text"></input>
-						<span>Password: </span><input ref="passwordInput" type="password"></input>
+					<div style={{display: 'flex', flexDirection: 'column', border: '1px', margin: '1em', padding: '1em'}}>
+						<span>Username: </span><input ref="usernameInput" type="text" value="Walter"></input>
+						<span>Password: </span><input ref="passwordInput" type="password" value="liquid"></input>
 						<button onClick={ this.tryLogin } >Login</button>
 					</div>
-					// <div>
-					// <span>Username: </span><input type="text"></input>
-					// <span>Password: </span><input type="password"></input>
-					// <span>Password repeat: </span><input type="password"></input>
-					// <button>Register</button>
-					// </div>
 				);
 			} else {
 				return (
-					<div style={{border: '1px', margin: '1em', padding: '1em'}}>
+					<div style={{display: 'flex', 'flex-direction': 'column', border: '1px', margin: '1em', padding: '1em'}}>
 						<span>Logged in as { user.getName() }</span>
 						<button onClick={ this.logout } >Logout</button>
 					</div>
@@ -316,11 +314,11 @@ window.CategoryView = React.createClass(liquidClassData({
 			};
 			
 			// This category is locked
-			console.log("In rendering!");
-			var value = this.props.category.isLocked();
-			console.log(value);
-			console.log(typeof(value));
-			if (this.props.category.isLocked()) { // TODO: consider !canRead() can liquid always set the locked property??
+			// console.log("In rendering!");
+			// var value = this.props.category.readable();
+			// console.log(value);
+			// console.log(typeof(value));
+			if (!this.props.category.readable()) {
 				return (
 					<div className="CategoryView">
 						{ createCollapseSpacer() }

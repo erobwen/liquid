@@ -495,6 +495,7 @@ liquid.getSubscriptionUpdate = function(page) {
 	trace('serialize', "Serialize events");
 	liquid.activePulse.events.forEach(function (event) {
 		trace('serialize', event.action, event.object);
+		// trace('serialize', event);
 		if (!event.redundant && (liquid.activePulse.originator !== page || event.repeater !== null || liquid.callOnServer)) { // Do not send back events to originator!
 			// console.log("A");
 			if (addedAndRemovedIds.static[event.object._id]) {

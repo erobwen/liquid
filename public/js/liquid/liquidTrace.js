@@ -25,7 +25,7 @@ traceTags = {
     'serialize' : true,
     'selection' : true,
     'security' : true,
-    // 'react' : true
+    'react' : true
 
     // 'database' : true,
     // 'pushDownstream' : true,
