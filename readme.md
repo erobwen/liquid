@@ -1,4 +1,4 @@
-![Alt text](/liquid_logotype.png?raw=true "Optional Title")
+![Alt text](/liquid_logotype_large.png?raw=true "Optional Title")
 
 Full stack isomorphic and reactive web-development framework.
 
