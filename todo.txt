@@ -25,6 +25,14 @@ Things to do:
 * Make database work again.
     Switch to MongoDB
 
+* Enable GC properly.
+    * Remove idObjectMap on server
+    These are the places where we need to store references to objects:
+    * Add page footprint maps
+    * keepAliveCache with N number of entries (last requested first, culled at the end)
+    * keepAliveStatic (manual insertion removal)
+    * Keep alive waiting for DB write operation (when writing)
+
 * Different animations on:
        change field from upstream.
        changed field by repeater
