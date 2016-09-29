@@ -6,6 +6,8 @@ Full stack isomorphic and reactive web-development framework.
 
 Liquid uses Node.js Neo4J, React, Express and Socket.io.
 
+(Neo4J might be replaced with MongoDB in the future)
+
 ![Alt text](/liquid_dependencies.png?raw=true "Optional Title")
 
 # Rationale
