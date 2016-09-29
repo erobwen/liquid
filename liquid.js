@@ -30,6 +30,7 @@ Fiber(function() {
 	liquid.initialize();
 }).run();
 
+liquid.onNodeJs = true;
 
 /**--------------------------------------------------------------
  *                 Connection management
@@ -141,6 +142,40 @@ liquidSocket.on('connection', function (socket) {
 				socket.emit('disconnectedDueToInactivityOrServerFault'); // TODO: Consider create new page?
 			}
 		}).run();
+	});
+
+	liquid.callOnServer = false;
+	socket.on('makeCallOnServer', function(hardToGuessPageId, callInfo) {
+		liquid.callOnServer = true;
+		// trace('serialize', "Make call on server");
+		// console.log(hardToGuessPageId);
+		// console.log(callInfo);
+		Fiber(function() {
+			// console.log(Object.keys(liquid.pagesMap));
+			if (typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
+				var page = liquid.pagesMap[hardToGuessPageId];
+				trace('serialize', "Make call on server ", page);
+
+				liquid.pulse(page, function() {
+					var object = getEntity(callInfo.objectId);
+					var methodName = callInfo.methodName;
+					var argumentList = callInfo.argumentList; // TODO: Convert to
+					trace('serialize', "Call: ", methodName);
+					trace('serialize', "Call: ", argumentList);
+
+					// traceTags.event = true;
+					if (object.allowCallOnServer(page)) {
+						liquid.unlockAll(function() {
+							object[methodName].apply(object, argumentList);
+						});
+					}
+					// delete traceTags.event;
+
+					trace('serialize', "Results after call to server", page.getSession(), page.getSession().getUser());
+				});
+			}
+		}).run();
+		liquid.callOnServer = false;
 	});
 
 	socket.on('disconnect', function(hardToGuessPageId) {

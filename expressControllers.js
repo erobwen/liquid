@@ -7,12 +7,12 @@ function createControllerFromClassName(className) {
 }
 
 function createControllerFromFunction(controllerFunction) {
-	// console.log("createControllerFromFunction");
+	// console.debug("createControllerFromFunction");
 	return function(req, res) {
-		// console.log("in controller created by func");
+		// console.debug("in controller created by func");
 		Fiber(function() {
 			liquid.pulse('httpRequest', function() {  // consider, remove fiber when not using rest api?    // change to httpRequest pulse  ?
-				// console.log("in controller created by func");
+				// console.debug("in controller created by func");
 				// Setup session object (that we know is the same object identity on each page request)
 				var page = controllerFunction(req)
 				// var selection = {};
@@ -36,14 +36,14 @@ function createControllers(liquidControllers) {
 	for (url in liquidControllers) {
 		var controllerDefinition = liquidControllers[url];
 		if (typeof(controllerDefinition) === 'string') {
-			// console.log("Create controller: " + url + " -> " + controllerDefinition);
+			// console.debug("Create controller: " + url + " -> " + controllerDefinition);
 			controllers[url] = createControllerFromClassName(controllerDefinition);
 		} else {
-			// console.log("Create controller: " + url + " -> [function]");
+			// console.debug("Create controller: " + url + " -> [function]");
 			controllers[url] = createControllerFromFunction(controllerDefinition);
 		}
 	}
-	// console.log(controllers);
+	// console.debug(controllers);
 	controllers['foo'] = function(req, res) {  res.send('made it'); };
 	return controllers;
 }
@@ -66,10 +66,10 @@ if (typeof(module.exports['index']) === 'undefined') {
 }
 
 
-// console.log("HERE!!!");
-// console.log(liquidController);
+// console.debug("HERE!!!");
+// console.debug(liquidController);
 // for (definitionName in liquid.liquidController) {
-// 	// console.log(definitionName);
+// 	// console.debug(definitionName);
 // 	var liquidControllerFunction = liquid.liquidController[definitionName];
 // 	module.exports[definitionName] = function (req, res) {
 // 		var result = liquidPageRequest(req, res, liquidControllerFunction);
@@ -86,7 +86,7 @@ if (typeof(module.exports['index']) === 'undefined') {
 
 	// init : function (req, res) {
 	// 	liquidPageRequest(req, res, function(user, session, page) {
-	// 		console.log("Request page 'init'");
+	// 		console.debug("Request page 'init'");
 	// 		liquid.clearDatabase();
 	//
 	// 		// User
@@ -134,68 +134,68 @@ if (typeof(module.exports['index']) === 'undefined') {
 	// 			// var reference4 = createPersistent('Reference', {url : 'http://foobarkazong.com/'  + created, user: user, category: direktdemokraterna});
 	// 		// }
 	// 		res.send("Finished");
-	// 		// console.log("====================");
+	// 		// console.debug("====================");
 	// 	});
 	// },
 
 
 	// test : function (req, res) {
-	// 	console.log("Request page 'test'");
-	// 	// console.log(sails);
+	// 	console.debug("Request page 'test'");
+	// 	// console.debug(sails);
 	// 	liquidPageRequest(req, res, function(user, session, page) {
-	// 		// console.log("Page id;");
-	// 		// console.log(page._id);
+	// 		// console.debug("Page id;");
+	// 		// console.debug(page._id);
 	//
 	// 		var politics = liquid.findEntity({className: 'Category', name: "Politics"});
-	// 		console.log(politics.getSubCategories());
+	// 		console.debug(politics.getSubCategories());
 	// 		res.send("Test finished");
 	// 	});
 	// },
 
 
 	// view : function (req, res) {
-	// 	console.log("Request page 'view'");
-	// 	// console.log(sails);
+	// 	console.debug("Request page 'view'");
+	// 	// console.debug(sails);
 	// 	liquidPageRequest(req, res, function(user, session, page) {
     //
-	// 		// console.log("Page id;");
-	// 		// console.log(page._id);
+	// 		// console.debug("Page id;");
+	// 		// console.debug(page._id);
 	//
 	// 		var somePerson = liquid.findPersistentEntity({className: 'User'});
-	// 		// console.log("Get name")
-	// 		// console.log(somePerson.getName());
-	// 		// console.log("Get owned categories")
-	// 		// console.log(somePerson.getOwnedCategories());
-	// 		// console.log("fin");
+	// 		// console.debug("Get name")
+	// 		// console.debug(somePerson.getName());
+	// 		// console.debug("Get owned categories")
+	// 		// console.debug(somePerson.getOwnedCategories());
+	// 		// console.debug("fin");
 	// 		// var politics = liquid.findEntity({name: "Politics"});
-	// 		// console.log("Politics parents:");
-	// 		// console.log(politics.getParents());
+	// 		// console.debug("Politics parents:");
+	// 		// console.debug(politics.getParents());
 	//
 	// 		// var georgism = liquid.findEntity({name: "Georgism"});
-	// 		// console.log("Georgism parents:");
-	// 		// console.log(politics.getParents());
+	// 		// console.debug("Georgism parents:");
+	// 		// console.debug(politics.getParents());
 	//
 	// 		var selection = {};
 	// 		somePerson.selectAllCategories(selection)
-	// 		// console.log("Selection:");
-	// 		// console.log(selection);
+	// 		// console.debug("Selection:");
+	// 		// console.debug(selection);
     //
 	// 		// Subscribe to these objects.
-	// 		console.log("Selection");
+	// 		console.debug("Selection");
 	// 		printSelection(selection);
-	// 		console.log("idObjectMap:")
+	// 		console.debug("idObjectMap:")
 	// 		printIdMap(liquid.idObjectMap);
-	// 		console.log("persistentIdObjectMap:")
+	// 		console.debug("persistentIdObjectMap:")
 	// 		printIdMap(liquid.persistentIdObjectMap);
 	// 		function printSelection(selection) {
 	// 			for (id in selection) {
-	// 				console.log(id + " : " + liquid.getEntity(id).__());
+	// 				console.debug(id + " : " + liquid.getEntity(id).__());
 	// 			}
 	// 		}
 	// 		function printIdMap(map) {
 	// 			for(id in map) {
 	// 				object = map[id];
-	// 				console.log(id + " : " + object.__());
+	// 				console.debug(id + " : " + object.__());
 	// 			}
 	// 		}
 	//
@@ -216,8 +216,8 @@ if (typeof(module.exports['index']) === 'undefined') {
 	// 			// favourite : liquid.findEntity({className:'Category', name: 'Favourite'})._id,
 	// 			// politics : liquid.findEntity({className:'Category', name: 'Politics'})._id
 	// 		};
-	// 		// console.log("Serialized data:");
-	// 		// console.log(data);
+	// 		// console.debug("Serialized data:");
+	// 		// console.debug(data);
 	// 		res.render('layout',{
 	// 			data: JSON.stringify(data)
 	// 		});

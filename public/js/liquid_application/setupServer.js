@@ -6,15 +6,16 @@ liquid.pulse('local', function() {
         'someurl/:someargument' : 'PageWithArgument'
     };
 
-
     /***
      * Setup some test data
      */
 
 // !function addTestData() {
 // User
-    var user = create('User', {name: "Some Person", email: "some.person@gmail.com" });
+    var user = create('User', {name: "Walter", email: "some.person@gmail.com", password: "liquid"});
+    liquid.addToLocalRegistry(user);
 
+    trace('setup', 'created user: ', user);
 
 // Create categories
     var favourite = create('Category', {name: 'Favourite', description: '', owner: user});
@@ -66,9 +67,9 @@ liquid.pulse('local', function() {
 
     function createTestPage(req) {
         var session = liquid.createOrGetSessionObject(req);
-        session.setUser(user);
+        // session.setUser(user);
         var page = create('LiquidPage', {Session: session});
-        page.addOrderedSubscription(create('Subscription', {object: user, selector:'all'}));
+        page.getPageService().addOrderedSubscription(create('Subscription', {object: user, selector:'all'})); //object: user,
         return page;
     }
 

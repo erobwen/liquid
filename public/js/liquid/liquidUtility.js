@@ -11,6 +11,7 @@ var stackDump = function() {
     console.log(stack);
 };
 
+
 var nullOr__ = function(liquidObject) {
     if (liquidObject === null) {
         return null;
@@ -157,14 +158,14 @@ var arrayDifference = function(updatedArray, oldArray) {
 
 
 function isLiquidObject(data) {
-    return (typeof(data._id) !== 'undefined' && typeof(data._upstreamId) !== 'undefined');
+    return data !== null && (typeof(data._id) !== 'undefined' && typeof(data._upstreamId) !== 'undefined');
 }
 
 function mapLiquidObjectsDeep(data, mapFunction) {
     if (data === null) {
         return null;
     } else if (isArray(data)) {
-        newData = [];
+        var newData = [];
         data.forEach(function(element) {
             newData.push(mapLiquidObjectsDeep(element, mapFunction));
         });
@@ -183,6 +184,39 @@ function mapLiquidObjectsDeep(data, mapFunction) {
     } else {
         return data;
     }
+}
+
+
+function safeCloneAndMapLiquidObjectsDeep(data, mapFunction, depth) {
+    if (depth === 0) {
+        return "...";
+    } else if (data === null) {
+        return null;
+    } else if (isArray(data)) {
+        var newData = [];
+        data.forEach(function(element) {
+            newData.push(safeCloneAndMapLiquidObjectsDeep(element, mapFunction, depth - 1));
+        });
+        return newData;
+    } else if (typeof(data) === 'object') {
+        if (isLiquidObject(data)) {
+            // Liquid object for sure!
+            return mapFunction(data);
+        } else {
+            var newData = {};
+            for (property in data) {
+                newData[property] = safeCloneAndMapLiquidObjectsDeep(data[property], mapFunction, depth - 1);
+            }
+            return newData;
+        }
+    } else {
+        return data;
+    }
+}
+
+
+function cloneAndMapLiquidObjectsDeep(data, mapFunction) {
+    return safeCloneAndMapLiquidObjectsDeep(data, mapFunction, 4);
 }
 
 
@@ -306,6 +340,9 @@ var pluralize = function(string, revert){
 };
 
 var startsWith = function(prefix, string) {
+    // trace('security', string);
+    // trace('security', prefix.length);
+    // trace('security', string.substr(0, prefix.length));
     return (prefix === string.substr(0, prefix.length));
 }
 
@@ -344,9 +381,12 @@ var nameToVariable = function(string) {
 
 if (typeof(module) !== 'undefined') {
 	module.exports.stackDump = stackDump;
+    // module.exports.nthCaller = nthCaller;
+    
 	module.exports.nullOr__ = nullOr__;
 	module.exports.undefinedAsNull = undefinedAsNull;
-	module.exports.isArray = isArray;
+	
+    module.exports.isArray = isArray;
 	module.exports.inArray = inArray;
 	module.exports.argumentsToArray = argumentsToArray;
 	module.exports.copyArray = copyArray;
@@ -360,7 +400,9 @@ if (typeof(module) !== 'undefined') {
     
 	module.exports.isLiquidObject = isLiquidObject;
 	module.exports.mapLiquidObjectsDeep = mapLiquidObjectsDeep;
-	
+	module.exports.cloneAndMapLiquidObjectsDeep = cloneAndMapLiquidObjectsDeep;
+
+    module.exports.startsWith = startsWith;
     module.exports.capitalize = capitalize;
 	module.exports.pluralize = pluralize;
 	module.exports.camelCaseToPlural = camelCaseToPlural;

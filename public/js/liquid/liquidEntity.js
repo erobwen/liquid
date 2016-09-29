@@ -2,7 +2,7 @@ var addLiquidEntity = function(liquid) {
     liquid.addCommonLiquidClasses = function() {
         liquid.registerClass({
             name: 'LiquidSession', _extends: 'Entity',
-
+            
             addPropertiesAndRelations : function (object) {
                 // Properties
                 object.addProperty('hardToGuessSessionId', '');
@@ -15,23 +15,13 @@ var addLiquidEntity = function(liquid) {
             },
 
             addMethods : function (object) {
-                object.addMethod('canReadAndWrite', function(user) { return liquid.isAdministrator; });
-                object.addMethod('canRead', function(user) { return liquid.isAdministrator; });
-
+                object.overrideMethod('accessLevel', function(parent, page) {
+                    return 'readOnly';
+                });
 
                 object.addMethod('encryptPassword', function(liquidPassword) {
                     return liquidPassword + " [encrypted]";
                 });
-
-                object.addMethod('login', function(loginName, liquidPassword) {
-                    var user = liquid.find({loginName: loginName});
-                    if (this.encryptPassword(liquidPassword) == user.getEncryptedPassword()) {
-                        this.setUser(user);
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }, 'administrator');
             }
         });
 
@@ -46,13 +36,13 @@ var addLiquidEntity = function(liquid) {
                 object.addRelation('Session', 'toOne');
                 object.addRelation('Service', 'toOne');
                 object.addRelation('ReceivedSubscription', 'toMany');
-                object.addRelation('OrderedSubscription', 'toMany');
+                object.addRelation('PageService', 'toOne');
             },
 
             addMethods : function(object) {
                 object.overrideMethod('init', function(parent, initData) {
                     parent(initData);
-
+                    this.setPageService(create('LiquidPageService', {}));
                     // Server variables
                     this._selection = {};
                     this._dirtySubscriptionSelections = true;
@@ -65,13 +55,18 @@ var addLiquidEntity = function(liquid) {
                     var hardToGuessPageId = liquid.generatePageId();
                     liquid.pagesMap[hardToGuessPageId] = this;
                     this.setHardToGuessPageId(hardToGuessPageId);
-                    this.addOrderedSubscription(create('Subscription', {selector: 'Basics', object: this}));
+                    this.getPageService().addOrderedSubscription(create('Subscription', {selector: 'Basics', object: this}));
                 });//Subscription
 
+                object.overrideMethod('accessLevel', function(parent, page) {
+                    return 'readOnly';
+                });
+
                 object.addMethod('upstreamPulseReceived', function() {
-                    this.setReceivedSubscriptions(this.getOrderedSubscriptions()); // TODO: Consider, what happens if two subscriptions are requested at the same time?
-                    this._requestingSubscription = false;
-                    this.checkLoadQueue();
+                    // TODO: activate this later
+                    // this.setReceivedSubscriptions(this.getOrderedSubscriptions()); // TODO: Consider, what happens if two subscriptions are requested at the same time?
+                    // this._requestingSubscription = false;
+                    // this.checkLoadQueue();
                 });
 
                 object.addMethod('encryptPassword', function(liquidPassword) {
@@ -79,16 +74,21 @@ var addLiquidEntity = function(liquid) {
                 });
 
                 object.addMethod('selectBasics', function(selection) {
+                    trace('selection', "----------");
                     liquid.addToSelection(selection, this);
+                    trace('selection', "----------");
                     liquid.addToSelection(selection, this.getSession());
+                    trace('selection', "----------");
                     liquid.addToSelection(selection, this.getActiveUser());
+                    trace('selection', "----------");
+                    liquid.addToSelection(selection, this.getPageService());
 
                     // Only needed for progressive loading!
                     this.getReceivedSubscriptions().forEach(function(subscription) {
                         liquid.addToSelection(selection, subscription);
                         liquid.addToSelection(selection, subscription.getTargetObject());
                     });
-                    this.getOrderedSubscriptions().forEach(function(subscription) {
+                    this.getPageService().getOrderedSubscriptions().forEach(function(subscription) {
                         liquid.addToSelection(selection, subscription);
                         liquid.addToSelection(selection, subscription.getTargetObject());
                     });
@@ -101,7 +101,7 @@ var addLiquidEntity = function(liquid) {
                         if (this._subscriptionQueue.length > 0) {
                             var subscription = this._subscriptionQueue.unshift();
                             subscription.setParent(subscription._parentSubscription);
-                            this.addOrderedSubscription(subscription);
+                            this.getPageService().addOrderedSubscription(subscription);
                         }
                     }
                 });
@@ -143,14 +143,14 @@ var addLiquidEntity = function(liquid) {
                     this.getReceivedSubscriptions().forEach(function(subscription) {
                         liquid.recordingSubscription = subscription;
                         var selection = {};
-                        var selectorFunctionName = capitalizeFirstLetter(selection.getSelector());
+                        var selectorFunctionName = capitaliseFirstLetter(selection.getSelector());
                         subscription.getTargetObject()[selectorFunctionName](selection);
                     });
                     liquid.recordingSelectors = false;
                     return liquid.idToSelectorsMap;
                 });
 
-                object.addMethod('getActiveUser', function(liquidPassword) {
+                object.addMethod('getActiveUser', function() {
                     if (this.getSession() != null) {
                         // console.log(this.getSession());
                         // console.log(this.getSession().getUser);
@@ -159,8 +159,14 @@ var addLiquidEntity = function(liquid) {
                     return null;
                 });
 
-                object.addMethod('login', function(loginName, liquidPassword) {
-                }, 'administrator');
+                object.addMethod('setActiveUser', function(user) {
+                    if (this.getSession() != null) {
+                        // console.log(this.getSession());
+                        // console.log(this.getSession().getUser);
+                        return this.getSession().setUser(user);
+                    }
+                    return null;
+                });
             }
         });
 
@@ -169,32 +175,49 @@ var addLiquidEntity = function(liquid) {
 
             addPropertiesAndRelations : function(object) {
                 // Relations
-                object.addReverseRelationTo('LiquidPage_Service', 'Page', 'toOne');
+                object.addRelation('OrderedSubscription', 'toMany');
+
+                // Reverse relations
+                object.addReverseRelationTo('LiquidPage_PageService', 'Page', 'toOne');
             },
 
             addMethods : function(object) {
+                object.overrideMethod('accessLevel', function(parent, page) {
+                    return 'readAndWrite';
+                });
+
+                object.overrideMethod('allowCallOnServer', function(parent, page) {
+                    return page === this.getPage();
+                });
+
                 object.addMethod('encryptPassword', function(liquidPassword) {
-                    return liquidPassword + " [encrypted]";
+                    return liquidPassword + "[encrypted]"; // Dummy encryption, replace with SHA5 or similar.
                 });
 
-                object.addMethod('getActiveUser', function(liquidPassword) {
-                    if (this.getSession() != null) {
-                        // console.log(this.getSession());
-                        // console.log(this.getSession().getUser);
-                        return this.getSession().getUser();
-                    }
-                    return null;
-                });
-
-                object.addMethod('login', function(loginName, liquidPassword) {
+                object.addMethod('tryLogin', function(loginName, liquidPassword) {
                     // Use SHA and similar here!
-                    this.callOnServer('loginOnServer', loginName, liquidPassword);
+                    // alert('try login');
+                    this.callOnServer('tryLoginOnServer', loginName, this.encryptPassword(liquidPassword));
                 });
 
-                object.addMethod('loginOnServer', function(loginName, liquidPassword) {
-                    var user = liquid.findPersistentEntity({name: loginName});
-                    // Verify password
-                    this.getPage().setUser(user);
+                object.addMethod('logout', function() {
+                    // Use SHA and similar here!
+                    this.callOnServer('logoutOnServer');
+                });
+
+                object.addMethod('tryLoginOnServer', function(loginName, clientEncryptedPassword) {
+                    console.log("Here");
+                    console.log(loginName);
+                    console.log(clientEncryptedPassword);
+                    var serverEncryptedPassword = this.encryptPassword(clientEncryptedPassword);
+                    var user = liquid.findLocalEntity({name: loginName});
+                    if (user.getEncryptedPassword() == serverEncryptedPassword) {
+                        this.getPage().setActiveUser(user);
+                    }
+                });
+
+                object.addMethod('logoutOnServer', function() {
+                    this.getPage().setActiveUser(null);
                 });
             }
         });
@@ -210,7 +233,7 @@ var addLiquidEntity = function(liquid) {
                 // Relations
                 object.addReverseRelationTo('LiquidPage_Subscriptions','Page', 'toOne');
 
-                object.addRelation('ChildSubscription');
+                object.addRelation('ChildSubscription', 'toMany');
                 object.addReverseRelationTo('Subscription_ChildSubscription', 'Parent', 'toOne');
             },
 
@@ -233,13 +256,55 @@ var addLiquidEntity = function(liquid) {
                 // Properties
                 object.addProperty('loginName', '');
                 object.addProperty('alternativeLoginName', '');
-                object.addProperty('encryptedPassword', '', {readOnly: [], readAndWrite:['administrator']});
+
+                // Relations
+                object.addRelation('PasswordVault', 'toOne');
+
+                object.addReverseRelationTo('LiquidSession_User', 'Session', 'toOne');
+            },
+
+            addMethods : function (object) {
+                object.overrideMethod('init', function(parent, initData) {
+                    parent(initData);
+
+                    var encryptedPassword = null;
+                    if (typeof(initData.password) !== 'undefined') {
+                        encryptedPassword = initData.password + "[encrypted][encrypted]";
+                    } else if (typeof(initData.clientEncryptedPassword) !== 'undefined') {
+                        encryptedPassword = initData.clientEncryptedPassword + "[encrypted]";
+                    } else if (typeof(initData.serverEncryptedPassword) !== 'undefined') {
+                        encryptedPassword = initData.serverEncryptedPassword;
+                    }
+
+                    this.setPasswordVault(create('LiquidUserPasswordVault', { encryptedPassword: encryptedPassword })); // TODO: really need init data?
+                });
+
+                object.addMethod('getEncryptedPassword', function() {
+                    return this.getPasswordVault().getEncryptedPassword();
+                });
+            }
+        });
+
+
+        /**
+         * Password vault
+         */
+        liquid.registerClass({
+            name: 'LiquidUserPasswordVault', _extends: 'Entity',
+
+            addPropertiesAndRelations : function (object) {
+                // Properties
+                object.addProperty('encryptedPassword', '');
 
                 // Relations
                 object.addReverseRelationTo('LiquidSession_User', 'Session', 'toOne');
             },
 
-            addMethods : function (object) {}
+            addMethods : function (object) {
+                object.overrideMethod('accessLevel', function(page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
+                    return "noAccess"; // Only accessible on server call.
+                });
+            }
         });
 
 
@@ -258,18 +323,13 @@ var addLiquidEntity = function(liquid) {
             name: 'Entity',
             addPropertiesAndRelations : function (object) {
                 // Note: This information needs to match what is in the database definition (fields and their default values) and the model and its relations.
+                object.addProperty('isPlaceholderObject', false, {clientOnly : true});
+                object.addProperty('isLockedObject', false, {clientOnly : true});
             },
 
             addMethods : function (object) {
-                object.touchedByEntity = true;
-
                 // TODO: Use define method functions instead!!!
-
-                object.roles = function(liquidPage) {
-                    // Do something with: liquidPage.getUser();
-                    return [];
-                };
-
+                
                 object.getGlobalId = function() {
                     // TODO: find source of object.
                     // Only some persitent servers can create global ids.
@@ -281,18 +341,18 @@ var addLiquidEntity = function(liquid) {
                         // console.log("property: " + property);
                         setterName = 'set' + capitaliseFirstLetter(property);
                         if (typeof(this[setterName]) !== 'undefined') {
-                            console.log("setting using standard constructor:" + setterName);
+                            trace("setting using standard constructor: ", setterName);
                             this[setterName](initData[property]);
                         } else {
-                            console.log("Error: Setter not found: " + this.__() + "." + setterName + "!");
+                            trace("Error: Setter not found: ", this, ".", setterName, "!");
                             // console.log(this);
                         }
                     }
                 };
 
                 object.isLoaded = function() {
-                    if (typeof(liquid.instancePage) !== 'undefined' && liquid.instancePage !== null) {
-                        if (arguments.length = 1) {
+                    if (liquid.onClient) {
+                        if (arguments.length == 1) {
                             var selector = arguments[0];
                             if (typeof(liquid.instancePage) !== 'undefined' && liquid.instancePage !== null) {
                                 return (typeof(liquid.instancePage.getLoadedSelectionsFor(this)[selector]) !== undefined);
@@ -300,15 +360,27 @@ var addLiquidEntity = function(liquid) {
                                 return true;
                             }
                         } else {
-                            if (typeof(this._isLoadedObservers) === 'undefined') {
-                                this._isLoadedObservers = { observers: {} };
-                            }
-                            liquid.registerObserverTo(this, {name: 'isLoaded'}, this._isLoadedObservers);
-                            return !this._noDataLoaded;
+                            return !this.getIsPlaceholderObject();
                         }
                     } else {
                         return true;
                     }
+                };
+
+                object.accessLevel = function(page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
+                    return "readAndWrite";
+                };
+
+                object.allowCallOnServer = function(page) { // Call on server grants admin rights inside the call, so it should be guarded well. False as default!
+                    return false;
+                };
+
+                object.readable = function() {
+                    return liquid.allowRead(this);
+                };
+
+                object.writeable = function() {
+                    return liquid.allowWrite(this);
                 };
 
                 object.is = function(className) {
@@ -320,7 +392,7 @@ var addLiquidEntity = function(liquid) {
                     // if (this._globalId !== null) {
                     //     idString = "¤." + this._globalId;
                     // } else if (this._persistentId !== null){
-                    //     idString = "#." + this._persistentId;
+                    //     idString = "#." + this._persistsentId;
                     // } else if (this._id !== null) {
                     //     idString = "id." + this._id;
                     // }
@@ -337,7 +409,7 @@ var addLiquidEntity = function(liquid) {
                 };
 
                 object.selectAll = function(selection) {
-                    if (typeof(selection[this._id]) === 'undefined') {
+                    if (typeof(selection[this._id]) === 'undefined' && liquid.allowRead(this)) {
                         // console.log("Selecting " + this.__());
                         selection[this._id] = true;
                         this.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {

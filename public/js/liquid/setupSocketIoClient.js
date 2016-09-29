@@ -5,14 +5,14 @@ var socket = io('http://localhost:8080');
 liquid.upstreamSocket = socket;
 
 socket.on('connect', function(){
-	console.log("received CONNECT");
-	console.log(liquid.instancePage.getHardToGuessPageId());
+	trace('serialize', "received CONNECT");
+	trace('serialize', liquid.instancePage, " Page id:", liquid.instancePage.getHardToGuessPageId());
 	socket.emit("registerPageId", liquid.instancePage.getHardToGuessPageId());
 });
 
 
 socket.on('disconnect', function(){
-	console.log("Disconnected");
+	trace('serialize', "Disconnected");
 });
 
 
@@ -38,22 +38,32 @@ socket.on('pushSubscriptionChanges', function(changes){
 		for (id in changes.idToUpstreamId) {
 			liquid.getEntity(id)._upstreamId = changes.idToUpstreamId[id];
 		}
+		console.log(changes);
 		//result
 		unserializeFromUpstream(changes.addedSerialized);
 
 		liquid.blockUponChangeActions(function() {
+			liquid.allUnlocked++;
 			changes.events.forEach(function(event) {
 				if (event.action === 'addingRelation') {
 					var object = liquid.getUpstreamEntity(event.objectId);
 					var relatedObject = liquid.getUpstreamEntity(event.relatedObjectId);
-					var adderName = object._relationDefinitions[event.relationName].adderName;
-					object[adderName](relatedObject);
+					var relation = object._relationDefinitions[event.relationName];
+					if (relation.isSet) {
+						object[relation.adderName](relatedObject);
+					} else {
+						object[relation.setterName](relatedObject);
+					}
 				} else if (event.action === 'deletingRelation') {
 					liquid.activeSaver = null;
 					var object = liquid.getUpstreamEntity(event.objectId);
 					var relatedObject = liquid.getUpstreamEntity(event.relatedObjectId);
-					var removerName = object._relationDefinitions[event.relationName].removerName;
-					object[removerName](relatedObject);
+					var relation = object._relationDefinitions[event.relationName];
+					if (relation.isSet) {
+						object[relation.removerName](relatedObject);
+					} else {
+						object[relation.setterName](null);
+					}
 					liquid.activeSaver = liquid.defaultSaver;
 				} else if (event.action === 'settingProperty') {
 					liquid.activeSaver = null;
@@ -63,9 +73,14 @@ socket.on('pushSubscriptionChanges', function(changes){
 					liquid.activeSaver = liquid.defaultSaver;
 				}
 			});
+
+			// and create an "originators copy" of the data for safekeeping. 
+			for (upstreamId in changes.unsubscribedUpstreamIds) {
+				var object = liquid.getUpstreamEntity(upstreamId);
+				object.setIsLockedObject(true);
+			}
+			liquid.allUnlocked--;
 		});
-		// TODO: kill objects changes.unsubscribedUpstreamIds, even remove from persistent memory if found,
-		// and create an "originators copy" of the data for safekeeping. 
 	});
 });
 
@@ -79,3 +94,9 @@ socket.on('pushSubscriptionChanges', function(changes){
 liquid.pushDownstreamPulseToServer = function(pulse) {
 	liquid.upstreamSocket.emit("pushDownstreamPulse", liquid.instancePage.getHardToGuessPageId(), pulse);
 };
+
+
+liquid.makeCallOnServer = function(callData) {
+	console.log(callData);
+	liquid.upstreamSocket.emit("makeCallOnServer", liquid.instancePage.getHardToGuessPageId(), callData);
+}

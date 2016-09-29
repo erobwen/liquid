@@ -38,9 +38,10 @@ var focusComponent = function(component) {
 
 var componentsNeedOfForceUpdate = [];
 liquid.addNoMoreDirtyRepeaterCallback(function() {
-	console.group("=== Updating user interface ===");
+	// console.group("=== Updating user interface ===");
 	// stackDump();
-	console.log("Starting UI update with " + componentsNeedOfForceUpdate.length + " required updates");
+	traceGroup('react', "Starting UI update with " + componentsNeedOfForceUpdate.length + " required updates");
+	// console.log("Starting UI update with " + componentsNeedOfForceUpdate.length + " required updates");
 	componentsNeedOfForceUpdate.forEach(function(component) {
 		// console.log("Force update!");
 		if (component._mounted) {
@@ -48,9 +49,10 @@ liquid.addNoMoreDirtyRepeaterCallback(function() {
 			component.forceUpdate();
 		}
 	});
-	console.log("=== Finished updating user interface ===");
-	console.groupEnd();
+	// console.log("=== Finished updating user interface ===");
+	// console.groupEnd();
 	componentsNeedOfForceUpdate.length = 0;
+	traceGroupEnd();
 });
 
 
@@ -113,7 +115,7 @@ var liquidClassData = function(classData) {
 		if (typeof(applicationComponentDidMount) === 'function') {
 			applicationComponentDidMount.bind(this)();
 		}
-	}
+	};
 	
 	var applicationComponentWillUnmount = classData.componentWillUnmount;
 	classData.componentWillUnmount = function() {
@@ -124,26 +126,28 @@ var liquidClassData = function(classData) {
 		if (typeof(applicationComponentWillUnmount) === 'function') {
 			applicationComponentWillUnmount.bind(this)();
 		}
-	}
+	};
 	
 	return classData;
-}
+};
 
 
 var invalidateUponLiquidChange = function(className, component, renderFunction) {
-	console.group("***" + className + ".render: ***");
+	traceGroup('react', " Render: " + className + ".render ");
 	// stackDump();
-	console.log(componentsNeedOfForceUpdate);
+	// console.log(componentsNeedOfForceUpdate);
 	component._ = "<" + className + " />";
 	return uponChangeDo("Component:" + className,
 	function() {
 		// console.log("Actually rendering!");
 		var element = renderFunction();
-		console.groupEnd();
+		// console.groupEnd();
+		traceGroupEnd();
 		return element;
 	},
 	function() {
-		console.log("Component:" + className + " in need of update");
+		// console.log("Component:" + className + " in need of update");
+		trace('react', "Component:" + className + " in need of update");
 		componentsNeedOfForceUpdate.push(component);
 	});
 	// return repeater.returnValue; //getReturnValueWithoutObservation(); // To not bind the surrounding repeater to this one.

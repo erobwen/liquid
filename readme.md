@@ -1,6 +1,6 @@
 ![Alt text](/liquid_logotype.png?raw=true "Optional Title")
 
-Full stack web-development framework.
+Full stack isomorphic and reactive web-development framework.
 
 # Dependencies
 
@@ -10,47 +10,31 @@ Liquid uses Node.js Neo4J, React, Express and Socket.io.
 
 # Rationale
 
-Liquid is a **full stack web-development framework** that will make it possible to create high quality web-services/pages to a significantly reduced cost. The purpose of liquid is to do a few VERY important things very well, they are:
+Liquid is a **full stack isomorphic & reactive web-development framework** that will make it possible to create high quality web-services/pages to a significantly reduced cost. The purpose of liquid is to do a few VERY important things very well, they are:
 
-1. **Full stack Javascript environment**, which integrates the client, server & database, and allows shared code between server and client. (see http://isomorphic.net/)
-2. **Continous data structure synchronization**(a) between server/client and peer clients to automatically keep everything in synchronization.
-3. **State of the art reactive programming**, with advanced change propagation using **dependency recording**. Allowing you to write code with pure business logic instead of code that updates derived data.
-4. **Real OOP for models** with polymorphism, model extension and inheritance etc. for efficient programming and code reuse.
-5. **REACT integration**, supporting recursive reactive views. Other UI frameworks could be used, or none, but Liquid comes bundeled with a through REACT integration.
+1. **Full stack isomorphic Javascript environment**, which integrates the client, server & database, and allows shared code between server and client. (see http://isomorphic.net/)
+2. **Continous data structure subscription and synchronization**(a) between server/client and peer clients to automatically keep everything in synchronization.
+3. **State of the art reactive programming**, with advanced change propagation using **dependency recording**. Allowing you to write code that never explicitly updates views or derrived data (see https://en.wikipedia.org/wiki/Reactive_programming). The extensive reactive programming library contains the following powerful primitives: uponChangeDo, repeatOnChange, callCached, callCachedPersistent, withoutSideEffects, infuse, project.
+4. **Reactive to the core**, In addition to offer reactive programming primitives for the application, react also utilizes these
+    * **Reactive data subscriptions**. What data is pushed to the client responds reactivley to changes in data.
+    * **Reactive security model**.  The visibility and writeability of objects for a particular user changes reactivley.
+    * **Reactive databases**. Traditional database handling depend on queries and streamed results. However, a result stream is inherently non-reactive as already read elements might already have changed. Instead, liquid features reactive search queries that reactivley updates the search result of a query.
+5. **Custom indexes**. Database-indexes might be highly application dependent. Whether you need augmented database indexes, or indexes of some specific kind, you can always implement your own reactive index (search tree) nodes on top of Liquid to facilitate your needs. There are two reasons for this, the first is to allow higher flexibility. The second reason is that databases today are generally non-reactive, so Liquid needs to implement its own reactive search indexes anyway.
+6. **Integrated security model**. The access relation between any user/object can be defined as "noAccess", "readOnly" or "readAndWrite".
+7. **Integrated version control** All objects can be subject to version control (comming soon)
+8. **Real OOP for models** with polymorphism, model extension and inheritance etc. for efficient programming and code reuse.
+9. **REACT integration**, supporting recursive reactive views. Other UI frameworks could be used, or none, but Liquid comes bundeled with a through REACT integration.
 
 (a) Note: Currently only object-level synchronization is supported, see roadmap.
 
 In addition, Liquid has been built, based upon the following guiding principles:
 
 1. **"Code before constructs"**. In liquid, Javascript code is placed in the lead role. For example, if we are to sort a list, we could either conceive of a fancy ordering language, that allows the programmer to write things such as "order = {alphabetically: 'DESC'}". While such construct can be convenient at times, it is nowhere near as powerful and versitile as a plain Javascript ordering function, that is passed to a general sorting function. such as. order = function(a, b) { return a.name > b.name }. Therefore, in Liquid we primarily use code interfaces to solve problems, rather than limited yet fancy special purpose languages.
-2. **Recursion as stresstest**. The possibility of nesting components within other components is very important. When it comes to reactive programming, and reactive creation and updating of UI:s, this is especially important to keep in mind.
+2. **Recursion as stresstest**. The possibility of nesting components within other components is very important.
 3. **No enforced static encapsulation**. Many frameworks tries to mitigate the complexity of the world by enforcing a degree of encapsulation. Components are introduced that has distinct "output" and "inputs" (Angular 2, I am looking at you!). However, many of the more difficult real world problems require algorithms that has easy access to data from various sources, and a too rigid framework will be harmful for this purpose. I believe that complex data-flows only pose a problem if we loose control of them, and by using reactive programming and dependency recording, keeping track of complex dependencies is easier than ever. For example, liquid can ensure that view code does not alter the model by simply write-protecting the model during the view-rendering phase. Liquid therefore has no enforced static encapsulation of any kind. There are just objects, and code that manipulate objects, or build views out of objects.
 4. **Only one definition**. Web developers has become acustomed to defining their model in at least three ways. First the database definition, then the accompanying PHP/Java/Python models, and lastly their Json/Javascript representation in the client. With Liquid, there is only ONE single model definition, used for database, server and client!
-5. **Indexes are a part of the application**. Liquid is based on a graph-database Neo4J, and while it is possible to write general CYPHER queries, and thereby receive an entry point into the database, liquid is not only intended for use that way. The basic idea is that "searching is just automated browsing", and with the easily accessible database objects, it is quite possible for the application to implement their own indexes on top of liquid, using binary-trees or similar, and hiding the complexity using classes.
-
-This is a link to a work in progress document that tries to capture and describe the goals of liquid:
-
-https://docs.google.com/document/d/1GRvU7RE23RzrpRRky8FIEYQon3L4_6x_4LV4AGnnkR0/pub
 
 
-# Roadmap
-
-The plan for the future is to include the following features.
-
-1. Support for data structure synchronization, currently the synchronization is on object level.
-2. Integrated security model based on custom user/object access levels.
-3. Client side routing with url/browser navigation support.
-4. Object version control.
-6. Liquid server clustering. It should be possible to organize Liquid servers in cluster-trees where end users communicate with leafs, and where the cluster tree act as a multi level data-cache.
-
-
-# Full stack Javascript environment
-
-Web development is often performed using one programming language for the frotend and one for the backend. This often means certain business logics has to be repeated once in each respective language. By using Javascript for both frontend and backend, we make it possible to reuse code between the two. In addition, having the same language on both client and server it makes it easier to synchronize data between the two.
-
-It can also be argued that Javascript is growing into a formidable programming language, with huge potential for the future. Since virtually all browsers on all devices run Javascript, it can be argued that Javascript is perhaps the most widespread programming language in the world, and might even become THE most important programming language in the world.
-
-Javascript also has some strenghts in its own right, besides from beeing widespread. Javascript was developed at a time when compiled languages such as Java and C++ reigned supreme for application development, and it is therefore understandable that borrows much of it syntax, and even parts of its name from Java. The true nature of Javascript however, is more that of a functional and dynamic language like Lisp or ML from the 70'ties, hiding beneath a thin imperative veneer. Webb development has brought a renaissance for dynamic programming languages in general, and Javascript has proven that concepts such as dynamic data structures and lexical closures (functions with encapsulated scope that can be passed around) are extremley powerful, especially when it comes to creating frameworks.
 
 # Continous data structure synchronization
 
@@ -82,12 +66,40 @@ When it comes to reactivley updating a view that already has a state of its own 
 The other way to update a view with a state is to create a view object structure where objects has certain view-id:s and then merge the updated view into the existing one. Liquid also has support for this using the "projection" reactive primitive of Liquid.
 
 ## Reactive programming in Liquid
-In fact, Liquid presents quite a few novel innovations when it comes to reactive programming. The main calls are
+In fact, Liquid presents quite a few novel innovations when it comes to reactive programming. The reactive primitives are:
+    * uponChangeDo
+    * repeatOnChange
+
+In addition, liquid offers the following features that are built upon these primitives:
+
+    * callCached & callCachedPersistent
+    * withoutSideEffects (helper)
+    * infuse (helper)
+    * project
+
+Some people might have difficoulty to understand the reactive primitives of liquid due to their simple nature. There is no need to "declare inputs", "define outputs" or setup a rendering pipeline. With liquid, you simply read a variable in the right situation, in order to register a dependency. It goes automatically and is integrated into what is normally viewed as the programming language.
+
+#### uponChangeDo ####
+Upon change do is the simplest primitive that uses dependency recording, and has a signature as follows:
 
     uponChangeDo(doFirstCallback, doOnChangeCallback)
 
-The function in the first argument will be called. Whenever anything that this function reads changes, then the doOnChange is called one single time. The intention is not for the second callback to trigger changes directly, but rather to invalidate in a way that will later cause a new call to uponChangeDo. This is for example used to trigger invalidation of components in REACT, depending on data that was read in their render function.
+With it, it is possible to execute an arbitrary function with recursion, loops etc. Every single piece of data that is read is then beeing recorded, and when any of that data is changed, another function is called one single time. This is for example used to trigger invalidation of components in REACT, depending on data that was read in their render function. Here is an example:
 
+
+    uponChangeDo(
+        function() {
+            x.getSomeValue();
+            y.performSomeComputation();
+            z.iterateADataStructure();
+        },
+        function() {
+            alert("Something has changed!!!");
+        });
+    x.setSomeValue("newValue"); // This will trigger alert!
+
+
+#### repeatOnChange ####
     repeatOnChange(callback)
 
 The callback given to this function will be executed immedeatley, and upon every change in any data that the callback read, the callback will be called again, continously. This can be used to set up

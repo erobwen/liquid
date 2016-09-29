@@ -1,43 +1,85 @@
 // var ReactTransitionGroup = React.addons.TransitionGroup;
 // http://react-toolbox.com/#/components/autocomplete
-
-var performScript = function() {
-	// console.log("performScript");
-	setTimeout(
-		function(){
-			// console.log("=== Setting name ===")
-			data.user.setName("Foobar");
-		}, 
-		1000
-	);
-
-	setTimeout(
-		function(){
-			// var rootCategories = data.user.getRootCategories();
-			// rootCategories[0].addSubCategory(rootCategories[1]);
-		}, 
-		2000
-	);
-}
-
+//
+// var performScript = function() {
+// 	// console.log("performScript");
+// 	setTimeout(
+// 		function(){
+// 			// console.log("=== Setting name ===")
+// 			data.user.setName("Foobar");
+// 		},
+// 		1000
+// 	);
+//
+// 	setTimeout(
+// 		function(){
+// 			// var rootCategories = data.user.getRootCategories();
+// 			// rootCategories[0].addSubCategory(rootCategories[1]);
+// 		},
+// 		2000
+// 	);
+// }
 
 window.LiquidApplication = React.createClass(liquidClassData({
 	render: function() {
-		return invalidateUponLiquidChange("UserView", this, function() {
+		return invalidateUponLiquidChange("LiquidApplication", this, function() {
 			return (
 				<div onClick={ function(event) { dropFocus(event);} }>
-					<UserView user = {page.getActiveUser()}/>
+					<LoginUI page = { page }/>
+					<UserView user = { displayedUser }/>
 				</div>
 			);
 		}.bind(this));
 	}
 }));
 
+// <div>
+// <span>Username: </span><input type="text"></input>
+// <span>Password: </span><input type="password"></input>
+// <span>Password repeat: </span><input type="password"></input>
+// <button>Register</button>
+// </div>
+
+var LoginUI = React.createClass(liquidClassData({
+	tryLogin : function() {
+		page.getPageService().tryLogin(this.refs.usernameInput.value, this.refs.passwordInput.value);
+	},
+	
+	logout : function() {
+		page.getPageService().logout();
+	},
+	
+	render : function() {
+		return invalidateUponLiquidChange("LoginUI", this, function() {
+			console.log(this.props.page);
+			var page = this.props.page; // same as window.page'
+			// traceTags.repetition = true;
+			var user = page.getActiveUser();
+			// traceTags.repetition = false;
+			if (user == null) {
+				return (
+					<div style={{display: 'flex', flexDirection: 'column', border: '1px', margin: '1em', padding: '1em'}}>
+						<span>Username: </span><input ref="usernameInput" type="text" value="Walter"></input>
+						<span>Password: </span><input ref="passwordInput" type="password" value="liquid"></input>
+						<button onClick={ this.tryLogin } >Login</button>
+					</div>
+				);
+			} else {
+				return (
+					<div style={{display: 'flex', 'flex-direction': 'column', border: '1px', margin: '1em', padding: '1em'}}>
+						<span>Logged in as { user.getName() }</span>
+						<button onClick={ this.logout } >Logout</button>
+					</div>
+				);
+			}
+		}.bind(this));
+	}
+}));
 
 var UserView = React.createClass(liquidClassData({
 	render: function() {
 		return invalidateUponLiquidChange("UserView", this, function() {
-			console.log("Render in user view. ");
+			trace('react', "Render in user view. ");
 			var rootCategories = this.props.user.cachedCall('getRootCategories');
 			// var rootCategories = this.props.user.getOwnedCategories();
 			return (
@@ -129,27 +171,29 @@ window.CategoryView = React.createClass(liquidClassData({
 	},
 	
 	componentDidMount: function() {
-		var subCategoriesDiv = this.refs.subCategoriesDiv;
-		// console.log(subCategoriesDiv.style.marginLeft);
-		subCategoriesDiv.style.overflow = 'hidden';
-		subCategoriesDiv.style.height = 'auto';
-		subCategoriesDiv.style.transition = 'height .5s';
-		subCategoriesDiv.addEventListener("transitionend", function() {
-			// console.log("Finished transition");
-			// console.log(subCategoriesDiv);
-			// console.log(this);
-			// console.log("Height: " + subCategoriesDiv.clientHeight);
-			if (subCategoriesDiv.clientHeight !== 0) {
-				// console.log("Tree open");
-				subCategoriesDiv.style.height = "auto";
+		if (typeof(this.refs.subCategoriesDiv) !== 'undefined') {
+			var subCategoriesDiv = this.refs.subCategoriesDiv;
+			// console.log(subCategoriesDiv.style.marginLeft);
+			subCategoriesDiv.style.overflow = 'hidden';
+			subCategoriesDiv.style.height = 'auto';
+			subCategoriesDiv.style.transition = 'height .5s';
+			subCategoriesDiv.addEventListener("transitionend", function() {
+				// console.log("Finished transition");
+				// console.log(subCategoriesDiv);
 				// console.log(this);
-				this.setState({collapsed : false});
-			} else {
-				// console.log("Tree closed");
-				// console.log(this);
-				this.setState({collapsed : true});
-			}
-		}.bind(this), false);
+				// console.log("Height: " + subCategoriesDiv.clientHeight);
+				if (subCategoriesDiv.clientHeight !== 0) {
+					// console.log("Tree open");
+					subCategoriesDiv.style.height = "auto";
+					// console.log(this);
+					this.setState({collapsed : false});
+				} else {
+					// console.log("Tree closed");
+					// console.log(this);
+					this.setState({collapsed : true});
+				}
+			}.bind(this), false);
+		}
     },
 		
 	
@@ -222,7 +266,7 @@ window.CategoryView = React.createClass(liquidClassData({
 		var droppedCategory = draggedCategory;
 		draggedCategory = null;
 		if (category.canAddAsSubCategory(droppedCategory)) {
-			liquid.pulse('user', function() {
+			liquid.pulse('local', function() {
 				console.log(droppedCategory.getParents().length);
 				console.log(droppedCategory.getParents());
 				var parents = copyArray(droppedCategory.getParents());
@@ -259,6 +303,45 @@ window.CategoryView = React.createClass(liquidClassData({
 		return invalidateUponLiquidChange("CategoryView", this, function() {
 			var subCategories = [];
 			var categoryViewElementName ="CategoryView"
+
+			// To replace the plus sign when not showing
+			var createCollapseSpacer = function() {
+				return (
+					<span
+						style={{opacity: 0, marginRight: "0.61em"}}
+						className={ "fa fa-plus-square-o" }>
+					</span>);
+			};
+			
+			// This category is locked
+			// console.log("In rendering!");
+			// var value = this.props.category.readable();
+			// console.log(value);
+			// console.log(typeof(value));
+			if (!this.props.category.readable()) {
+				return (
+					<div className="CategoryView">
+						{ createCollapseSpacer() }
+						<span
+							style={{marginRight: "0.61em"}}
+							className={ "fa fa-lock" }>
+						</span>
+					</div>);
+			}
+
+			// This category is not loaded
+			if (!this.props.category.isLoaded()) {
+				return (
+					<div className="CategoryView">
+						{ createCollapseSpacer() }
+						<span
+							style={{marginRight: "0.61em"}}
+							className={ "fa fa-spinner" }>
+						</span>
+					</div>);
+			}
+
+
 			this.props.category.getSubCategories().forEach(function(category) {
 				// How to do it with standard syntax:
 

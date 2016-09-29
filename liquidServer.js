@@ -4,6 +4,7 @@ var liquidSelection = require('./public/js/liquid/liquidSelection.js');
 var liquidRepetition = require('./public/js/liquid/liquidRepetition.js');
 var neo4j = require('./liquidNeo4jInterface.js');
 include('./public/js/liquid/liquidUtility.js'); ///..  // Note: path relative to the include service!
+include('./public/js/liquid/liquidTrace.js'); ///..  // Note: path relative to the include service!
 require( 'console-group' ).install();
 
 /**
@@ -11,6 +12,7 @@ require( 'console-group' ).install();
  */ 
 var liquid = {};
 liquid.onServer = true;
+liquid.onClient = false;
 liquidCommon.addCommonLiquidFunctionality(liquid);
 liquidEntity.addLiquidEntity(liquid)
 liquidSelection.addLiquidSelectionFunctionality(liquid);
@@ -262,7 +264,8 @@ liquid.loadSingleRelation = function(object, definition, instance) {
 
 liquid.ensureIncomingRelationsLoaded = function(object) {
 	if (object._persistentId !== null) {
-		console.log("ensureIncomingRelationsLoaded: " + object.__() + " <--  ?");
+		// console.log("ensureIncomingRelationsLoaded: " + object.__() + " <--  ?");
+		trace('incoming', object, " <--  ?");
 		if (typeof(object._allIncomingRelationsLoaded) === 'undefined') {
 			// console.log("run liquid version of ensureIncomingRelationLoaded");
 			var incomingRelationAndIds = neo4j.getAllIncomingRelationsAndIds(object._persistentId); // This now contains potentially too many ids.
@@ -290,7 +293,8 @@ liquid.ensureIncomingRelationsLoaded = function(object) {
 
 
 liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualifiedName) {
-	console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationQualifiedName + "] -- ?");
+	// console.log("ensureIncomingRelationLoaded: " + object.__() + " <-- [" + incomingRelationQualifiedName + "] -- ?");
+	trace('incoming', object, " <--[",  incomingRelationQualifiedName, "] -- ?");
 	if (object._persistentId !== null) {
 		if (typeof(object._incomingRelationsComplete[incomingRelationQualifiedName]) === 'undefined') {
 			// console.log("run liquid version of ensureIncomingRelationLoaded");
@@ -355,19 +359,25 @@ liquid.loadSetRelation = function(object, definition, instance) {
  *-----------------------------------------------------------------*/
 
 function getMapDifference(firstSet, secondSet) {
+	// console.log("getmapdifference");
+	// console.log(firstSet);
+	// console.log(secondSet);
 	var added = {};
 	var removed = {};
 	var static = {};
 	for(id in firstSet) {
 		if(typeof(secondSet[id]) === 'undefined') {
+			// console.log("removed");
 			removed[id] = true;
 		} else {
+			// console.log("static");
 			static[id] = true;
 		}
 	} 
 	
 	for(id in secondSet) {
 		if(typeof(firstSet[id]) === 'undefined') {
+			// console.log("added");
 			added[id] = true;
 		}
 	}
@@ -382,44 +392,58 @@ function getMapDifference(firstSet, secondSet) {
 
 liquid.dirtyPageSubscritiptions = {};
 liquid.getSubscriptionUpdate = function(page) {
-	console.group("getSubscriptionUpdate");
+	// console.group("getSubscriptionUpdate");
+	traceGroup('subscribe', "--- getSubscriptionUpdate ", page, "---");
 	var result = {};
 
 	var addedAndRemovedIds;
 	if (page._dirtySubscriptionSelections) {
-		console.log("dirty selection");
+		traceGroup('subscribe', '--- dirty footprint selection --- ');
+		// console.log("dirty selection");
 		liquid.uponChangeDo(function() {
 			var selection = {};
-			page.getOrderedSubscriptions().forEach(function(subscription) {
+			page.getPageService().getOrderedSubscriptions().forEach(function(subscription) {
 				var object = subscription._relationInstances['Subscription_TargetObject'].data; // silent get
 				var selectorSuffix = capitaliseFirstLetter(subscription._propertyInstances['selector'].data); // Silent get
-				console.log("--- Considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
+				// console.log("--- Considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
+				traceGroup('subscribe', "--- Considering subscription: ", object, ".select" + selectorSuffix + "() ---");
 				var selectorFunctionName = 'select' + selectorSuffix;
 
 				// Perform a selection with dependency recording!
 				var subscriptionSelection = {};
+				
+				// Select as
+				liquid.pageSubject = page;
 				object[selectorFunctionName](subscriptionSelection);
+				liquid.pageSubject = null;
+				
+				// console.log(subscriptionSelection);
 				// console.log(subscriptionSelection);
 				for (id in subscriptionSelection) {
 					selection[id] = true;
 				}
-				console.log("--- Finish considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
+				traceGroupEnd();
+				// console.log("--- Finish considering subscription: " + object._ + ".select" + selectorSuffix + "() ---");
 				// console.groupEnd();
 			});
+			// console.log("consolidate");
 			// console.log(selection);
 			page._previousSelection = page._selection;
+			// console.log(page._previousSelection);
 			page._selection = selection;
 			page._addedAndRemovedIds = getMapDifference(page._previousSelection, selection);
 			page._dirtySubscriptionSelections  = false;
 		}, function() {
-			console.log("A subscription selection got dirty: " + page._id);
-			stackDump();
+			trace('serialize', "A subscription selection got dirty: ", page);
+			// console.log("A subscription selection got dirty: " + page._id);
+			// stackDump();
 			liquid.dirtyPageSubscritiptions[page._id] = page;
 			page._dirtySubscriptionSelections  = true;
 		});
 		addedAndRemovedIds = page._addedAndRemovedIds;
+		traceGroupEnd();
 	} else {
-		console.log("just events");
+		trace('serialize', "just events");
 		addedAndRemovedIds = {
 			added : {},
 			removed : {},
@@ -427,9 +451,24 @@ liquid.getSubscriptionUpdate = function(page) {
 		}
 	}
 
-
-	console.log("Added ids:");
-	console.log(addedAndRemovedIds.added);
+	traceGroup('serialize', "Added and removed:");
+	trace('serialize', "Added:");
+	for (var id in addedAndRemovedIds.added) {
+		trace('serialize', getEntity(id));
+	}
+	trace('serialize', "Removed:");
+	for (var id in addedAndRemovedIds.removed) {
+		trace('serialize', getEntity(id));
+	}
+	trace('serialize', "Static:");
+	for (var id in addedAndRemovedIds.static) {
+		trace('serialize', getEntity(id));
+	}
+	traceGroupEnd();
+	// console.log("Added ids:");
+	// console.log(addedAndRemovedIds.added);
+	// console.log("Removed ids:");
+	// console.log(addedAndRemovedIds.added);
 
 	// Add as subscriber
 	for (id in addedAndRemovedIds.added) {
@@ -448,18 +487,25 @@ liquid.getSubscriptionUpdate = function(page) {
 	}
 
 	// Serialize
+	liquid.pageSubject = page;
 	result.addedSerialized = liquid.serializeSelection(addedAndRemovedIds.added);
+	liquid.pageSubject = null;
+
 	result.unsubscribedUpstreamIds = addedAndRemovedIds.removed;
 
 	//add event info originating from repeaters.
 	result.events = [];
+	trace('serialize', "Serialize events");
 	liquid.activePulse.events.forEach(function (event) {
-		// console.log(event);
-		if (liquid.activePulse.originator !== page || event.repeater !== null) { // Do not send back events to originator!
+		trace('serialize', event.action, event.object);
+		// trace('serialize', event);
+		if (!event.redundant && (liquid.activePulse.originator !== page || event.repeater !== null || liquid.callOnServer)) { // Do not send back events to originator!
 			// console.log("A");
 			if (addedAndRemovedIds.static[event.object._id]) {
 				// console.log("B");
+				liquid.pageSubject = page;
 				result.events.push(serializeEventForDownstream(event));
+				liquid.pageSubject = null;
 			}
 		}
 	});
@@ -479,7 +525,9 @@ liquid.getSubscriptionUpdate = function(page) {
 	}
 
 	// console.log(result);
-	console.groupEnd();
+	trace('serialize', "Subscription update: ", result);
+	// console.groupEnd();
+	traceGroupEnd();
 	return result;
 
 	/**

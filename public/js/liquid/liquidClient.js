@@ -3,7 +3,8 @@
  */
 
 var liquid = {
-	onServer : false
+	onServer : false,
+	onClient: true
 };
 
 addCommonLiquidFunctionality(liquid);
@@ -13,43 +14,39 @@ addLiquidRepetitionFunctionality(liquid);
 
 
 
-
 /**--------------------------------------------------------------
- *                   Object/Entity retreival
+ *              Call on server
  *----------------------------------------------------------------*/
 
 
-/**
-* Find entity
-*/
-liquid.findLocalEntity = function(properties) {
-	return liquid.findEntities(properties)[0];
-}
-liquid.find = liquid.findEntity;
-
-liquid.findLocalEntities = function(properties) {
-	var result = [];
-	for (id in liquid.idObjectMap) {
-		var object = liquid.idObjectMap[id];
-		var failed = false;
-		for (key in properties) {
-			if (key === 'className') {
-				failed = object.className !== properties[key];
-			} else if (typeof(object._propertyInstances[key]) !== 'undefined') {
-				failed = object._propertyInstances[key].data !== properties[key];
-			} else {
-				failed = true;
-			}
-			if (failed) {
-				break;
-			}
-		}
-		if (!failed) {
-			result.push(object);
-		}
+var callId = 0;
+liquid.addCallOnServer = function(object) {
+	if (liquid.onClient) {
+		object['callOnServer'] = function() {
+			// Split arguments
+			var argumentsArray = argumentsToArray(arguments);
+			var methodName = argumentsArray.shift();
+			var methodArguments = argumentsArray;
+			var callData = {
+				callId: callId++,
+				objectId: this._upstreamId,
+				methodName: methodName,
+				argumentList: cloneAndMapLiquidObjectsDeep(argumentsArray, function(liquidObject) {
+					if (liquidObject._upstreamId != null) {
+						return { id : liquidObject._upstreamId };
+					} else {
+						return null; // TODO: consider, should we push data to server?
+					}
+				})
+			};
+			traceGroup('serialize', "=== Call on server ===");
+			trace('serialize', callData.callId, callData.objectId, callData.methodName);
+			trace('serialize', callData.argumentList);
+			traceGroupEnd();
+			liquid.makeCallOnServer(callData);
+		};
 	}
-	return result;
-}
+};
 
 
 /**--------------------------------------------------------------
@@ -63,7 +60,7 @@ liquid.findLocalEntities = function(properties) {
 //  {action: addingRelation, objectDownstreamId:45, relationName: 'Foobar', relatedObjectDownstreamId:45 }
 //  {action: settingProperty, objectDownstreamId:45, propertyName: 'Foobar', propertyValue: 'Some string perhaps'}
 function serializeEventForUpstream(event) {
-	console.log(event);
+	// console.log(event);
 	var serialized  = {
 		action: event.action
 	};
@@ -96,7 +93,7 @@ liquid.pushDataUpstream = function() {
 	// console.log("Not yet!");
 	// return;
 	if (typeof(liquid.upstreamSocket) !== undefined) {
-		console.group("Consider push data upstream");
+		// console.group("Consider push data upstream");
 
 		// Find data that needs to be pushed upstream
 		var requiredObjects = {};
@@ -112,7 +109,7 @@ liquid.pushDataUpstream = function() {
 		liquid.activePulse.events.forEach(function(event) {
 			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
 			if (!eventIsFromUpstream) {
-				console.log("processing event required objects");
+				trace('serialize', "processing event required objects");
 				if (event.object._upstreamId !== null && event.action == 'addingRelation' && event.relatedObject._upstreamId === null) {
 					addRequiredCascade(event.relatedObject, requiredObjects);
 				}
@@ -130,8 +127,8 @@ liquid.pushDataUpstream = function() {
 			// console.log(event);
 			var eventIsFromUpstream = liquid.activePulse.originator === 'upstream' && event.isDirectEvent;
 			if (!event.redundant && !eventIsFromUpstream) {
-				console.log("not from upstream");
-				if (event.object._upstreamId !== null) {
+				trace('serialize', "not from upstream");
+				if (event.object._upstreamId !== null && typeof(event.definition) !== 'undefined' && !event.definition.clientOnly) {
 					serializedEvents.push(serializeEventForUpstream(event));
 				} else if (typeof(requiredObjects[event.object._id]) !== 'undefined') {
 					serializedEvents.push(serializeEventForUpstream(event));
@@ -145,13 +142,14 @@ liquid.pushDataUpstream = function() {
 		};
 
 		if (pulse.serializedEvents.length > 0 || pulse.serializedObjects.length > 0) {
-			console.log(pulse);
+			trace('serialize', "Push upstream:", pulse);
+			// console.log(pulse);
 			if (typeof(liquid.pushDownstreamPulseToServer) !== 'undefined') {
 				liquid.pushDownstreamPulseToServer(pulse);
 			}
 		}
 
-		console.groupEnd();
+		// console.groupEnd();
 	}
 };
 
@@ -168,16 +166,22 @@ function unserializeUpstreamReference(reference) {
 	var fragments = reference.split(":");
 	var className = fragments[0];
 	var id = parseInt(fragments[1]);
-	return ensureEmptyObjectExists(id, className);
+	var locked = fragments[2] === 'true' ? true : false;
+	// console.log("What the hell!!!");
+	// console.log(fragments);
+	// console.log(locked);
+	return ensureEmptyObjectExists(id, className, locked);
 }
 
-function ensureEmptyObjectExists(upstreamId, className) {
+function ensureEmptyObjectExists(upstreamId, className, isLocked) {
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
 		var newObject = liquid.createClassInstance(className);
 		newObject._upstreamId = upstreamId;
-		newObject._noDataLoaded = true;
 		liquid.upstreamIdObjectMap[upstreamId] = newObject;
 		newObject._ = newObject.__();
+		newObject.setIsPlaceholderObject(true);
+		newObject.setIsLockedObject(isLocked);
+		// newObject._noDataLoaded = true;
 	}
 	return liquid.upstreamIdObjectMap[upstreamId];
 }
@@ -187,13 +191,14 @@ function unserializeUpstreamObject(serializedObject) {
 	// console.log(serializedObject);
 	var upstreamId = serializedObject.id;
 	if (typeof(liquid.upstreamIdObjectMap[upstreamId]) === 'undefined') {
-		ensureEmptyObjectExists(upstreamId, serializedObject.className);
+		ensureEmptyObjectExists(upstreamId, serializedObject.className, false);
 	}
 	var targetObject = liquid.upstreamIdObjectMap[upstreamId];
 	// console.log(targetObject);
-	if (targetObject._noDataLoaded) {
+	if (targetObject.getIsPlaceholderObject()) {
 		targetObject.forAllOutgoingRelations(function(definition, instance) {
-			console.log("processingRelation: " + definition.name);
+			// console.log("processingRelation: " + definition.name);
+			trace('unserialize', definition.name, "~~>", targetObject);
 			if (typeof(serializedObject[definition.qualifiedName]) !== 'undefined') {
 				var data = serializedObject[definition.qualifiedName];
 				if (definition.isSet) {
@@ -206,31 +211,33 @@ function unserializeUpstreamObject(serializedObject) {
 		});
 		for (propertyName in targetObject._propertyDefinitions) {
 			definition = targetObject._propertyDefinitions[propertyName];
-			console.log("processingProperty: " + definition.name);
+			// console.log("processingProperty: " + definition.name);
+			trace('unserialize', definition.name, "~~>", targetObject);
 			if (typeof(serializedObject[definition.name]) !== 'undefined') {
 				var data = serializedObject[definition.name];
 				targetObject[definition.setterName](data);
 			}
 		}
-		targetObject._noDataLoaded = false;
-		if (typeof(targetObject._isLoadedObservers) !== 'undefined') {
-			liquid.recordersDirty(targetObject._isLoadedObservers.observers);
-		}
+		targetObject.setIsPlaceholderObject(false);
 		targetObject._ = targetObject.__();
 	} else {
-		console.log("Loaded data that was already loaded!!!");
+		trace('unserialize', "Loaded data that was already loaded!!!");
+		// console.log("Loaded data that was already loaded!!!");
 	}
 }
 
 
 function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is undefined it will be used to set saver for all unserialized objects.
+	liquid.allUnlocked++;
 	arrayOfSerialized.forEach(function(serialized) {
-		console.log("unserializeFromUpstream: " + serialized.id);
+		trace('unserialize', "unserializeFromUpstream: ", serialized.id);
+		// console.log("unserializeFromUpstream: " + serialized.id);
 		unserializeUpstreamObject(serialized);
 	});
 	if (typeof(liquid.instancePage) !== 'undefined') {
 		liquid.instancePage.upstreamPulseReceived();
 	}
+	liquid.allUnlocked--;
 }
 
 

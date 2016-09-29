@@ -3,7 +3,7 @@
 // Reference service
 var defined = function(something) {
 	return typeof(something) !== 'undefined';
-}
+};
 
 var alphabeticSorter = function(getterName) {
 	return function(a, b) {
@@ -14,7 +14,7 @@ var alphabeticSorter = function(getterName) {
 		if(aProperty > bProperty) return 1;
 		return 0;		
 	}
-}
+};
 
 registerClass({
 	name: 'User', _extends: 'LiquidUser',
@@ -82,14 +82,37 @@ registerClass({
 		
 		object.overrideMethod('__', function(parent) {
 			// Old:
-			// var unloadedOrName = this._noDataLoaded ? "[no data]" : this.getName();
 			// return "(" + this.className + "." + this._idString() + ":" + unloadedOrName + ")";
 
 			// New: TODO: Create a without observation syntax?
-			var unloadedOrName = this._noDataLoaded ? "[no data]" : this._propertyInstances['name'].data;  // Without regestring as observer!
+			var unloadedOrName = this._propertyInstances['name'].data; //this.getName(); //+ liquid.onClient && !liquid. ?;
 			return "(" + this.className + "." + this._idString() + ":" + unloadedOrName + ")";
 		});
-		
+
+		object.overrideMethod('accessLevel', function(parent, page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
+			// console.log(page);
+			trace('security', "Considering security: ", page, " access level to ",  this);
+			// trace('security', startsWith("X", this.getName()));
+			// trace('security', this.getName());
+			// trace('security', page);
+			var pageUserIsOwner = this.getOwner() === page.getActiveUser();
+			if (startsWith("X", this.getName())) {
+				if (pageUserIsOwner)  {
+					return "readAndWrite";
+				} else {
+					return "noAccess";
+				}
+				// trace('security', "return noAccess");
+ 			} else {
+				// trace('security', "return readAndWrite");
+				if (pageUserIsOwner)  {
+					return "readAndWrite";
+				} else {
+					return "readOnly";
+				}
+			}
+		});
+
 		object.addMethod("isParentOf", function(category) {
 			var result = false;
 			category.getParents().forEach(function(parentCategory) {
