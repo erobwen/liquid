@@ -411,9 +411,12 @@ liquid.getSubscriptionUpdate = function(page) {
 
 				// Perform a selection with dependency recording!
 				var subscriptionSelection = {};
+				
+				// Select as
 				liquid.pageSubject = page;
 				object[selectorFunctionName](subscriptionSelection);
 				liquid.pageSubject = null;
+				
 				// console.log(subscriptionSelection);
 				// console.log(subscriptionSelection);
 				for (id in subscriptionSelection) {
