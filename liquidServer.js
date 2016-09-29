@@ -579,8 +579,19 @@ liquid.pushDataDownstream = function() {
 		var page = liquid.dirtyPageSubscritiptions[id];
 		var update = liquid.getSubscriptionUpdate(page);
 		// console.log(update);
-		page._socket.emit('pushSubscriptionChanges', update);
-		delete liquid.dirtyPageSubscritiptions[id];
+		if (typeof(page._pendingUpdates) === 'undefined') {
+			page._pendingUpdates = [];
+		}
+		page._pendingUpdates.push(update);
+
+		if (typeof(page._socket) !== 'undefined') {
+			while(page._pendingUpdates.length > 0) {
+				page._socket.emit('pushSubscriptionChanges', page._pendingUpdates.shift());
+			}
+			delete liquid.dirtyPageSubscritiptions[id];
+		} else {
+			// An update occured before the page has gotten to register its socket id.
+		}
 	}
 };
 

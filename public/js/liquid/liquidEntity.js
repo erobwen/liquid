@@ -206,12 +206,12 @@ var addLiquidEntity = function(liquid) {
                 });
 
                 object.addMethod('tryLoginOnServer', function(loginName, clientEncryptedPassword) {
-                    console.log("Here");
-                    console.log(loginName);
-                    console.log(clientEncryptedPassword);
+                    // console.log("Here");
+                    // console.log(loginName);
+                    // console.log(clientEncryptedPassword);
                     var serverEncryptedPassword = this.encryptPassword(clientEncryptedPassword);
                     var user = liquid.findLocalEntity({name: loginName});
-                    if (user.getEncryptedPassword() == serverEncryptedPassword) {
+                    if (user != null && user.getEncryptedPassword() === serverEncryptedPassword) {
                         this.getPage().setActiveUser(user);
                     }
                 });

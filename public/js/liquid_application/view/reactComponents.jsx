@@ -41,8 +41,20 @@ window.LiquidApplication = React.createClass(liquidClassData({
 // </div>
 
 var LoginUI = React.createClass(liquidClassData({
+	getInitialState: function() {
+		return {name: "Walter", password: "liquid"};
+	},
+
+	nameChanged: function(event) {
+		this.setState({name : event.target.value});
+	},
+
+	passwordChanged: function(event) {
+		this.setState({password : event.target.value});
+	},
+
 	tryLogin : function() {
-		page.getPageService().tryLogin(this.refs.usernameInput.value, this.refs.passwordInput.value);
+		page.getPageService().tryLogin(this.state.name, this.state.password);
 	},
 	
 	logout : function() {
@@ -51,7 +63,7 @@ var LoginUI = React.createClass(liquidClassData({
 	
 	render : function() {
 		return invalidateUponLiquidChange("LoginUI", this, function() {
-			console.log(this.props.page);
+			// console.log(this.props.page);
 			var page = this.props.page; // same as window.page'
 			// traceTags.repetition = true;
 			var user = page.getActiveUser();
@@ -59,15 +71,15 @@ var LoginUI = React.createClass(liquidClassData({
 			if (user == null) {
 				return (
 					<div style={{display: 'flex', flexDirection: 'column', border: '1px', margin: '1em', padding: '1em'}}>
-						<span>Username: </span><input ref="usernameInput" type="text" value="Walter"></input>
-						<span>Password: </span><input ref="passwordInput" type="password" value="liquid"></input>
+						<span>Username: </span><input ref="usernameInput" type="text" value={ this.state.name }  onChange={ this.nameChanged }></input>
+						<span>Password: </span><input ref="passwordInput" type="password" value={ this.state.password } onChange={ this.passwordChanged }></input>
 						<button onClick={ this.tryLogin } >Login</button>
 					</div>
 				);
 			} else {
 				return (
 					<div style={{display: 'flex', 'flex-direction': 'column', border: '1px', margin: '1em', padding: '1em'}}>
-						<span>Logged in as { user.getName() }</span>
+						<span>Logged in as <PropertyField object = { user } propertyName = "Name"/></span>
 						<button onClick={ this.logout } >Logout</button>
 					</div>
 				);
@@ -84,7 +96,7 @@ var UserView = React.createClass(liquidClassData({
 			// var rootCategories = this.props.user.getOwnedCategories();
 			return (
 				<div className="UserView">
-					<PropertyField label="Name" object = { this.props.user} propertyName = "Name"/>
+					<span>{ this.props.user.getName() }'s categories</span>
 					<div style={{height: "1em"}}></div>
 					<CategoriesView
 						key = { this.props.user._id }
@@ -115,7 +127,7 @@ var PropertyField = React.createClass(liquidClassData({
 	},	
 	render: function() {
 		return invalidateUponLiquidChange("PropertyField", this, function() {
-			var labelString = (this.props.label !== null) ? (this.props.label + ": ") : "";
+			var labelString = (typeof(this.props.label) !== 'undefined' && this.props.label !== null) ? (this.props.label + ": ") : "";
 			if (this.state.focused) {
 				return (
 					<span onClick={ this.clickOnField } style={{marginBottom: '1em'}}>

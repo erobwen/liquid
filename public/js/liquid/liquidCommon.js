@@ -81,19 +81,24 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 * Find entity
 	 */
 	liquid.findLocalEntity = function(properties) {
-		return liquid.findLocalEntities(properties)[0];
+		var entities = liquid.findLocalEntities(properties);
+		if (entities.length > 0) {
+			return liquid.findLocalEntities(properties)[0];
+		} else {
+			return null;
+		}
 	};
-	liquid.find = liquid.findEntity;
+	liquid.find = liquid.findLocalEntity;
 
 	liquid.findLocalEntities = function(properties) {
-		console.log(properties)
+		// console.log(properties)
 		var result = [];
 		for (id in liquid.idObjectMap) {
 			var object = liquid.idObjectMap[id];
-			trace('setup', "Try to match ", object, " with ", properties)
+			// trace('setup', "Try to match ", object, " with ", properties)
 			var failed = false;
 			for (key in properties) {
-				console.log(key);
+				// console.log(key);
 				if (key === 'className') {
 					failed = object.className !== properties[key];
 				} else if (typeof(object._propertyInstances[key]) !== 'undefined') {
@@ -105,7 +110,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 					break;
 				}
 			}
-			trace('setup', "Result: ", !failed)
+			// trace('setup', "Result: ", !failed)
 			if (!failed) {
 				result.push(object);
 			}
