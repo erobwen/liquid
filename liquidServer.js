@@ -1,4 +1,5 @@
 var liquidCommon = require('./public/js/liquid/liquidCommon.js');
+var liquidShape = require('./public/js/liquid/liquidShape.js');
 var liquidEntity = require('./public/js/liquid/liquidEntity.js');
 var liquidSelection = require('./public/js/liquid/liquidSelection.js');
 var liquidRepetition = require('./public/js/liquid/liquidRepetition.js');
@@ -14,7 +15,8 @@ var liquid = {};
 liquid.onServer = true;
 liquid.onClient = false;
 liquidCommon.addCommonLiquidFunctionality(liquid);
-liquidEntity.addLiquidEntity(liquid)
+liquidShape.addLiquidShapeFunctionality(liquid);
+liquidEntity.addLiquidEntity(liquid);
 liquidSelection.addLiquidSelectionFunctionality(liquid);
 liquidRepetition.addLiquidRepetitionFunctionality(liquid);
 

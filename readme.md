@@ -17,30 +17,28 @@ Liquid is a **full stack isomorphic & reactive web-development framework** that 
 1. **Full stack isomorphic Javascript environment**, which integrates the client, server & database, and allows shared code between server and client. (see http://isomorphic.net/)
 2. **Continous data structure subscription and synchronization**(a) between server/client and peer clients to automatically keep everything in synchronization.
 3. **State of the art reactive programming**, with advanced change propagation using **dependency recording**. Allowing you to write code that never explicitly updates views or derrived data (see https://en.wikipedia.org/wiki/Reactive_programming). The extensive reactive programming library contains the following powerful primitives: uponChangeDo, repeatOnChange, callCached, callCachedPersistent, withoutSideEffects, infuse, project.
-4. **Reactive to the core**, In addition to offer reactive programming primitives for the application, react also utilizes these
+4. **Reactive to the core**, In addition to offer reactive programming primitives for the application, react also utilizes these for its core functionality.
     * **Reactive data subscriptions**. What data is pushed to the client responds reactivley to changes in data.
     * **Reactive security model**.  The visibility and writeability of objects for a particular user changes reactivley.
     * **Reactive databases**. Traditional database handling depend on queries and streamed results. However, a result stream is inherently non-reactive as already read elements might already have changed. Instead, liquid features reactive search queries that reactivley updates the search result of a query.
 5. **Custom indexes**. Database-indexes might be highly application dependent. Whether you need augmented database indexes, or indexes of some specific kind, you can always implement your own reactive index (search tree) nodes on top of Liquid to facilitate your needs. There are two reasons for this, the first is to allow higher flexibility. The second reason is that databases today are generally non-reactive, so Liquid needs to implement its own reactive search indexes anyway, to support reactive selection over large sets.
-6. **Integrated security model**. The access relation between any user/object can be defined as "noAccess", "readOnly" or "readAndWrite". 
+6. **Integrated security model**. The access relation between any user/object can be defined as "noAccess", "readOnly" or "readAndWrite".
 7. **Integrated version control** All objects can be subject to version control (comming soon)
 8. **Real OOP for models** with polymorphism, model extension and inheritance etc. for efficient programming and code reuse.
 9. **REACT integration**, supporting recursive reactive views. Other UI frameworks could be used, or none, but Liquid comes bundeled with a through REACT integration.
 
-(a) Note: Currently only object-level synchronization is supported, see roadmap.
-
 In addition, Liquid has been built, based upon the following guiding principles:
 
-1. **"Code before constructs"**. In liquid, Javascript code is placed in the lead role. For example, if we are to sort a list, we could either conceive of a fancy ordering language, that allows the programmer to write things such as "order = {alphabetically: 'DESC'}". While such construct can be convenient at times, it is nowhere near as powerful and versitile as a plain Javascript ordering function, that is passed to a general sorting function. such as. order = function(a, b) { return a.name > b.name }. Therefore, in Liquid we primarily use code interfaces to solve problems, rather than limited yet fancy special purpose languages.
-2. **Recursion as stresstest**. The possibility of nesting components within other components is very important.
-3. **No enforced static encapsulation**. Many frameworks tries to mitigate the complexity of the world by enforcing a degree of encapsulation. Components are introduced that has distinct "output" and "inputs" (Angular 2, I am looking at you!). However, many of the more difficult real world problems require algorithms that has easy access to data from various sources, and a too rigid framework will be harmful for this purpose. I believe that complex data-flows only pose a problem if we loose control of them, and by using reactive programming and dependency recording, keeping track of complex dependencies is easier than ever. For example, liquid can ensure that view code does not alter the model by simply write-protecting the model during the view-rendering phase. Liquid therefore has no enforced static encapsulation of any kind. There are just objects, and code that manipulate objects, or build views out of objects.
-4. **Only one definition**. Web developers has become acustomed to defining their model in at least three ways. First the database definition, then the accompanying PHP/Java/Python models, and lastly their Json/Javascript representation in the client. With Liquid, there is only ONE single model definition, used for database, server and client!
+1. **"Code before constructs"**. In liquid, Javascript code is placed in the lead role. For example, if we are to sort a list, we could either conceive of a fancy ordering language, that allows the programmer to write things such as "order = {alphabetically: 'DESC'}". While such construct can be convenient at times, it is nowhere near as powerful and versitile as a plain Javascript ordering function, that is passed to a general sorting function. such as. order = function(a, b) { return a.name > b.name }. Therefore, in Liquid we primarily use code interfaces to solve problems, rather than fancy yet limited special purpose languages.
+2. **Recursion as stresstest**. The possibility of nesting components within other components is very important. The ability to handle recursive algorithms and data structures well is a testiment to any framework.
+3. **No enforced static encapsulation**. Many frameworks tries to mitigate the complexity of the world by enforcing a certain degree of encapsulation. Components are introduced that has distinct "output" and "inputs" (Angular 2 for example). However, many of the more difficult real world problems require algorithms that has easy access to data from various sources, and a too rigid framework will be harmful for this purpose. I believe that complex data-flows only pose a problem if we loose control of them, and by using reactive programming and dependency recording, keeping track of complex dependencies is easier than ever! For example, liquid can ensure that view code does not alter the model by simply write-protecting the model during the view-rendering phase. Liquid therefore has no enforced static encapsulation of any kind. There are just objects, and code that manipulate objects, or build views out of objects.
+4. **Only one definition**. Web developers has become acustomed to defining their model in at least three ways. First the database definition, then the accompanying PHP/Java/Python models, and lastly their Json/Javascript representation in the client. This implies a lot of redundant work, as a small change in the application requires a multitude of updates. With Liquid, there is only ONE single model definition, used for database, server and client!
 
 
 
 # Continous data structure synchronization
 
-The server and the client are two separate machines, yet is important to bring them together as close as possible, and the method to do so is to provide automatic synchronizaiton of data.
+The server and the client are two separate machines, yet is important to bring them together as close as possible, and the method to do so is to provide automatic synchronizaiton of data structures.
 
 Whenever shared data is written on the client, changes will automatically, without delay, propagate to the server, and whenever shared data is written on the server, changes will automatically propagate to the client. And Liquid makes this automatically for you! This makes Liquid higly suitable for applications where clients needs to share data in realtime, such as chatboards and games. For applications that require distinct "saving" or "reloading", other solutions will be available.
 
@@ -50,43 +48,53 @@ The only limitation inherent to all web development is about how the client need
 
 # State of the art reactive programming
 
-In essence, reactive programming is about only writing code that creates views, but never write code that update those views. Views could be simple renderings of a model, or contain complex data derrived from the model. Changes in the model will then give cause to an automatic update of any view dependent on the changed data.
+In essence, reactive programming is about:
 
-This is an evolution over traditional models, such as the observer pattern or other kinds of event triggered view updates. With reactive programming, it should be more automatic.
+*Only writing code that creates views and derrived data/models, but never write code that update those artifacts.* I we write code such as:
 
-This sounds simple, but in practice there are two inherent hard problems to overcome:
+     x = y + z
+*x should automatically update on any change of y or z. Moreover, we should not even have to write code that listens to, observes or in any other way detects changes in y or z. **The change detection and updating should be completley automatic***
 
-1. Dependency detection. How can we tell what has changed.
-2. View updating. How can we update the view when it carries a state.
+In practice there are two inherent hard problems to overcome:
 
-Dependency detection has traditionally depended on observer patterns, or just having code that knows how to update the corresponing view on some model change. As Angular 1.x was popularized however, the digest loop introduced a new level of reactive programming where the programmer in many cases did not need to write any code that updated the view, or that observed certain data. There were however a limitation in that any data prepared in the controller setup, would not change automatically. Hence there was till a limited need for the observer pattern using $watch. Angular 2 takes one step further towards the observer pattern, with distinct input and output declarations for components.
+1. **Dependency detection**. How can we tell what has changed.
+2. **View updating**. How can we update the view when it carries a state.
 
-For dependency detection liquid uses the radical idea of dependency recording, where we simply record any data read by a certain algorithm. I have found out that MobX uses the same technique. Dependency recording has the huge advantage that it puts no resctriction on the view code, allowing any kind of javascript to execute, while it still can maintain pinpoint precision in what view to re-evaluate.
+Liquid builds on a 10+ years legacy of original research into reactive programming and provides a state of the art solutions to each of these problems.
 
-When it comes to reactivley updating a view that already has a state of its own (such as status of buttons pressed, accordions etc), there are two fundamentally different approaches. The first one is to have a view-template driven rendering engine that pulls model data into the view. This semantics makes it inherently easy to know how to integrate a changed part of the view into the existing view. This approach is used heavily by for example Angular 1, but is also present in Angular 2 and React. Since Liquid has support for React itegration, it can use this method to allow reactive view creation/updating, while maintaining the state of the user interface.
+#### Dependency Detection ####
+Dependency detection has traditionally depended on **observer pattern**, or just having code that knows how to update the corresponing view on some model change. As Angular 1.x was popularized however, the **digest loop** introduced a new level of reactive programming where the programmer in many cases did not need to write any code that updated the view, or that observed certain data. There were however a limitation in that any data prepared in the controller setup, would not change automatically. Hence there was till a limited need for the observer pattern using $watch. Angular 2 takes one step further towards the observer pattern, with distinct input and output declarations for components.
 
-The other way to update a view with a state is to create a view object structure where objects has certain view-id:s and then merge the updated view into the existing one. Liquid also has support for this using the "projection" reactive primitive of Liquid.
+For dependency detection liquid uses the radical idea of **dependency recording**, where we simply record any data read by a certain algorithm. I have found out that MobX uses the same technique.
+
+*Dependency recording has the huge advantage that it puts no resctriction on the view code in terms of what object it reads data from, or what computations it performs in the process, allowing any kind of javascript to execute, while it still can maintain pinpoint precision in what view or derrived data to re-evaluate*.
+
+#### View Updating####
+When it comes to reactivley updating a view that already has a state of its own (such as status of buttons pressed, accordions etc), there are two fundamentally different approaches. The first one is to have a **view-template driven rendering** engine that pulls model data into the view. This semantics makes it inherently easy to know how to integrate a changed part of the view into the existing view. This approach is used heavily by for example Angular 1, but is also present in Angular 2 and React. Since Liquid has support for React itegration, it can use this method to allow reactive view creation/updating, while maintaining the state of the user interface.
+
+The other way to update a view with a state is to use a **construct and merge views methodology**. Upon change, a new view structure is created where objects has certain view-id:s that can be matched with view-id:s of any already existing view. The new view structure is merged into the existing one, retaining the identities of the already existing view. Liquid also has support for this using the **projection** reactive primitive of Liquid, which in turn uses the **infusion** concept.
 
 ## Reactive programming in Liquid
 In fact, Liquid presents quite a few novel innovations when it comes to reactive programming. The reactive primitives are:
-    * uponChangeDo
-    * repeatOnChange
+
+* uponChangeDo
+* repeatOnChange
 
 In addition, liquid offers the following features that are built upon these primitives:
 
-    * callCached & callCachedPersistent
-    * withoutSideEffects (helper)
-    * infuse (helper)
-    * project
+* callCached & callCachedPersistent
+* withoutSideEffects (helper)
+* infuse (helper)
+* project
 
-Some people might have difficoulty to understand the reactive primitives of liquid due to their simple nature. There is no need to "declare inputs", "define outputs" or setup a rendering pipeline. With liquid, you simply read a variable in the right situation, in order to register a dependency. It goes automatically and is integrated into what is normally viewed as the programming language.
+Some people might have difficoulty to understand the reactive primitives of liquid due to their simple nature. There is no need to "declare inputs", "define outputs" or setup a rendering pipeline. *With liquid, you simply read a variable in the right situation, in order to register a dependency*. It goes automatically and is integrated into what is normally viewed as the programming language.
 
 #### uponChangeDo ####
 Upon change do is the simplest primitive that uses dependency recording, and has a signature as follows:
 
     uponChangeDo(doFirstCallback, doOnChangeCallback)
 
-With it, it is possible to execute an arbitrary function with recursion, loops etc. Every single piece of data that is read is then beeing recorded, and when any of that data is changed, another function is called one single time. This is for example used to trigger invalidation of components in REACT, depending on data that was read in their render function. Here is an example:
+With it, it is possible to execute an arbitrary function with recursion, loops etc. Every single piece of data that is read during this dynamic scope of execuion is then beeing recorded, and when any of that data is changed, another function is called one single time. This is for example used to trigger invalidation of components in REACT, depending on data that was read in their render function. Here is an example:
 
 
     uponChangeDo(
@@ -120,23 +128,25 @@ Lastly, the dependency recording of liquid grants a bonus feature. Namley a "blo
 
 # Real OOP for models
 
-Sometimes development takes two steps forward, and one step back. The shift for application development from compiled languages, to web development and dynamic languages has brought many advances. Yet, one thing seems to have been lost. When programs started to store their data persistently in primarily SQL databases, it became difficoult to transfer the long legacy of OOP from the compiled languages. In the 90'ties all programmers built deep inheritance hierarchies for their models, reusing code on a grand scale. Yet today, this practice almost seems lost. To handle inheritance in an SQL database, the programmer has to resort to either single table inheritance, or multi table inheritance, and neither is any good. Some frameworks tries to offer this as a functionality, but none of them has gained any popularity, perhaps because of the inherent complexity.
+Sometimes development takes two steps forward, and one step back. The shift for application development from compiled languages, to web development and dynamic languages has brought many advances. Yet, one thing seems to have been lost. When programs started to store their data persistently in primarily SQL databases, it became difficoult to transfer the long legacy of OOP from the compiled languages. In the 90'ties all programmers built deep inheritance hierarchies for their models, reusing code on a grand scale. Yet today, this practice almost seems lost.
 
-What Liquid does, is that it tries to bring back true OOP for models, making it possible to once again build deep class hierarchies for increased code reuse. Currently, a graph database is used to make this possible, without increased complexity, but in the future a liquid/SQL adaptation might be created for supporting legacy projects.
+To handle inheritance in an SQL database, the programmer has to resort to either single table inheritance, or multi table inheritance, and neither is any good. Some frameworks tries to offer this as a functionality, but none of them has gained any popularity, perhaps because of the inherent complexity.
+
+What Liquid does, is that it tries to bring back true OOP for models, making it possible to once again build deep class hierarchies for increased code reuse. Currently, a schema-less NoSQL database is used to make this possible, without increased complexity. If there is a demand for it, a liquid/SQL adaptation might be created for supporting legacy projects.
 
 
 # Folder structure
 
 * Liquid
 	* LiquidNeo4JInterface   native Java wrapper for Neo4J (to be removed)
-	* public 
+	* public
 		* js
 			* liquid  -- The liquid libraries. Used on both client and server.
-			* **liquid_application**  -- This is where your application files go. Used on both client and server. 
-	* views -- ejs files for your express server. 
+			* **liquid_application**  -- This is where your application files go. Used on both client and server.
+	* views -- ejs files for your express server.
 	* **liquid.js** -- main starting point for liquid.
-	* controllers.js -- Controller definitions. 
-	* liquidServer.js -- the part of the framework that only needs to reside on the server.  
+	* controllers.js -- Controller definitions.
+	* liquidServer.js -- the part of the framework that only needs to reside on the server.
 
 
 # Simple demo videos
@@ -159,11 +169,10 @@ Currently, liquid is not packaged as a framework that can be downloaded with npm
 1. Install Node 6.3.1
 2. Install Neo4J 3.0.4
 3. Clone the repository to c:\liquid or corresponding
-4. Run npm install in this directory. (some warnings and errors, but it should be ok). 
-5. Start Neo4J and open the interface. Change the password of user neo4j to "liquid"
+4. Run npm install in this directory. (some warnings and errors, but it should be ok).
+5. ~~Start Neo4J and open the interface. Change the password of user neo4j to "liquid"~~ (database is not used currently)
 6. run "node liquid.js" in the liquid directory.
-7. Navigate to: http://localhost:4000/init  (this will populate the database with some data) **WARNING**: This will clean out everything in the database.
-8. Navigate to: http://localhost:4000/view
+8. Navigate to: http://localhost:4000/test
 
 
 # Liquid/Neo4J Connectivity

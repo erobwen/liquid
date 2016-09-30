@@ -8,6 +8,7 @@ var liquid = {
 };
 
 addCommonLiquidFunctionality(liquid);
+addLiquidShapeFunctionality(liquid);
 addLiquidEntity(liquid);
 addLiquidSelectionFunctionality(liquid);
 addLiquidRepetitionFunctionality(liquid);
