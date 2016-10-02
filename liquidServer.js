@@ -102,7 +102,7 @@ liquid.ensurePersisted = function(object) {
 				neo4j.setPropertyValue(object._persistentId, "definition.name", instance.data); // TODO: Set multiple values at the same time!
 			}
 		});
-		object.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject){
+		object.forAllOutgoingRelationsAndObjects(function(definition, instance, relatedObject){
 			liquid.ensurePersisted(relatedObject);
 			neo4j.createRelationTo(object._persistentId, relatedObject._persistentId, definition.qualifiedName);
 		});
@@ -153,7 +153,7 @@ liquid.unpersistIfOrphined = function() {
 	if (object._persistedDirectly === false && !liquid.hasDirectlyPersistedAncestor(object)) {
 		neo4j.query("MATCH (n) WHERE n.id() = '" + object._persistentId + "' DETACH DELETE n");
 		object._persistentId = null;
-		object.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject){
+		object.forAllOutgoingRelationsAndObjects(function(definition, instance, relatedObject){
 			liquid.unpersistIfOrphined(relatedObject);
 		});
 	}
@@ -306,7 +306,7 @@ liquid.ensureIncomingRelationLoaded = function(object, incomingRelationQualified
 			if (incomingRelationIds.length > 0) {
 				incomingRelationIds.forEach(function(incomingId) {
 					var relatedObject = liquid.getPersistentEntity(incomingId);
-					// Call getter on the incoming relations
+					// Call getter on the incoming relations, this will trigger observation
 					var definition = relatedObject.getRelationDefinitionFromQualifiedName(incomingRelationQualifiedName);
 					relatedObject[definition.getterName]();
 				});

@@ -90,26 +90,12 @@ registerClass({
 		});
 
 		object.overrideMethod('accessLevel', function(parent, page) {  // Return values, "noAccess", "readOnly", "readAndWrite".
-			// console.log(page);
 			trace('security', "Considering security: ", page, " access level to ",  this);
-			// trace('security', startsWith("X", this.getName()));
-			// trace('security', this.getName());
-			// trace('security', page);
 			var pageUserIsOwner = this.getOwner() === page.getActiveUser();
-			if (startsWith("X", this.getName())) {
-				if (pageUserIsOwner)  {
-					return "readAndWrite";
-				} else {
-					return "noAccess";
-				}
-				// trace('security', "return noAccess");
- 			} else {
-				// trace('security', "return readAndWrite");
-				if (pageUserIsOwner)  {
-					return "readAndWrite";
-				} else {
-					return "readOnly";
-				}
+			if (pageUserIsOwner)  {
+				return "readAndWrite";
+			} else {
+				return startsWith("X", this.getName()) ? "noAccess" : "readOnly";
 			}
 		});
 

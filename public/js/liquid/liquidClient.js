@@ -101,7 +101,7 @@ liquid.pushDataUpstream = function() {
 		function addRequiredCascade(object, requiredObjects) {
 			if (object._upstreamId === null && typeof(requiredObjects[object.id]) === 'undefined') {
 				requiredObjects[object.id] = object;
-				object.forAllOutgoingRelatedObjects(function(definition, instance, relatedObject) {
+				object.forAllOutgoingRelationsAndObjects(function(definition, instance, relatedObject) {
 					addRequiredCascade(relatedObject);
 				});
 			}
