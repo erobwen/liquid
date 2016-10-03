@@ -1,5 +1,6 @@
 /*--------------------------------------
- * Liquid shape analysis functionality
+ * Liquid data structure shape 
+ * analysis functionality
  * 
  *---------------------------------------*/
 
@@ -54,7 +55,53 @@ var addLiquidShapeFunctionality = function(liquid) {
 
         /*---------------------------------------------------------------
          *
-         *     Relation browsing
+         *     Shape analysis
+         *   (using members with observation)
+         *---------------------------------------------------------------*/
+
+        object['canRelateAccordingToShape'] = function(shape, definition, relatedObject) {
+            try {
+                // shape can be 'non-recursive', 'tree', 'acyclic', 'graph'
+                if (shape == 'non-recursive') {
+                    return relatedObject.outgoingRelatedObjects(definition.qualifiedName).length == 0;
+                } else if (shape == 'tree') {
+                    var allTransitiveOutgoing = relatedObject.getAllTransitiveOutgoing(definition.qualifiedName);
+                    allTransitiveOutgoing[relatedObject._id] = true;
+                    return typeof((allTransitiveOutgoing[this._id]) === 'undefined') && (relatedObject.incomingRelatedObjects(definition.qualifiedName).length == 0);
+                } else if (shape == 'acyclic') {
+                    var allTransitiveOutgoing = this.getAllTransitiveOutgoing(definition.qualifiedName);
+                    return typeof(allTransitiveOutgoing[this._id]) === 'undefined';
+                } else if (shape == 'graph') {
+                    return true;
+                }
+            } catch(exception) {
+                return false;
+            }
+        };
+
+
+        object["getAllTransitiveOutgoing"] = function(qualifiedRelationName) {
+            var objects = {};
+            this.addAllTransitiveOutgoing(qualifiedRelationName, objects);
+            return objects;
+        };
+
+        object["addAllTransitiveOutgoing"] = function(qualifiedRelationName, addedObjects) {
+            if (typeof(addedObjects[this._id]) === 'undefined') {
+                if (this.onClient && object.isPlaceholderObject() || !object.readable()) {
+                    throw "Data not accessable for shape analysis!";
+                }
+
+                addedObjects[this._id] = true;
+                this.forAllOutgoingRelatedObjects(qualifiedRelationName, function(relatedObject) {
+                    relatedObject.addAllTransitiveOutgoing(qualifiedRelationName, addedObjects);
+                });
+            }
+        }
+
+        /*---------------------------------------------------------------
+         *
+         *     Relation browsing OBS RAW!!!
          *  (without members, no observation, no auto loading)
          *---------------------------------------------------------------*/
 
@@ -123,7 +170,9 @@ var addLiquidShapeFunctionality = function(liquid) {
 
 
         /*---------------------------------------------------------------
-         *   Parent and child
+         *   Parent and child  OBS RAW!!!
+         *
+         *   (without members, autoloading.)
          *---------------------------------------------------------------*/
 
         // Essetially, is child of
@@ -155,48 +204,7 @@ var addLiquidShapeFunctionality = function(liquid) {
                 return false;
             }
         };
-
-        /*---------------------------------------------------------------
-         *
-         *     Shape analysis
-         *   (without observation)
-         *   TODO: Consider, do we need observation posibilities?
-         *---------------------------------------------------------------*/
-
-        object['canRelateAccordingToShape'] = function(shape, definition, relatedObject) {
-            // shape can be 'non-recursive', 'tree', 'acyclic', 'graph'
-            if (shape == 'non-recursive') {
-                return relatedObject.outgoingRelatedObjects(definition.qualifiedName).length == 0;
-            } else if (shape == 'tree') {
-                var allTransitiveOutgoing = relatedObject.getAllTransitiveOutgoing(definition.qualifiedName);
-                allTransitiveOutgoing[relatedObject._id] = true;
-                return typeof((allTransitiveOutgoing[this._id]) === 'undefined') && (relatedObject.incomingRelatedObjects(definition.qualifiedName).length == 0);
-            } else if (shape == 'acyclic') {
-                var allTransitiveOutgoing = this.getAllTransitiveOutgoing(definition.qualifiedName);
-                return typeof(allTransitiveOutgoing[this._id]) === 'undefined';
-            } else if (shape == 'graph') {
-                return true;
-            }
-        };
-
-
-        object["getAllTransitiveOutgoing"] = function(qualifiedRelationName) {
-            var objects = {};
-            this.addAllTransitiveOutgoing(qualifiedRelationName, objects);
-            return objects;
-        };
-
-        object["addAllTransitiveOutgoing"] = function(qualifiedRelationName, addedObjects) {
-            if (typeof(addedObjects[this._id]) === 'undefined') {
-                addedObjects[this._id] = true;
-                this.forAllOutgoingRelatedObjects(qualifiedRelationName, function(relatedObject) {
-                    relatedObject.addAllTransitiveOutgoing(qualifiedRelationName, addedObjects);
-                });
-            }
-        }
     };
-
-
 };
 
 
