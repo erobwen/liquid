@@ -1,5 +1,6 @@
 var liquidCommon = require('./public/js/liquid/liquidCommon.js');
 var liquidShape = require('./public/js/liquid/liquidShape.js');
+var liquidObjectMember = require('./public/js/liquid/liquidObjectMember.js');
 var liquidEntity = require('./public/js/liquid/liquidEntity.js');
 var liquidSelection = require('./public/js/liquid/liquidSelection.js');
 var liquidRepetition = require('./public/js/liquid/liquidRepetition.js');
@@ -14,6 +15,7 @@ require( 'console-group' ).install();
 var liquid = {};
 liquid.onServer = true;
 liquid.onClient = false;
+liquidObjectMember.addLiquidObjectMemberFunctionality(liquid);
 liquidCommon.addCommonLiquidFunctionality(liquid);
 liquidShape.addLiquidShapeFunctionality(liquid);
 liquidEntity.addLiquidEntity(liquid);
