@@ -24,7 +24,7 @@ traceTags = {
     'unserialize' : true,
     'serialize' : true,
     'selection' : true,
-    'security' : true,
+    // 'security' : true,
     'react' : true
 
     // 'database' : true,
@@ -246,6 +246,8 @@ var traceGroup = function() {
     // }
 };
 
+
+
 var traceGroupEnd = function() {
     groupNesting--;
     if (surpressChildTraces && groupNesting < hiddenGroupAtNesting) {
@@ -255,10 +257,17 @@ var traceGroupEnd = function() {
 };
 
 
+var logData = function(data) {
+    console.log(cloneAndMapLiquidObjectsDeep(data, function(liquidObject) { return liquidObject.__()}));
+};
+
 if (typeof(module) !== 'undefined') {
     module.exports.trace = trace;
     module.exports.traceGroup = traceGroup;
     module.exports.traceGroupEnd = traceGroupEnd;
     module.exports.traceTage = traceTags;
+    module.exports.logData = logData;
 }
+
+
 

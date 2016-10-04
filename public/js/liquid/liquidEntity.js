@@ -339,12 +339,13 @@ var addLiquidEntity = function(liquid) {
                 object.init = function(initData) {
                     for(var property in initData) {
                         // console.log("property: " + property);
+                        trace('init', this, ".",  property,  "=");
                         setterName = 'set' + capitaliseFirstLetter(property);
                         if (typeof(this[setterName]) !== 'undefined') {
-                            trace("setting using standard constructor: ", setterName);
+                            trace('init', "setting using standard constructor: ", setterName);
                             this[setterName](initData[property]);
                         } else {
-                            trace("Error: Setter not found: ", this, ".", setterName, "!");
+                            trace('init', "Error: Setter not found: ", this, ".", setterName, "!");
                             // console.log(this);
                         }
                     }
@@ -409,10 +410,12 @@ var addLiquidEntity = function(liquid) {
                 };
 
                 object.selectAll = function(selection) {
+                    trace('selection', liquid.allowRead(this));
                     if (typeof(selection[this._id]) === 'undefined' && liquid.allowRead(this)) {
                         // console.log("Selecting " + this.__());
                         selection[this._id] = true;
                         this.forAllOutgoingRelationsAndObjects(function(definition, instance, relatedObject) {
+                            trace('selection', "In here!");
                             liquid.registerObserverTo(this, definition, instance);
                             relatedObject.selectAll(selection);
                         }.bind(this));

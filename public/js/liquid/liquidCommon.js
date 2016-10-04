@@ -288,6 +288,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	// Note: see also Entity::allowCallOnServer()
 
 	liquid.allowRead = function(object) {
+		trace('security', "Allow read? ", object);
 		// All is open?
 		if (liquid.allUnlocked > 0) {
 			return true;
@@ -297,6 +298,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if (liquid.onClient) {
 			liquid.allUnlocked++;
 			var isLockedProperty = object.getIsLockedObject();
+			trace('security', "isLockedProperty: ", isLockedProperty);
 			liquid.allUnlocked--;
 			var result = isLockedProperty
 		}
@@ -306,6 +308,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		if (page !== null) {
 			liquid.allUnlocked++;
 			var accessLevel = object.cachedCall('accessLevel', page);
+			trace('security', "accessLevel: ", accessLevel);
 			liquid.allUnlocked--;
 			return accessLevel === 'readOnly' || accessLevel === 'readAndWrite';
 		}
@@ -501,7 +504,8 @@ var addCommonLiquidFunctionality = function(liquid) {
 		definition.type = "relation";
 		// definition.isLoaded = false;
 		// Interpret undefined as false
-		if(typeof(definition.isSet) == 'undefined') definition.isSet = false;
+		if(typeof(definition.isSet) === 'undefined') definition.isSet = false;
+		if(typeof(definition.shape) === 'undefined') definition.shape = 'graph'; // valid arguments are 
 		// if(typeof(definition.isBidirectional) == 'undefined') definition.isBidirectional = false;
 		if(typeof(definition.incomingRelationQualifiedName) == 'undefined') {
 			definition.incomingRelationQualifiedName = null;
@@ -554,22 +558,6 @@ var addCommonLiquidFunctionality = function(liquid) {
 	*               Generic relation loading interface
 	*----------------------------------------------------------------*/
 		
-	liquid.logData = function(data) {
-		if (data === null) {
-			//console.log("null");
-		} else if (isArray(data)) {
-			var logArray = [];
-			data.forEach(function(child) {
-				logArray.push(child.__());
-			});
-			//console.log(logArray);
-		} else if(typeof(data) === 'object'){
-			//console.log(data.__());
-		} else {
-			//console.log(data);			
-		}
-	};
-		
 	liquid.loadSingleRelation = function(object, definition, instance) {
 		instance.data = null;
 		//console.log("loadSingleRelation: " + object.__() + " -- [" + definition.name + "] --> ?");
@@ -608,7 +596,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		instance.data = set;
 		// Setup sorting
 		liquid.setupRelationSorting(object, definition, instance);
-		liquid.logData(instance.data);
+		// logData(instance.data);
 	};
 		
 	
@@ -1007,7 +995,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	 * Properties
 	 */	
 	liquid.addProperty = function(object, name, defaultValue, details) {
-		liquid.addPropertyInfo(
+		liquid.addPropertyInterface(
 			object, 
 			liquid.createPropertyStructure({
 				name : name,
@@ -1043,11 +1031,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		
 		// Init explorative calls
 		// liquid.addGettersAndSetters(object, relation); //???
-		if (!relationDefinition.isSet) {
-			liquid.addSingleRelationInfo(object, relationDefinition);
-		} else {
-			liquid.addSetRelationInfo(object, relationDefinition);		
-		}
+		liquid.addRelationInterface(object, relationDefinition);
 	};
 
 	liquid.registerRelation = function(object, definition, instance) {
@@ -1080,7 +1064,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 		liquid.registerRelation(object, relationDefinition, relationInstance);
 		
 		// Init explorative calls
-		liquid.addRelationInfo(object, relationDefinition);
+		liquid.addRelationInterface(object, relationDefinition);
 	};
 
 

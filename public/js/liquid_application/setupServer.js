@@ -22,10 +22,12 @@ liquid.pulse('local', function() {
 
     var funny = create('Category', {name: 'Funny', description: '', owner: user});
 
+
     var politics = create('Category', {name: 'Politics', description: '', owner: user});
 
     var georgism = create('Category', {name: 'Georgism', description: '', owner: user});
     politics.addSubCategory(georgism);
+
 
     setTimeout(function() {
         liquid.pulse('local', function() {
@@ -50,6 +52,11 @@ liquid.pulse('local', function() {
     while (created++ < 3) {
         var reference1 = create('Reference', {url : 'http://foo.com/' + created, owner: user, categories: [georgism]});
     }
+
+    trace('setup', "Users categories: ", user.getOwnedCategories());
+
+    // return;
+
 
 // created = 0;
 // while (created++ < 10) {
