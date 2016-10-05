@@ -64,6 +64,14 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
      *
      *---------------------------------------*/
 
+    
+    function addRelationShapeCheck(object, definition, plural) {
+        var name = plural ? ('canAdd' + definition.name) : ('canSet' + definition.name);
+        object[name] = function (relatedObject) {
+            return liquid.canRelateAccordingToShape(definition, relatedObject);
+        }    
+    }
+    
     // Setter
     function addRelationGetter(object, definition) {
         // Member: Outgoing single getter
@@ -562,6 +570,7 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
     liquid.addRelationInterface = function(object, relationDefinition) {
         if (!relationDefinition.isSet) {
             if (!relationDefinition.isReverseRelation) {
+                addRelationShapeCheck(object, relationDefinition, false);
                 addRelationGetter(object, relationDefinition);
                 addRelationSetter(object, relationDefinition);
             } else {
@@ -570,6 +579,7 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
             }
         } else {
             if (!relationDefinition.isReverseRelation) {
+                addRelationShapeCheck(object, relationDefinition, true);
                 addRelationPluralIterator(object, relationDefinition);
                 addRelationPluralGetter(object, relationDefinition);
                 addRelationPluralSetter(object, relationDefinition);
