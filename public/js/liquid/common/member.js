@@ -65,13 +65,16 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
      *---------------------------------------*/
 
     
-    function addRelationShapeCheck(object, definition, plural) {
-        var name = plural ? ('canAdd' + definition.name) : ('canSet' + definition.name);
-        object[name] = function (relatedObject) {
-            return liquid.canRelateAccordingToShape(definition, relatedObject);
-        }    
+    function addRelationShapeCheck(object, definition) {
+        object[definition.shapeCheckerName] = function (relatedObject) {
+            if (relatedObject === null) {
+                return true;
+            } else {
+                return this.canRelateAccordingToShape(definition, relatedObject);
+            }
+        }
     }
-    
+
     // Setter
     function addRelationGetter(object, definition) {
         // Member: Outgoing single getter
@@ -101,7 +104,7 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
         object[definition.setterName] = function (newValue) {
             // console.log("Set single relation: " + this.__() + "." + definition.name + " = " + nullOr__(newValue));
             trace('member', this, ".", definition.setterName, "(", newValue, ")");
-            if (liquid.allowWrite(this)) {
+            if (liquid.allowWrite(this) && this[definition.shapeCheckerName](newValue)) {
                 var previousValue = this[definition.getterName]();
                 if (previousValue != newValue) {
                     liquid.inPulseBlockUponChangeActions(function (pulse) {
@@ -242,7 +245,7 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
             trace('member', this, ".", definition.adderName, "(", added, ")");
             // console.log("Add to set: " + this.__() + "." + definition.adderName + "(" + added.__() + ")");
             // console.log(definition.adderName + "(...)");
-            if (liquid.allowWrite(this)) {
+            if (liquid.allowWrite(this) && this[definition.shapeCheckerName](added)) {
                 // console.log("Set relation adder");
                 // console.log(relation);
                 var instance = this._relationInstances[definition.qualifiedName];
@@ -378,7 +381,7 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
             // console.log("Set single relation (reverse): " + this.__() + "." + definition.name + " = " + newValue.__());
             trace('member', this, ".", definition.setterName, "(", newValue, ")");
             var previousValue = this[definition.getterName]();
-            if (liquid.allowWrite(this) && previousValue !== newValue) {
+            if (previousValue !== newValue) {  //liquid.allowWrite(this) &&
                 liquid.inPulseBlockUponChangeActions(function (pulse) {
                     if (previousValue != null) {
                         var incomingRelation = previousValue._relationDefinitions[incomingRelationQualifiedName];
@@ -570,7 +573,7 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
     liquid.addRelationInterface = function(object, relationDefinition) {
         if (!relationDefinition.isSet) {
             if (!relationDefinition.isReverseRelation) {
-                addRelationShapeCheck(object, relationDefinition, false);
+                addRelationShapeCheck(object, relationDefinition);
                 addRelationGetter(object, relationDefinition);
                 addRelationSetter(object, relationDefinition);
             } else {
@@ -579,7 +582,7 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
             }
         } else {
             if (!relationDefinition.isReverseRelation) {
-                addRelationShapeCheck(object, relationDefinition, true);
+                addRelationShapeCheck(object, relationDefinition);
                 addRelationPluralIterator(object, relationDefinition);
                 addRelationPluralGetter(object, relationDefinition);
                 addRelationPluralSetter(object, relationDefinition);

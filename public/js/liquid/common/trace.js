@@ -10,7 +10,7 @@ var col1Left = 0;
 var col2Left = col1Width;
 var col3Left = col1Width + col2Width;
 
-// (liquidCommon.js:573:3)             create:       (className: Category)
+// (common/core.js:573:3)             create:       (className: Category)
 
 traceTags = {
     'setup' : true,

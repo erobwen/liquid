@@ -11,6 +11,7 @@ addCommonLiquidFunctionality(liquid);
 addLiquidShapeFunctionality(liquid);
 addLiquidObjectMemberFunctionality(liquid);
 addLiquidEntity(liquid);
+addUserPageAndSessions(liquid)
 addLiquidSelectionFunctionality(liquid);
 addLiquidRepetitionFunctionality(liquid);
 

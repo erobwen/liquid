@@ -1,12 +1,13 @@
-var liquidCommon = require('./public/js/liquid/liquidCommon.js');
+var liquidCommon = require('./public/js/liquid/common/core.js');
 var liquidShape = require('./public/js/liquid/liquidShape.js');
-var liquidObjectMember = require('./public/js/liquid/liquidObjectMember.js');
-var liquidEntity = require('./public/js/liquid/liquidEntity.js');
-var liquidSelection = require('./public/js/liquid/liquidSelection.js');
-var liquidRepetition = require('./public/js/liquid/liquidRepetition.js');
+var liquidObjectMember = require('./public/js/liquid/common/member.js');
+var liquidEntity = require('./public/js/liquid/common/entity.js');
+var userPageAndSession = require('./public/js/liquid/common/userPageAndSession.js');
+var liquidSelection = require('./public/js/liquid/common/selection.js');
+var liquidRepetition = require('./public/js/liquid/common/reactive.js');
 var neo4j = require('./liquidNeo4jInterface.js');
 include('./public/js/liquid/liquidUtility.js'); ///..  // Note: path relative to the include service!
-include('./public/js/liquid/liquidTrace.js'); ///..  // Note: path relative to the include service!
+include('./public/js/liquid/common/trace.js'); ///..  // Note: path relative to the include service!
 require( 'console-group' ).install();
 
 /**
@@ -19,6 +20,7 @@ liquidObjectMember.addLiquidObjectMemberFunctionality(liquid);
 liquidCommon.addCommonLiquidFunctionality(liquid);
 liquidShape.addLiquidShapeFunctionality(liquid);
 liquidEntity.addLiquidEntity(liquid);
+userPageAndSession.addUserPageAndSessions(liquid);
 liquidSelection.addLiquidSelectionFunctionality(liquid);
 liquidRepetition.addLiquidRepetitionFunctionality(liquid);
 

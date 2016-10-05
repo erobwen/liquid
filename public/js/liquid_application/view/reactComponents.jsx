@@ -223,7 +223,7 @@ window.CategoryView = React.createClass(liquidClassData({
 		var category = this.props.category;
 		if (this.dragEnterCounter === 1) {
 			// console.log("Drag enter counter is one!");
-			if (category.canAddAsSubCategory(draggedCategory)) {
+			if (category.canAddSubCategory(draggedCategory)) {
 				// console.log("Actually enter!");
 				this.setState({ 
 					draggingOver: true
@@ -243,7 +243,7 @@ window.CategoryView = React.createClass(liquidClassData({
 		var category = this.props.category;
 		if (this.dragEnterCounter === 0) {
 			// console.log("Drag leave counter is zero!");
-			if (category.canAddAsSubCategory(draggedCategory)) {
+			if (category.canAddSubCategory(draggedCategory)) {
 				// console.log("Actually leave!");
 				this.setState({ 
 					draggingOver: false
@@ -277,7 +277,7 @@ window.CategoryView = React.createClass(liquidClassData({
 		var category = this.props.category;
 		var droppedCategory = draggedCategory;
 		draggedCategory = null;
-		if (category.canAddAsSubCategory(droppedCategory)) {
+		if (category.canAddSubCategory(droppedCategory)) {
 			liquid.pulse('local', function() {
 				console.log(droppedCategory.getParents().length);
 				console.log(droppedCategory.getParents());

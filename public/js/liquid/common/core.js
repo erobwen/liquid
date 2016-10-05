@@ -12,6 +12,7 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.initialize = function() {
 		//console.log("Initialize liquid!");
 		liquid.addCommonLiquidClasses(liquid);
+		liquid.addUserPageAndSessionClasses(liquid);
 		// console.log(liquid.classRegistry);
 		liquid.ensureClassRegistryLinked();
 	};
@@ -545,12 +546,14 @@ var addCommonLiquidFunctionality = function(liquid) {
 			// definition.getterName = definition.name;
 			definition.getterName = "get" + definition.name;
 			definition.setterName = "set" + definition.name;
+			definition.shapeCheckerName = 'canSet' + definition.name;
 		} else {
 			definition.getterName = "get" + definition.plural;
 			definition.setterName = "set" + definition.plural;
 			definition.adderName = 'add' + definition.name;
 			definition.removerName = 'remove' + definition.name;
 			definition.forAllName = 'forAll' + definition.plural;
+			definition.shapeCheckerName = 'canAdd' + definition.name;
 		}
 	};
 	
