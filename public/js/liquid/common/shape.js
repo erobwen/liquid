@@ -5,6 +5,10 @@
  *---------------------------------------*/
 
 var addLiquidShapeFunctionality = function(liquid) {
+
+
+    liquid.turnOffShapeCheck = 0;
+
     liquid.addGenericRelationBrowsing = function(object) {
         /*---------------------------------------------------------------
          *
@@ -24,11 +28,11 @@ var addLiquidShapeFunctionality = function(liquid) {
             var definition = this._relationDefinitions[qualifiedRelationName];
             if (!definition.isReverseRelation) {
                 if (definition.isSet) {
-                    this[definition.getterName].forEach(function(relatedObject) {
+                    this[definition.getterName]().forEach(function(relatedObject) {
                         callback(relatedObject);
                     })
                 } else {
-                    callback(this[definition.getterName]);
+                    callback(this[definition.getterName]());
                 }
             }
         };
@@ -60,6 +64,13 @@ var addLiquidShapeFunctionality = function(liquid) {
          *---------------------------------------------------------------*/
 
         object['canRelateAccordingToShape'] = function(definition, relatedObject) {
+            if (liquid.turnOffShapeCheck > 0) {
+                return true;
+            }
+
+            var shape = definition.shape;
+            trace('shape', "Can relate: ", this, ".", definition.name, ".", relatedObject, " shape: ", shape);
+
             // Allowed shape names:
             // 'graph', 'non-recursive', 'non-shared', 'tree', 'acyclic', 'spiral'
 
@@ -68,7 +79,6 @@ var addLiquidShapeFunctionality = function(liquid) {
             // non-cyclic (no loops)
             // non-recursive (child cannot be parent)
 
-            var shape = definition.shape;
             if (shape === 'graph') { // Default value. No checks!
                 // shared recursive cyclic
                 return true;
@@ -76,13 +86,13 @@ var addLiquidShapeFunctionality = function(liquid) {
 
                 // Can only analyze shape if related object accessible
                 if (liquid.onClient) {
-                    if (relatedObject.isPlaceholderObject() || !relatedObject.readable()) {
+                    if (relatedObject.getIsPlaceholderObject() || !relatedObject.readable()) {
                         return false;
                     }
                     // TODO: consider how to handle incomingRelatedObjects on client? Should we demand they are all loaded?
                 }
 
-                try {
+                // try {
                     if (shape === 'non-recursive') {
                         // non-shared recursive non-cyclic
                         return (relatedObject.outgoingRelatedObjects(definition.qualifiedName).length == 0)
@@ -98,14 +108,16 @@ var addLiquidShapeFunctionality = function(liquid) {
                     } else if (shape === 'tree') {
                         // TODO: return false on client since we cannot guarantee non-shared?
                         // non-shared recursive non-cyclic
-                        let allTransitiveOutgoing = relatedObject.getAllTransitiveOutgoing(definition.qualifiedName);
+                        var allTransitiveOutgoing = relatedObject.getAllTransitiveOutgoing(definition.qualifiedName);
                         allTransitiveOutgoing[relatedObject._id] = true;
                         return typeof((allTransitiveOutgoing[this._id]) === 'undefined')
                             && (relatedObject.incomingRelatedObjects(definition.qualifiedName).length == 0);
 
                     } else if (shape === 'acyclic') {
+                        trace('shape', "Acyclic");
                         // shared recursive non-cyclic
-                        let allTransitiveOutgoing = relatedObject.getAllTransitiveOutgoing(definition.qualifiedName);
+                        var allTransitiveOutgoing = relatedObject.getAllTransitiveOutgoing(definition.qualifiedName);
+                        trace('shape', "allTransitiveOutgoing:", allTransitiveOutgoing);
                         return typeof(allTransitiveOutgoing[this._id]) === 'undefined';
 
                     } else if (shape === 'spiral') {
@@ -113,9 +125,10 @@ var addLiquidShapeFunctionality = function(liquid) {
                         // non-shared recursive cyclic
                         return (relatedObject.incomingRelatedObjects(definition.qualifiedName).length == 0);
                     }
-                } catch(exception) { // discovering unloaded data recursivley will result in exception.
-                    return false;
-                }
+                // } catch(exception) { // discovering unloaded data recursivley will result in exception.
+                //     trace('shape', "Got exception", exception);
+                //     return false;
+                // }
             }
         };
 
@@ -127,8 +140,10 @@ var addLiquidShapeFunctionality = function(liquid) {
         };
 
         object["addAllTransitiveOutgoing"] = function(qualifiedRelationName, addedObjects) {
+            trace('shape', this, ".addAllTransitiveOutgoing ...",qualifiedRelationName, addedObjects);
             if (typeof(addedObjects[this._id]) === 'undefined') {
-                if (liquid.onClient && this.isPlaceholderObject() || !this.readable()) {
+                if (liquid.onClient && this.getIsPlaceholderObject() || !this.readable()) {
+                    trace('shape', "Data not readable during shape analysis");
                     throw "Data not accessable for shape analysis!";
                 }
 

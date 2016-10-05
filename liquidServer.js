@@ -1,5 +1,5 @@
 var liquidCommon = require('./public/js/liquid/common/core.js');
-var liquidShape = require('./public/js/liquid/liquidShape.js');
+var liquidShape = require('./public/js/liquid/common/shape.js');
 var liquidObjectMember = require('./public/js/liquid/common/member.js');
 var liquidEntity = require('./public/js/liquid/common/entity.js');
 var userPageAndSession = require('./public/js/liquid/common/userPageAndSession.js');

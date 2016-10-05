@@ -505,8 +505,9 @@ var addCommonLiquidFunctionality = function(liquid) {
 		definition.type = "relation";
 		// definition.isLoaded = false;
 		// Interpret undefined as false
+		definition.shape = (typeof(details) !== 'undefined' && typeof(details.shape) !== 'undefined') ? details.shape : 'graph'; // valid arguments are
+
 		if(typeof(definition.isSet) === 'undefined') definition.isSet = false;
-		if(typeof(definition.shape) === 'undefined') definition.shape = 'graph'; // valid arguments are 
 		// if(typeof(definition.isBidirectional) == 'undefined') definition.isBidirectional = false;
 		if(typeof(definition.incomingRelationQualifiedName) == 'undefined') {
 			definition.incomingRelationQualifiedName = null;

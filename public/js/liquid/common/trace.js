@@ -14,18 +14,22 @@ var col3Left = col1Width + col2Width;
 
 traceTags = {
     'setup' : true,
-    'member' : true,
-    'incoming' : true,
-    'property' : true,
+
     'create' : true,
-    'pulse' : true,
-    'subscribe' : true,
+    
+    'member' : true,
+    // 'property' : true,
+    'incoming' : true,
+    'shape': true
+
+    // 'pulse' : true,
+    // 'subscribe' : true,
     // 'repetition' : true,
-    'unserialize' : true,
-    'serialize' : true,
-    'selection' : true,
+    // 'unserialize' : true,
+    // 'serialize' : true,
+    // 'selection' : true,
     // 'security' : true,
-    'react' : true
+    // 'react' : true,
 
     // 'database' : true,
     // 'pushDownstream' : true,

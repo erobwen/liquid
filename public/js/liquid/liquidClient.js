@@ -231,6 +231,7 @@ function unserializeUpstreamObject(serializedObject) {
 
 
 function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is undefined it will be used to set saver for all unserialized objects.
+	liquid.turnOffShapeCheck++;
 	liquid.allUnlocked++;
 	arrayOfSerialized.forEach(function(serialized) {
 		trace('unserialize', "unserializeFromUpstream: ", serialized.id);
@@ -241,6 +242,7 @@ function unserializeFromUpstream(arrayOfSerialized) { // If optionalSaver is und
 		liquid.instancePage.upstreamPulseReceived();
 	}
 	liquid.allUnlocked--;
+	liquid.turnOffShapeCheck--;
 }
 
 
