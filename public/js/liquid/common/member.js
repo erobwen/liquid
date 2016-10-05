@@ -245,9 +245,13 @@ var addLiquidObjectMemberFunctionality = function(liquid) {
             trace('member', this, ".", definition.adderName, "(", added, ")");
             // console.log("Add to set: " + this.__() + "." + definition.adderName + "(" + added.__() + ")");
             // console.log(definition.adderName + "(...)");
+            // trace('member', 'Shape check:', this[definition.shapeCheckerName](added));
+            // trace('member', 'Allow write:', this[definition.shapeCheckerName](added));
+
             if (liquid.allowWrite(this) && this[definition.shapeCheckerName](added)) {
                 // console.log("Set relation adder");
                 // console.log(relation);
+                // trace('member', 'allowed');
                 var instance = this._relationInstances[definition.qualifiedName];
                 if (typeof(instance.data) === 'undefined') {
                     liquid.loadSetRelation(this, definition, instance);

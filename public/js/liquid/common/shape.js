@@ -68,6 +68,11 @@ var addLiquidShapeFunctionality = function(liquid) {
                 return true;
             }
 
+            // Cannot relate already related!
+            if (this.hasOutgoingRelationTo(definition.qualifiedName, relatedObject)) {
+                return false;
+            }
+
             var shape = definition.shape;
             trace('shape', "Can relate: ", this, ".", definition.name, ".", relatedObject, " shape: ", shape);
 
@@ -156,6 +161,46 @@ var addLiquidShapeFunctionality = function(liquid) {
 
         /*---------------------------------------------------------------
          *
+         *   Parent and child
+         *
+         *---------------------------------------------------------------*/
+
+        // Essetially, is child of
+        object["hasIncomingRelationFrom"] =  function(relatedObject, qualifiedRelationName) {
+            if (typeof(relatedObject._relationDefinitions[qualifiedRelationName]) !== 'undefined') {
+                var result = false;
+                relatedObject.outgoingRelatedObjects(qualifiedRelationName).forEach(function(outgoingRelatedObject) {
+                    if (outgoingRelatedObject === this) {
+                        result = true;
+                    }
+                });
+                return result;
+            } else {
+                return false;
+            }
+        };
+
+        // Essetially, is parent to
+        object["hasOutgoingRelationTo"] = function(qualifiedRelationName, relatedObject) {
+            if (typeof(object._relationDefinitions[qualifiedRelationName]) !== 'undefined') {
+                var result = false;
+                this.outgoingRelatedObjects(qualifiedRelationName).forEach(function(outgoingRelatedObject) {
+                    trace('shape', "outgoing object", outgoingRelatedObject);
+                    if (outgoingRelatedObject === relatedObject) {
+                        trace('shape', "Found match");
+                        result = true;
+                    }
+                });
+                return result;
+            } else {
+                trace('shape', "Definition not found");
+                return false;
+            }
+        };
+
+        
+        /*---------------------------------------------------------------
+         *
          *     Relation browsing OBS RAW!!!
          *  (without members, no observation, no auto loading)
          *---------------------------------------------------------------*/
@@ -220,43 +265,6 @@ var addLiquidShapeFunctionality = function(liquid) {
                 var definition = object._propertyDefinitions[definitionName];
                 var instance = object._propertyInstances[definitionName];
                 callback(definition, instance);
-            }
-        };
-
-
-        /*---------------------------------------------------------------
-         *   Parent and child  OBS RAW!!!
-         *
-         *   (without members, autoloading.)
-         *---------------------------------------------------------------*/
-
-        // Essetially, is child of
-        object["hasIncomingRelationFrom"] =  function(relatedObject, qualifiedRelationName) {
-            if (typeof(object._relationDefinitions[qualifiedRelationName]) !== 'undefined') {
-                var result = false;
-                object.forAllRelatedObjects(qualifiedRelationName, function(outgoingRelatedObject) {
-                    if (outgoingRelatedObject === this) {
-                        result = true;
-                    }
-                });
-                return result;
-            } else {
-                return false;
-            }
-        };
-
-        // Essetially, is parent to
-        object["hasOutgoingRelationTo"] = function(qualifiedRelationName, relatedObject) {
-            if (typeof(object._relationDefinitions[qualifiedRelationName]) !== 'undefined') {
-                var result = false;
-                this.forAllRelatedObjects(qualifiedRelationName, function(outgoingRelatedObject) {
-                    if (outgoingRelatedObject === relatedObject) {
-                        result = true;
-                    }
-                });
-                return result;
-            } else {
-                return false;
             }
         };
     };
