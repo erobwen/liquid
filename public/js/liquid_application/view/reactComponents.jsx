@@ -279,11 +279,11 @@ window.CategoryView = React.createClass(liquidClassData({
 		draggedCategory = null;
 		if (category.writeable() && category.canAddSubCategory(droppedCategory)) {
 			liquid.pulse('local', function() {
-				console.log(droppedCategory.getParents().length);
-				console.log(droppedCategory.getParents());
+				// console.log(droppedCategory.getParents().length);
+				// console.log(droppedCategory.getParents());
 				var parents = copyArray(droppedCategory.getParents());
 				parents.forEach(function(parentCategory) {
-					console.log("Dropping parent: " + parentCategory.__());
+					// console.log("Dropping parent: " + parentCategory.__());
 					droppedCategory.removeParent(parentCategory);
 				});
 				category.addSubCategory(droppedCategory);	

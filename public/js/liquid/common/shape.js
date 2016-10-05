@@ -97,7 +97,7 @@ var addLiquidShapeFunctionality = function(liquid) {
                     // TODO: consider how to handle incomingRelatedObjects on client? Should we demand they are all loaded?
                 }
 
-                // try {
+                try {
                     if (shape === 'non-recursive') {
                         // non-shared recursive non-cyclic
                         return (relatedObject.outgoingRelatedObjects(definition.qualifiedName).length == 0)
@@ -119,10 +119,10 @@ var addLiquidShapeFunctionality = function(liquid) {
                             && (relatedObject.incomingRelatedObjects(definition.qualifiedName).length == 0);
 
                     } else if (shape === 'acyclic') {
-                        trace('shape', "Acyclic");
+                        // trace('shape', "Acyclic");
                         // shared recursive non-cyclic
                         var allTransitiveOutgoing = relatedObject.getAllTransitiveOutgoing(definition.qualifiedName);
-                        trace('shape', "allTransitiveOutgoing:", allTransitiveOutgoing);
+                        // trace('shape', "allTransitiveOutgoing:", allTransitiveOutgoing);
                         return typeof(allTransitiveOutgoing[this._id]) === 'undefined';
 
                     } else if (shape === 'spiral') {
@@ -130,10 +130,10 @@ var addLiquidShapeFunctionality = function(liquid) {
                         // non-shared recursive cyclic
                         return (relatedObject.incomingRelatedObjects(definition.qualifiedName).length == 0);
                     }
-                // } catch(exception) { // discovering unloaded data recursivley will result in exception.
-                //     trace('shape', "Got exception", exception);
-                //     return false;
-                // }
+                } catch(exception) { // discovering unloaded data recursivley will result in exception.
+                    trace('shape', "Got exception", exception);
+                    return false;
+                }
             }
         };
 
@@ -198,7 +198,7 @@ var addLiquidShapeFunctionality = function(liquid) {
             }
         };
 
-        
+
         /*---------------------------------------------------------------
          *
          *     Relation browsing OBS RAW!!!
