@@ -13,7 +13,7 @@ traceGroup('setup', "=== Unserialize: ===");
 var start = new Date().getTime();
 liquid.pulse('upstream', function() {
 	// console.log("serialize 0");
-	unserializeFromUpstream(data.subscriptionInfo.addedSerialized);
+	liquid.unserializeFromUpstream(data.subscriptionInfo.addedSerialized);
 
 	// console.log("serialize 1");
 });

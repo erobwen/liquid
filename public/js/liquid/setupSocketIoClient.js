@@ -40,7 +40,7 @@ socket.on('pushSubscriptionChanges', function(changes){
 		}
 		console.log(changes);
 		//result
-		unserializeFromUpstream(changes.addedSerialized);
+		liquid.unserializeFromUpstream(changes.addedSerialized);
 
 		liquid.blockUponChangeActions(function() {
 			liquid.allUnlocked++;

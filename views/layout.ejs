@@ -1,15 +1,14 @@
-
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title>Reference Service</title>
 
-	<!--link rel="stylesheet" href="/external/bower/bootstrap/dist/css/bootstrap.css"-->
+    <!--link rel="stylesheet" href="/external/bower/bootstrap/dist/css/bootstrap.css"-->
 
     <!-- TODO <script src="/js/liquid/dependencies/sails.io.js"></script>-->
-	<link rel="stylesheet" href="/external/font-awsome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/external/font-awsome/css/font-awesome.min.css">
 
-	<!-- Liquid scripts -->
+    <!-- Liquid scripts -->
     <!--script src="/external/react/react.js"></script-->
     <script src="/external/react-0.14.7/build/react.js"></script>
     <script src="/external/react-0.14.7/build/react-with-addons.js"></script>
@@ -18,6 +17,7 @@
     <!--script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>-->
     <script src="/external/babel/browser.min.js"></script>
     <script src="/external/socket.io-client/socket.io.js"></script>
+
     <script src="/js/liquid/liquidUtility.js"></script>
     <script src="/js/liquid/common/trace.js"></script>
     <script src="/js/liquid/common/core.js"></script>
@@ -27,28 +27,29 @@
     <script src="/js/liquid/common/userPageAndSession.js"></script>
     <script src="/js/liquid/common/selection.js"></script>
     <script src="/js/liquid/common/reactive.js"></script>
-    <script src="/js/liquid/liquidClient.js"></script>
-	<script src="/js/liquid/liquidReact.js"></script>
+    <script src="/js/liquid/client/serializeAndServerCall.js"></script>
+    <script src="/js/liquid/client/start.js"></script>
+    <script src="/js/liquid/client/reactIntegration.js"></script>
 
-	<!-- Application scripts TODO: make it load all in these directories as default -->
+    <!-- Application scripts TODO: make it load all in these directories as default -->
     <script src="/js/liquid_application/model/referenceService.js"></script>
-	<script type="text/babel" src="/js/liquid_application/view/reactComponents.jsx"></script>
-	
-	<!-- Initialize & setup data and socket io -->
-	<script>liquid.initialize();</script>
-	<script>var data = <%- data %></script>
+    <script type="text/babel" src="/js/liquid_application/view/reactComponents.jsx"></script>
+
+    <!-- Initialize & setup data and socket io -->
+    <script>liquid.initialize();</script>
+    <script>var data = <%- data %></script>
     <script src="/js/liquid/setupData.js"></script>
     <script src="/js/liquid/setupSocketIoClient.js"></script>
 
     <!-- Custom script (mostly for debugging and trying out stuff) -->
     <!-- script src="/js/liquid/setupClient.js"></script-->
 
-	<!-- Render page -->
-	<script type="text/babel" src="/js/liquid/renderPage.js"></script>
-  </head>
+    <!-- Render page -->
+    <script type="text/babel" src="/js/liquid/renderPage.js"></script>
+</head>
 
-  <body>
-	<div id = "ReactRootDiv">
-	</div>
-  </body>
+<body>
+<div id="ReactRootDiv">
+</div>
+</body>
 </html>
