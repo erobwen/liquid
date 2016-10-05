@@ -18,7 +18,7 @@
     <script src="/external/babel/browser.min.js"></script>
     <script src="/external/socket.io-client/socket.io.js"></script>
 
-    <script src="/js/liquid/liquidUtility.js"></script>
+    <script src="/js/liquid/common/utility.js"></script>
     <script src="/js/liquid/common/trace.js"></script>
     <script src="/js/liquid/common/core.js"></script>
     <script src="/js/liquid/common/shape.js"></script>
@@ -38,14 +38,14 @@
     <!-- Initialize & setup data and socket io -->
     <script>liquid.initialize();</script>
     <script>var data = <%- data %></script>
-    <script src="/js/liquid/setupData.js"></script>
-    <script src="/js/liquid/setupSocketIoClient.js"></script>
+    <script src="/js/liquid/client/setupData.js"></script>
+    <script src="/js/liquid/client/setupSocketIo.js"></script>
 
     <!-- Custom script (mostly for debugging and trying out stuff) -->
     <!-- script src="/js/liquid/setupClient.js"></script-->
 
     <!-- Render page -->
-    <script type="text/babel" src="/js/liquid/renderPage.js"></script>
+    <script type="text/babel" src="/js/liquid/client/render.js"></script>
 </head>
 
 <body>

@@ -6,7 +6,7 @@ var userPageAndSession = require('./public/js/liquid/common/userPageAndSession.j
 var liquidSelection = require('./public/js/liquid/common/selection.js');
 var liquidRepetition = require('./public/js/liquid/common/reactive.js');
 var neo4j = require('./liquidNeo4jInterface.js');
-include('./public/js/liquid/liquidUtility.js'); ///..  // Note: path relative to the include service!
+include('./public/js/liquid/common/utility.js'); ///..  // Note: path relative to the include service!
 include('./public/js/liquid/common/trace.js'); ///..  // Note: path relative to the include service!
 require( 'console-group' ).install();
 
