@@ -142,7 +142,7 @@ What Liquid does, is that it tries to bring back true OOP for models, making it 
 	* public
 		* js
 			* liquid  -- The liquid libraries. Used on both client and server.
-			* **liquid_application**  -- This is where your application files go. Used on both client and server.
+			* **liquid/application**  -- This is where your application files go. Used on both client and server.
 	* views -- ejs files for your express server.
 	* **liquid.js** -- main starting point for liquid.
 	* controllers.js -- Controller definitions.

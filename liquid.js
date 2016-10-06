@@ -22,8 +22,8 @@ var colors = require('colors');
  * ---------------------- */
 
 // Liquid server and model libraries.
-include('./liquidServer.js');
-includeFolderOnce('./public/js/liquid_application/model');
+include('./liquid/server/liquidServer.js');
+includeFolderOnce('./public/js/liquid/application/model');
 
 // Link classes etc.
 Fiber(function() {
@@ -69,28 +69,33 @@ liquid.generateUniqueKey = function(keysMap) {
  *----------------------------------------------------------------*/
 
 // Custom setup server script
-include('./public/js/liquid_application/setupServer.js');
+include('./liquid/application/serverConfiguration.js');
 
 
 /* ----------------------------
  *    Initialize http server 
  * ---------------------------- */
 
+// Setup express server
 var express = require('express');
 var liquidHttpServer = express();
-// set the view engine to ejs
 liquidHttpServer.set('view engine', 'ejs');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-// console.log(session);
 liquidHttpServer.use(cookieParser());
 liquidHttpServer.use(session({secret: '12345QWER67890TY'}));
 
-var controllers = require('./expressControllers.js');
-// console.log(controllers);
+var controllers = require('./liquid/server/expressControllers.js');
 for (controllerName in controllers) {
 	liquidHttpServer.get('/' + controllerName, controllers[controllerName]);
 }
+
+// Set defualt path
+var mainController = 'test';
+if (typeof(controllers[mainController]) !== 'undefined') {
+	liquidHttpServer.get('/', controllers[mainController]);
+}
+
 liquidHttpServer.get('/fie', function(req, res) {res.send("Found me!");});
 
 liquidHttpServer.use(express.static('public')); // TODO: use grunt to compile to different directory
@@ -116,17 +121,18 @@ var fs = require('fs');
 var liquidSocket = socketIo.sockets;
  
 liquidSocket.on('connection', function (socket) {
-	console.log('Connected a socket!');
+	trace('serialize', 'Connected a socket!');
 	
 	socket.on('registerPageId', function(hardToGuessPageId) {
 		Fiber(function() {
-			console.log("Register page connection:" + hardToGuessPageId);
-			console.log(hardToGuessPageId);
+			trace('serialize', "Register page connection:" + hardToGuessPageId);
+			trace('serialize', hardToGuessPageId);
 			if (typeof(hardToGuessPageId) !== 'undefined' && hardToGuessPageId !== null && typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
 				var page = liquid.pagesMap[hardToGuessPageId];
 				page._socket = socket;
-				console.log("Made an association between socket and hardToGuessPageId");
-				//console.log(page._socket);
+				liquid.pushDataDownstream(); // In case this page had subscription updates that never got pushed. 
+				trace('serialize', "Made an association between socket and hardToGuessPageId");
+				//trace('serialize', page._socket);
 			}
 		}).run();
 	});
@@ -148,10 +154,10 @@ liquidSocket.on('connection', function (socket) {
 	socket.on('makeCallOnServer', function(hardToGuessPageId, callInfo) {
 		liquid.callOnServer = true;
 		// trace('serialize', "Make call on server");
-		// console.log(hardToGuessPageId);
-		// console.log(callInfo);
+		// trace('serialize', hardToGuessPageId);
+		// trace('serialize', callInfo);
 		Fiber(function() {
-			// console.log(Object.keys(liquid.pagesMap));
+			// trace('serialize', Object.keys(liquid.pagesMap));
 			if (typeof(liquid.pagesMap[hardToGuessPageId]) !== 'undefined') {
 				var page = liquid.pagesMap[hardToGuessPageId];
 				trace('serialize', "Make call on server ", page);
@@ -185,8 +191,8 @@ liquidSocket.on('connection', function (socket) {
 			// delete liquid.pagesMap[hardToGuessPageId];
 			// page.setSession(null);
 			// // TODO: unpersist page
-			console.log('Disconnected'); 
-			console.log(hardToGuessPageId);
+			trace('serialize', 'Disconnected'); 
+			trace('serialize', hardToGuessPageId);
 		}).run();
 	});
 });

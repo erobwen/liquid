@@ -1,12 +1,21 @@
 Things to do:
 
-* Support shape constraints: nonrecursive, tree, acyclic, graph
-
 * Complete DAG ui support, as a proof of concept.
+    * Able to sort sub categories, and remember sort order. (distinguish between drop beside, drop underneath)
+    * Able to dissconnect a child category
+    * Able to auto-disconnect to previous parent(s) by ctrl-move.
+    * Able to create/delete category
+    * Support for single-duplicate open.
 
 * Add a nice look n feel.
     consider how to deal with screen sizes.
-    material design for react.
+    Use material design for react?
+
+* Reactive animations animations on:
+       change field from upstream.
+       changed field by repeater
+       added/removed subtree from upstream
+       (added/removed subtree by repeater)
 
 * Work on readme file.
     split to several files
@@ -33,11 +42,6 @@ Things to do:
     * keepAliveStatic (manual insertion removal)
     * Keep alive waiting for DB write operation (when writing)
 
-* Different animations on:
-       change field from upstream.
-       changed field by repeater
-       added/removed subtree from upstream
-       (added/removed subtree by repeater)
 
 * Client side routing with url/browser navigation support.
 

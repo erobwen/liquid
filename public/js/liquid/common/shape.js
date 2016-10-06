@@ -77,7 +77,7 @@ var addLiquidShapeFunctionality = function(liquid) {
             trace('shape', "Can relate: ", this, ".", definition.name, ".", relatedObject, " shape: ", shape);
 
             // Allowed shape names:
-            // 'graph', 'non-recursive', 'non-shared', 'tree', 'acyclic', 'spiral'
+            // 'graph', 'non-recursive', 'non-shared'/'non-shared-non-recursive', 'tree', 'acyclic', 'spiral'
 
             // All shape checks are a combination of the following checks:
             // non-shared (single parent only)

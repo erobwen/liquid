@@ -1,10 +1,10 @@
-var liquidCommon = require('./public/js/liquid/common/core.js');
-var liquidShape = require('./public/js/liquid/common/shape.js');
-var liquidObjectMember = require('./public/js/liquid/common/member.js');
-var liquidEntity = require('./public/js/liquid/common/entity.js');
-var userPageAndSession = require('./public/js/liquid/common/userPageAndSession.js');
-var liquidSelection = require('./public/js/liquid/common/selection.js');
-var liquidRepetition = require('./public/js/liquid/common/reactive.js');
+var liquidCommon = require('../../public/js/liquid/common/core.js');
+var liquidShape = require('../../public/js/liquid/common/shape.js');
+var liquidObjectMember = require('../../public/js/liquid/common/member.js');
+var liquidEntity = require('../../public/js/liquid/common/entity.js');
+var userPageAndSession = require('../../public/js/liquid/common/userPageAndSession.js');
+var liquidSelection = require('../../public/js/liquid/common/selection.js');
+var liquidRepetition = require('../../public/js/liquid/common/reactive.js');
 var neo4j = require('./liquidNeo4jInterface.js');
 include('./public/js/liquid/common/utility.js'); ///..  // Note: path relative to the include service!
 include('./public/js/liquid/common/trace.js'); ///..  // Note: path relative to the include service!
@@ -502,19 +502,21 @@ liquid.getSubscriptionUpdate = function(page) {
 	//add event info originating from repeaters.
 	result.events = [];
 	trace('serialize', "Serialize events");
-	liquid.activePulse.events.forEach(function (event) {
-		trace('serialize', event.action, event.object);
-		// trace('serialize', event);
-		if (!event.redundant && (liquid.activePulse.originator !== page || event.repeater !== null || liquid.callOnServer)) { // Do not send back events to originator!
-			// console.log("A");
-			if (addedAndRemovedIds.static[event.object._id]) {
-				// console.log("B");
-				liquid.pageSubject = page;
-				result.events.push(serializeEventForDownstream(event));
-				liquid.pageSubject = null;
+	if (liquid.activePulse !== null) {
+		liquid.activePulse.events.forEach(function (event) {
+			trace('serialize', event.action, event.object);
+			// trace('serialize', event);
+			if (!event.redundant && (liquid.activePulse.originator !== page || event.repeater !== null || liquid.callOnServer)) { // Do not send back events to originator!
+				// console.log("A");
+				if (addedAndRemovedIds.static[event.object._id]) {
+					// console.log("B");
+					liquid.pageSubject = page;
+					result.events.push(serializeEventForDownstream(event));
+					liquid.pageSubject = null;
+				}
 			}
-		}
-	});
+		});
+	}
 
 	// Add id mapping information
 	result.idToUpstreamId = {};
@@ -590,12 +592,13 @@ liquid.pushDataDownstream = function() {
 		}
 		page._pendingUpdates.push(update);
 
-		if (typeof(page._socket) !== 'undefined') {
+		if (typeof(page._socket) !== 'undefined' && page._socket !== null) {
 			while(page._pendingUpdates.length > 0) {
 				page._socket.emit('pushSubscriptionChanges', page._pendingUpdates.shift());
 			}
 			delete liquid.dirtyPageSubscritiptions[id];
 		} else {
+			trace('serialize', 'An update occured before the page has gotten to register its socket id: ', page);
 			// An update occured before the page has gotten to register its socket id.
 		}
 	}

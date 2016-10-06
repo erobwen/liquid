@@ -1,5 +1,5 @@
 node_modules/
 neo4Jdb/
 .idea/
-neo4J_db/
+liquid/server/neo4J_db/
 npm-debug.log
