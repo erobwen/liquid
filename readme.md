@@ -27,13 +27,7 @@ Liquid is a **full stack isomorphic & reactive web-development framework** that 
 8. **Real OOP for models** with polymorphism, model extension and inheritance etc. for efficient programming and code reuse.
 9. **REACT integration**, supporting recursive reactive views. Other UI frameworks could be used, or none, but Liquid comes bundeled with a through REACT integration.
 
-In addition, Liquid has been built, based upon the following guiding principles:
-
-1. **"Code before constructs"**. In liquid, Javascript code is placed in the lead role. For example, if we are to sort a list, we could either conceive of a fancy ordering language, that allows the programmer to write things such as "order = {alphabetically: 'DESC'}". While such construct can be convenient at times, it is nowhere near as powerful and versitile as a plain Javascript ordering function, that is passed to a general sorting function. such as. order = function(a, b) { return a.name > b.name }. Therefore, in Liquid we primarily use code interfaces to solve problems, rather than fancy yet limited special purpose languages.
-2. **Recursion as stresstest**. The possibility of nesting components within other components is very important. The ability to handle recursive algorithms and data structures well is a testiment to any framework.
-3. **No enforced static encapsulation**. Many frameworks tries to mitigate the complexity of the world by enforcing a certain degree of encapsulation. Components are introduced that has distinct "output" and "inputs" (Angular 2 for example). However, many of the more difficult real world problems require algorithms that has easy access to data from various sources, and a too rigid framework will be harmful for this purpose. I believe that complex data-flows only pose a problem if we loose control of them, and by using reactive programming and dependency recording, keeping track of complex dependencies is easier than ever! For example, liquid can ensure that view code does not alter the model by simply write-protecting the model during the view-rendering phase. Liquid therefore has no enforced static encapsulation of any kind. There are just objects, and code that manipulate objects, or build views out of objects.
-4. **Only one definition**. Web developers has become acustomed to defining their model in at least three ways. First the database definition, then the accompanying PHP/Java/Python models, and lastly their Json/Javascript representation in the client. This implies a lot of redundant work, as a small change in the application requires a multitude of updates. With Liquid, there is only ONE single model definition, used for database, server and client!
-
+In addition, Liquid has been built, based upon the [here](documents/guiding_principles.md) guiding principles.
 
 
 # Continous data structure synchronization
@@ -48,7 +42,7 @@ However, it is not enough to just synchronize isolated objects, as data today of
 
 The only limitation inherent to all web development is about how the client needs to fetch data asynchronously in the first place, and that there might be a limitation in transfer speed. For this purpose Liquid provides a very versitile system for data-subsription, making it as easy as possible to to control the loading of data into the client. Supporting all kinds of on-demand and lazy loading, including a sensible behavior on the client when data is not loaded.
 
-Read more about this topic here: [Read more words!](documents/more_about_data_structure_synchronization.md)
+Read more about this topic [here](documents/more_about_data_structure_synchronization.md)
 
 # State of the art reactive programming
 
