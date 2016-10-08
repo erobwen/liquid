@@ -40,11 +40,15 @@ In addition, Liquid has been built, based upon the following guiding principles:
 
 The server and the client are two separate machines, yet is important to bring them together as close as possible, and the method to do so is to provide automatic synchronizaiton of data structures.
 
+![Alt text](/documents/data_structure_synchronization.png?raw=true "Optional Title")
+
 Whenever shared data is written on the client, changes will automatically, without delay, propagate to the server, and whenever shared data is written on the server, changes will automatically propagate to the client. And Liquid makes this automatically for you! This makes Liquid higly suitable for applications where clients needs to share data in realtime, such as chatboards and games. For applications that require distinct "saving" or "reloading", other solutions will be available.
 
 However, it is not enough to just synchronize isolated objects, as data today often consist out of more complex data structures, such as tree, graph or document structures with objects. Liquid also makes it possible to synchronize these, and makes it possible to automatically push added objects either to the client or the server.
 
 The only limitation inherent to all web development is about how the client needs to fetch data asynchronously in the first place, and that there might be a limitation in transfer speed. For this purpose Liquid provides a very versitile system for data-subsription, making it as easy as possible to to control the loading of data into the client. Supporting all kinds of on-demand and lazy loading, including a sensible behavior on the client when data is not loaded.
+
+Read more about this topic here: [Read more words!](documents/more_about_data_structure_synchronization.md)
 
 # State of the art reactive programming
 
