@@ -22,7 +22,6 @@ liquid.pulse('local', function() {
 
     var funny = create('Category', {name: 'Funny', description: '', owner: user});
 
-
     var politics = create('Category', {name: 'Politics', description: '', owner: user});
 
     var georgism = create('Category', {name: 'Georgism', description: '', owner: user});

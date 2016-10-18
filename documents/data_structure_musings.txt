@@ -1,0 +1,63 @@
+
+Indexes
+id-to-position(s)
+id-to-object/value... what id? local? persistent? global?
+position-to-object/value  +  id-to-position?
+sort-key-to-object/value  +  id-to-position?
+
+object.addRelation(
+    'Foobar',
+    'toMany', // 'toOne' or 'toOneAndMany'
+    {
+          allElementsUnique: true,      // true = sequence, false = set
+          elementToIndex: true,
+          order: function(sizeA, sizeB) { ... }, // can be 'defined', 'dictionary' or 'none' (in that case we use the elementId)
+          getOrTouchKeyMethodName: "getSize",
+          indexClassName: 'MyFoobarIndex'
+    }
+)
+
+
+
+* Think through datatypes support:
+    'variable' (just an observable variable)
+    'set' (an ordered set with immutable order)
+    'ordered_set'  (a dictionary with "true" as value for included objects +  a sequence defining the order)
+    'sequence' (an array under 128 elements, then grows into an AVL tree, it should be possible to decorate tree nodes with cached methods etc.)
+    'dictionary' (improved from Javascript with possibility to use objects as indexes, implicitly using their id, uses a sequence for underlying storage).
+
+
+
+
+class MyObject {
+    function accessLevel(user) {
+        if (startsWith('R', user.name())) {
+            return 'readAndWrite';
+        } else {
+            return 'readOnly';
+        }
+    }
+}
+
+// Singular
+dataStructure.set(object);
+dataStructure.get();
+
+// Plural manipulation
+dataStructure.add(object, (optional)index); // Last is default
+dataStructure.addLast(object);
+dataStructure.addFirst(object);
+dataStructure.getter(object);
+dataStructure.removeLast(object);
+dataStructure.removeFirst(object);
+dataStructure.move(sourceIndex, targetIndex);
+dataStructure.shuffle(sourceIndices, targetIndex);
+
+// Reverse indexing.
+dataStructure.hasObject(object);
+dataStructure.indexOf(object);
+
+// Plural getter
+dataStructure.getObjectWithIndex(index);
+dataStructure.get();
+dataStructure.forAll(callback, (optional)index, (optional)index);

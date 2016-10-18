@@ -45,6 +45,7 @@ var addLiquidShapeFunctionality = function(liquid) {
             return result;
         };
 
+        // TODO: Just use reverse relations? Demand that trees and non-shared has a reverse relation?
         // Note: ignores reverse relations, they are not needed here at all. However, observation is triggered.
         object['forAllIncomingRelatedObjects'] = function(qualifiedRelationName, callback) {
             liquid.ensureIncomingRelationLoaded(this, qualifiedRelationName);

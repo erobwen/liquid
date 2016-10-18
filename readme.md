@@ -27,7 +27,7 @@ Liquid is a **full stack isomorphic & reactive web-development framework** that 
 8. **Real OOP for models** with polymorphism, model extension and inheritance etc. for efficient programming and code reuse.
 9. **REACT integration**, supporting recursive reactive views. Other UI frameworks could be used, or none, but Liquid comes bundeled with a through REACT integration.
 
-In addition, Liquid has been built, based upon the [here](documents/guiding_principles.md) guiding principles.
+In addition, Liquid has been built, based upon the following [guiding principles](documents/guiding_principles.md).
 
 
 # Continous data structure synchronization
