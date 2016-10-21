@@ -344,7 +344,7 @@ var startsWith = function(prefix, string) {
     // trace('security', prefix.length);
     // trace('security', string.substr(0, prefix.length));
     return (prefix === string.substr(0, prefix.length));
-}
+};
 
 var camelCaseToPlural = function(string) {
 	var words = breakdownCamelCase(string);
