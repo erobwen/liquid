@@ -39,7 +39,7 @@ var inArray = function(item, array) {
 		}
 	});
 	return result;
-}
+};
 
 var argumentsToArray = function(arguments) {
 	return Array.prototype.slice.call(arguments);
@@ -73,6 +73,38 @@ var arrayToMap = function(array) {
 	}
 	return result;
 };
+
+// Helper to quickly get a child array
+function getObject() {
+    var argumentList = argumentsToArray(arguments);
+    var object = argumentList.unshift();
+    while (argumentList.length > 0) {
+        var key = argumentList.unshift();
+        if (typeof(object[key]) === 'undefined') {
+            object[key] = {};
+        }
+        object = object[key];
+    }
+    return object[key];
+}
+
+function getArray() {
+    var argumentList = argumentsToArray(arguments);
+    var object = argumentList.unshift();
+    while (argumentList.length > 0) {
+        var key = argumentList.unshift();
+        if (typeof(object[key]) === 'undefined') {
+            if (argumentList.length === 0) {
+                object[key] = [];
+            } else {
+                object[key] = {};
+            }
+        }
+        object = object[key];
+    }
+    return object[key];
+}
+
 
 // var argumentsToArray = function(argumentsObject) {
 	// var result = [];

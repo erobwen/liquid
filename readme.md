@@ -21,6 +21,7 @@ Liquid is a **full stack isomorphic & reactive web-development framework** that 
     * **Reactive data subscriptions**. What data is pushed to the client responds reactivley to changes in data.
     * **Reactive security model**.  The visibility and writeability of objects for a particular user changes reactivley.
     * **Reactive databases**. Traditional database handling depend on queries and streamed results. However, a result stream is inherently non-reactive as already read elements might already have changed. Instead, liquid features reactive search queries that reactivley updates the search result of a query.
+5. ** Reactive databases **. Selecting 10 cats from a list of a millions is one thing, simple to deal with using contemporary database techn. But it a million. However,
 5. **Custom indexes**. Database-indexes might be highly application dependent. Whether you need augmented database indexes, or indexes of some specific kind, you can always implement your own reactive index (search tree) nodes on top of Liquid to facilitate your needs. There are two reasons for this, the first is to allow higher flexibility. The second reason is that databases today are generally non-reactive, so Liquid needs to implement its own reactive search indexes anyway, to support reactive selection over large sets.
 6. **Integrated security model**. The access relation between any user/object can be defined as "noAccess", "readOnly" or "readAndWrite".
 7. **Integrated version control** All objects can be subject to version control (comming soon)
