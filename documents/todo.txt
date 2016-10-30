@@ -1,5 +1,36 @@
 Things to do:
 
+
+New data types:
+    Dictionary
+    Set (augment object with id)
+    OrderedSet
+    Sequence
+
+* Make objects into dictionaries.
+
+* Make persistent
+    * cached functions.
+    * repeaters
+    * projection
+
+* Implement new data structure funtionality, more harmonious with javascript.
+    * Supply arrays of infinite size (auto indexing for larger arrays)
+    * Supply hash maps of infinite size.
+    * Supply indexed sets of infinite size.
+
+* Container objects, and indirect relations.
+    * A relation is rooted at an index (property) in the object hash, map, then goes across all container objects.
+
+* Incoming chronological indexes
+
+* Make incoming relations load, up to a limit.
+
+* Sort order for all relations.
+
+
+...
+
 * Complete DAG ui support, as a proof of concept.
     * Able to sort sub categories, and remember sort order. (distinguish between drop beside, drop underneath)
     * Able to dissconnect a child category
@@ -16,21 +47,6 @@ Things to do:
        changed field by repeater
        added/removed subtree from upstream
        (added/removed subtree by repeater)
-
-* Work on readme file.
-    split to several files
-    add images
-    describe infusion.
-
-* Sort order for all relations.
-
-* Think through datatypes support:
-    'variable' (just an observable variable)
-    'set' (an ordered set with immutable order)
-    'ordered_set'  (a dictionary with "true" as value for included objects +  a sequence defining the order)
-    'sequence' (an array under 128 elements, then grows into an AVL tree, it should be possible to decorate tree nodes with cached methods etc.)
-    'dictionary' (improved from Javascript with possibility to use objects as indexes, implicitly using their id, uses a sequence for underlying storage).
-
 
 
 * Make database work again.
