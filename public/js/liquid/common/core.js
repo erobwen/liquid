@@ -225,6 +225,18 @@ var addCommonLiquidFunctionality = function(liquid) {
 	liquid.pushDataUpstream = function(){};
 	liquid.pushDataToPersistentStorage = function(){};
 
+
+	liquid.inPulse = function(action) {
+		if (liquid.activePulse === null) {
+			liquid.pulse('local', function(pulse) { // We assume it is a local pulse if not explicitly started.
+				action(pulse);
+			});
+			return;
+		} else {
+			action(liquid.activePulse);
+		}
+	}
+
 	liquid.inPulseBlockUponChangeActions = function(action) {
 		if (liquid.activePulse === null) {
 			liquid.pulse('local', function(pulse) { // We assume it is a local pulse if not explicitly started.
