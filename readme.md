@@ -168,9 +168,10 @@ Currently, liquid is not packaged as a framework that can be downloaded with npm
 1. Install Node 6.3.1
 2. Install Neo4J 3.0.4
 3. Clone the repository to c:\liquid or corresponding
-4. Run npm install in this directory. (some warnings and errors, but it should be ok).
-5. ~~Start Neo4J and open the interface. Change the password of user neo4j to "liquid"~~ (database is not used currently)
-6. run "node liquid.js" in the liquid directory.
+4. Open a Node.js console in administrator mode. Type npm install --global --production windows-build-tools.
+5. In the same console: Run npm install in this directory. (some warnings and errors, but it should be ok).
+6. ~~Start Neo4J and open the interface. Change the password of user neo4j to "liquid"~~ (database is not used currently)
+7. run "node liquid.js" in the liquid directory.
 8. Navigate to: http://localhost:4000/test
 
 
